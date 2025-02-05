@@ -12,3 +12,26 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum OAuthProvider {
+  GOOGLE
+  KAKAO
+  NAVER
+}
+
+model User {
+  id String @id
+  email String @db.VarChar(255)
+  provider OAuthProvider
+  accountId String @db.VarChar(15) @map("account_id") @unique
+  nickname String
+  tag String
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+  deletedAt DateTime @map("deleted_at")
+
+
+  @@unique([nickname, tag])
+  @@unique([email, deletedAt])
+  @@unique([accountId, deletedAt])
+}
