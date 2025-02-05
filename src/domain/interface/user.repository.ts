@@ -1,6 +1,6 @@
 import { UserInfo } from '../types/uesr.types';
 
-export interface UserRepositoy {
+export interface UserRepository {
     findOneByEmail(emial: string): Promise<UserInfo | null>;
 }
 
