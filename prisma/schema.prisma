@@ -21,7 +21,7 @@ enum OAuthProvider {
 
 model User {
   id String @id
-  email String @db.VarChar(255)
+  email String @db.VarChar(255) @unique
   provider OAuthProvider
   accountId String @db.VarChar(15) @map("account_id") @unique
   nickname String
