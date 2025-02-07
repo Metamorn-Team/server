@@ -1,4 +1,4 @@
-import { UserInfo } from '../types/uesr.types';
+import { UserInfo } from 'src/domain/types/uesr.types';
 
 export interface UserRepository {
     findOneByEmail(emial: string): Promise<UserInfo | null>;

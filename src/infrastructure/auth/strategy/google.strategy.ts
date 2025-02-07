@@ -1,6 +1,9 @@
-import { GOOGLE_USER_INFO_URL } from 'src/common/constants';
-import { OauthStrategy, OauthUserInfo } from './oauth.strategy';
 import { InternalServerErrorException } from '@nestjs/common';
+import { GOOGLE_USER_INFO_URL } from 'src/common/constants';
+import {
+    OauthStrategy,
+    OauthUserInfo,
+} from 'src/infrastructure/auth/strategy/oauth.strategy';
 
 export class GoogleStrategy implements OauthStrategy {
     async getUserInfo(token: string): Promise<OauthUserInfo> {
