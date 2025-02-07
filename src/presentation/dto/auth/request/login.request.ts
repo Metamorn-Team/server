@@ -6,5 +6,5 @@ export class LoginRequest {
         description: '소셜 로그인 플렛폼 회원 정보 요청을 위한 access token',
     })
     @IsString()
-    readonly accessToken!: string;
+    readonly accessToken: string;
 }
