@@ -9,6 +9,8 @@ export interface UserInfo {
 }
 
 export interface UserPrototype {
-    readonly id: string;
     readonly email: string;
+    readonly nickname: string;
+    readonly tag: string;
+    readonly provider: Provider;
 }

@@ -1,4 +1,4 @@
-export class LoginResponse {
+export class RegisterResponse {
     readonly id: string;
 
     readonly accessToken: string;
