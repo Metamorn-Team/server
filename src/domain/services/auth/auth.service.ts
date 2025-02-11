@@ -12,6 +12,11 @@ import { UserRepository } from 'src/domain/interface/user.repository';
 import { UserPrototype } from 'src/domain/types/uesr.types';
 import { OauthContext } from 'src/infrastructure/auth/context/auth-context';
 import { Provider } from 'src/shared/types';
+import {
+    ProviderConflictException,
+    UserConflictException,
+    UserNotFoundException,
+} from 'src/domain/exceptions/exceptions';
 
 @Injectable()
 export class AuthService {
@@ -38,10 +43,10 @@ export class AuthService {
         const user = await this.userRepository.findOneByEmail(userInfo.email);
 
         if (!user) {
-            throw new NotFoundException(userInfo);
+            throw new UserNotFoundException();
         }
         if (!(user.provider === provider)) {
-            throw new ConflictException(userInfo);
+            throw new ProviderConflictException();
         }
 
         return {
@@ -66,7 +71,7 @@ export class AuthService {
         );
 
         if (userByEmail && userByEmail.provider === prototype.provider) {
-            throw new ConflictException('이미 가입한 회원입니다.');
+            throw new UserConflictException();
         }
 
         const stdDate = new Date();
