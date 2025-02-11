@@ -5,8 +5,10 @@ import {
     ArgumentsHost,
     HttpException,
     HttpStatus,
+    Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import path from 'path';
 import {
     BadRequestException,
     ConflictException,
@@ -17,7 +19,7 @@ import {
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-    constructor() {}
+    private readonly logger = new Logger(HttpExceptionFilter.name);
 
     catch(exception: Error, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
@@ -29,17 +31,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const query = req.query;
         let status: number;
         let errorMessage: string | object;
-
-        const paramMessage = params
-            ? ` \nparams: ${JSON.stringify(params, null, 2)}`
-            : '';
-        const queryMessage = query
-            ? ` \nquery: ${JSON.stringify(query, null, 2)}`
-            : '';
-        const bodyMessage = body
-            ? ` \nbody: ${JSON.stringify(body, null, 2)}`
-            : '';
-        const ipMessage = `\nip: ${req.ip}`;
 
         if (exception instanceof ForbiddenException) {
             exception = new HttpException(
@@ -75,6 +66,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             errorMessage = exception.message;
         }
+
+        this.logger.error({
+            message: 'Exception occured',
+            status,
+            error: errorMessage,
+            path: req.url,
+            timestamp: new Date().toISOString(),
+            method: req.method,
+            body: body,
+            params: params,
+            query: query,
+        });
 
         res.status(status).json({
             statusCode: status,
