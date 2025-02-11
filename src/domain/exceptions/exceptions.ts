@@ -44,7 +44,14 @@ export class ForbiddenException extends Error {
 export class UnauthorizedException extends Error {
     constructor(message: string = '인증 정보가 적절하지 않습니다') {
         super(message);
-        this.name = 'Unauthorizaed';
+        this.name = 'Unauthorized';
+    }
+}
+
+export class AccessTokenUnauthorizedException extends UnauthorizedException {
+    constructor() {
+        super('Access 토큰 권한이 없습니다.');
+        this.name = 'Access Token Unauthorized';
     }
 }
 
