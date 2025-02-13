@@ -29,4 +29,14 @@ export class UserPrismaRepository implements UserRepository {
             },
         });
     }
+
+    async update(data: Partial<UserEntity>): Promise<void> {
+        const { id, ...updateData } = data;
+        await this.prisma.user.update({
+            data: updateData,
+            where: {
+                id,
+            },
+        });
+    }
 }
