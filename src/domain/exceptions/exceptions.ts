@@ -2,9 +2,9 @@
 export interface ErrorBody {
     message: string;
     userInfo?: {
-        email: string;
-        name: string;
-        provider: string;
+        email?: string;
+        name?: string;
+        provider?: string;
         registerProvider?: string;
     };
 }
@@ -55,7 +55,7 @@ export class ProviderConflictException extends ConflictException {
 }
 
 export class UserConflictException extends ConflictException {
-    constructor(userInfo: { email: string; name: string; provider: string }) {
+    constructor(userInfo: { email: string }) {
         super('이미 존재하는 사용자 입니다.');
         this.name = 'User Conflict';
         this.errorBody = {

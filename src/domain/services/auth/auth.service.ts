@@ -43,10 +43,13 @@ export class AuthService {
         const user = await this.userRepository.findOneByEmail(userInfo.email);
 
         if (!user) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(userInfo);
         }
         if (!(user.provider === provider)) {
-            throw new ProviderConflictException();
+            throw new ProviderConflictException({
+                registeredProvider: provider,
+                ...userInfo,
+            });
         }
 
         return {
@@ -71,7 +74,7 @@ export class AuthService {
         );
 
         if (userByEmail && userByEmail.provider === prototype.provider) {
-            throw new UserConflictException();
+            throw new UserConflictException({ email: prototype.email });
         }
 
         const stdDate = new Date();
