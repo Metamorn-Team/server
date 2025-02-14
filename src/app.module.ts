@@ -4,7 +4,8 @@ import { AppController } from 'src/app.controller';
 import { AppService } from 'src/app.service';
 import { UserModule } from 'src/modules/user/user.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
-import { PrismaModule } from './infrastructure/prisma/prisma.module';
+import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
+import { FilterModule } from 'src/common/filter/filter.module';
 
 @Module({
     imports: [
@@ -12,6 +13,7 @@ import { PrismaModule } from './infrastructure/prisma/prisma.module';
         PrismaModule,
         UserModule,
         AuthModule,
+        FilterModule,
     ],
     controllers: [AppController],
     providers: [AppService],

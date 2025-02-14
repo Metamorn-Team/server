@@ -36,3 +36,6 @@ lerna-debug.log*
 
 # env
 .env
+
+# 내 노트
+note.md
