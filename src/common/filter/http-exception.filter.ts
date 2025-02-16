@@ -8,10 +8,10 @@ import {
     Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import path from 'path';
 import {
     BadRequestException,
     ConflictException,
+    ErrorBody,
     ForbiddenException,
     NotFoundException,
     UnauthorizedException,
@@ -32,39 +32,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
         let status: number;
         let errorMessage: string | object;
 
-        if (exception instanceof ForbiddenException) {
-            exception = new HttpException(
-                exception.message,
-                HttpStatus.FORBIDDEN,
-            );
-        } else if (exception instanceof BadRequestException) {
-            exception = new HttpException(
-                exception.message,
-                HttpStatus.BAD_REQUEST,
-            );
-        } else if (exception instanceof NotFoundException) {
-            exception = new HttpException(
-                exception.message,
-                HttpStatus.NOT_FOUND,
-            );
-        } else if (exception instanceof UnauthorizedException) {
-            exception = new HttpException(
-                exception.message,
-                HttpStatus.UNAUTHORIZED,
-            );
-        } else if (exception instanceof ConflictException) {
-            exception = new HttpException(
-                exception.message,
-                HttpStatus.CONFLICT,
-            );
-        }
+        if (exception instanceof Error && 'errorBody' in exception) {
+            const errorWithBody = exception as unknown as {
+                errorBody: ErrorBody;
+            };
+            status = this.getStatusCodeFromException(exception);
+            errorMessage = errorWithBody.errorBody;
 
-        if (exception instanceof HttpException) {
+            // 도메인 예외를 HttpException으로 변환
+            exception = new HttpException(errorMessage, status);
+        } else if (exception instanceof HttpException) {
+            // 이미 HttpException인 경우
             status = exception.getStatus();
             errorMessage = exception.getResponse();
         } else {
+            // 그 외 예외 (예: 시스템 오류)
             status = HttpStatus.INTERNAL_SERVER_ERROR;
-            errorMessage = exception.message;
+            errorMessage = {
+                code: 'INTERNAL_SERVER_ERROR',
+                message: '서버 내부 오류가 발생했습니다.',
+                body: body,
+            };
         }
 
         this.logger.error({
@@ -81,9 +69,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
         res.status(status).json({
             statusCode: status,
-            message: errorMessage,
+            ...(typeof errorMessage === 'object'
+                ? errorMessage
+                : { message: errorMessage }),
             path: req.url,
             timestamp: new Date().toISOString(),
         });
+    }
+
+    private getStatusCodeFromException(exception: Error): number {
+        if (exception instanceof BadRequestException) {
+            return HttpStatus.BAD_REQUEST;
+        } else if (exception instanceof UnauthorizedException) {
+            return HttpStatus.UNAUTHORIZED;
+        } else if (exception instanceof ForbiddenException) {
+            return HttpStatus.FORBIDDEN;
+        } else if (exception instanceof NotFoundException) {
+            return HttpStatus.NOT_FOUND;
+        } else if (exception instanceof ConflictException) {
+            return HttpStatus.CONFLICT;
+        } else {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
     }
 }
