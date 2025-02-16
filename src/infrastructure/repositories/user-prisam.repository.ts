@@ -30,6 +30,22 @@ export class UserPrismaRepository implements UserRepository {
         });
     }
 
+    async findOneByTag(tag: string): Promise<UserInfo | null> {
+        return await this.prisma.user.findFirst({
+            select: {
+                id: true,
+                email: true,
+                nickname: true,
+                tag: true,
+                provider: true,
+            },
+            where: {
+                tag: tag,
+                deletedAt: null,
+            },
+        });
+    }
+
     async update(data: Partial<UserEntity>): Promise<void> {
         const { id, ...updateData } = data;
         await this.prisma.user.update({

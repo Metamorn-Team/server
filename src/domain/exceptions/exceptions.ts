@@ -67,6 +67,17 @@ export class UserConflictException extends ConflictException {
     }
 }
 
+export class TagConflictException extends ConflictException {
+    constructor(userInfo: { email: string }) {
+        super('이미 사용 중인 태그입니다.');
+        this.name = 'Tag Conflict';
+        this.errorBody = {
+            message: this.message,
+            userInfo: userInfo,
+        };
+    }
+}
+
 export class ForbiddenException extends Error {
     public errorBody: ErrorBody;
 
@@ -95,6 +106,9 @@ export class AccessTokenUnauthorizedException extends UnauthorizedException {
     constructor() {
         super('유효한 토큰이 아닙니다.');
         this.name = 'Access Token Unauthorized';
+        this.errorBody = {
+            message: this.message,
+        };
     }
 }
 

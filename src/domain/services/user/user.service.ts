@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { ConflictException } from 'src/domain/exceptions/exceptions';
+import { TagConflictException } from 'src/domain/exceptions/exceptions';
 import { UserRepository } from 'src/domain/interface/user.repository';
 
 @Injectable()
@@ -15,15 +14,12 @@ export class UserService {
     }
 
     async updateTag(userId: string, tag: string) {
-        try {
-            await this.userRepository.update({ id: userId, tag });
-        } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError) {
-                if (error.code === 'P2002') {
-                    throw new ConflictException('이미 사용 중인 태그입니다.');
-                }
-            }
-            throw error;
+        const userInfo = await this.userRepository.findOneByTag(tag);
+
+        if (userInfo) {
+            throw new TagConflictException({ email: userInfo.email });
         }
+
+        await this.userRepository.update({ id: userId, tag });
     }
 }

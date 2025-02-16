@@ -115,6 +115,7 @@ describe('UserController (e2e)', () => {
             const { status, body } = response;
 
             expect(status).toEqual(409);
+            expect(body.message).toEqual('이미 사용 중인 태그입니다.');
         });
     });
 });
