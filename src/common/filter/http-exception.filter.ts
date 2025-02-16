@@ -8,7 +8,6 @@ import {
     Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import path from 'path';
 import {
     BadRequestException,
     ConflictException,
@@ -52,6 +51,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
             errorMessage = {
                 code: 'INTERNAL_SERVER_ERROR',
                 message: '서버 내부 오류가 발생했습니다.',
+                body: body,
             };
         }
 

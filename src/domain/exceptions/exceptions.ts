@@ -1,17 +1,19 @@
+import { Provider } from 'src/shared/types';
+
 // src/domain/exceptions/user.exception.ts
 export interface ErrorBody {
     message: string;
     userInfo?: {
         email?: string;
         name?: string;
-        provider?: string;
-        registerProvider?: string;
+        provider?: Provider;
+        registerProvider?: Provider;
     };
 }
 export class NotFoundException extends Error {
     public errorBody: ErrorBody;
 
-    constructor(message: string = '존재하지 않는 값입니다.') {
+    constructor(message = '존재하지 않는 값입니다.') {
         super(message);
         this.name = 'Not found';
         this.errorBody = { message: this.message };
@@ -19,7 +21,7 @@ export class NotFoundException extends Error {
 }
 
 export class UserNotFoundException extends NotFoundException {
-    constructor(userInfo: { email: string; name: string; provider: string }) {
+    constructor(userInfo: { email: string; name: string; provider: Provider }) {
         super('존재하지 않는 사용자입니다.');
         this.name = 'User not found';
         this.errorBody = {
@@ -32,7 +34,7 @@ export class UserNotFoundException extends NotFoundException {
 export class ConflictException extends Error {
     public errorBody: ErrorBody;
 
-    constructor(message: string = '이미 존재하는 값입니다.') {
+    constructor(message = '이미 존재하는 값입니다.') {
         super(message);
         this.name = 'Conflict';
     }
@@ -42,8 +44,8 @@ export class ProviderConflictException extends ConflictException {
     constructor(userInfo: {
         email: string;
         name: string;
-        provider: string;
-        registeredProvider: string;
+        provider: Provider;
+        registeredProvider: Provider;
     }) {
         super('Oauth Provider가 다릅니다.');
         this.name = 'Provider Conflict';
@@ -55,7 +57,7 @@ export class ProviderConflictException extends ConflictException {
 }
 
 export class UserConflictException extends ConflictException {
-    constructor(userInfo: { email: string }) {
+    constructor(userInfo: { email: string; provider: Provider }) {
         super('이미 존재하는 사용자 입니다.');
         this.name = 'User Conflict';
         this.errorBody = {
@@ -68,7 +70,7 @@ export class UserConflictException extends ConflictException {
 export class ForbiddenException extends Error {
     public errorBody: ErrorBody;
 
-    constructor(message: string = '권한이 없습니다.') {
+    constructor(message = '권한이 없습니다.') {
         super(message);
         this.name = 'Forbidden';
         this.errorBody = {
@@ -80,7 +82,7 @@ export class ForbiddenException extends Error {
 export class UnauthorizedException extends Error {
     public errorBody: ErrorBody;
 
-    constructor(message: string = '인증 정보가 적절하지 않습니다') {
+    constructor(message = '인증 정보가 적절하지 않습니다') {
         super(message);
         this.name = 'Unauthorized';
         this.errorBody = {
@@ -99,7 +101,7 @@ export class AccessTokenUnauthorizedException extends UnauthorizedException {
 export class BadRequestException extends Error {
     public errorBody: ErrorBody;
 
-    constructor(message: string = '잘못된 요청입니다.') {
+    constructor(message = '잘못된 요청입니다.') {
         super(message);
         this.name = 'BadRequest';
         this.errorBody = {

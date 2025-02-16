@@ -1,9 +1,4 @@
-import {
-    ConflictException,
-    Inject,
-    Injectable,
-    NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { v4 } from 'uuid';
@@ -74,7 +69,10 @@ export class AuthService {
         );
 
         if (userByEmail && userByEmail.provider === prototype.provider) {
-            throw new UserConflictException({ email: prototype.email });
+            throw new UserConflictException({
+                email: prototype.email,
+                provider: prototype.provider,
+            });
         }
 
         const stdDate = new Date();
