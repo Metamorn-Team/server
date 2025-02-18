@@ -39,14 +39,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
             status = this.getStatusCodeFromException(exception);
             errorMessage = errorWithBody.errorBody;
 
-            // 도메인 예외를 HttpException으로 변환
             exception = new HttpException(errorMessage, status);
         } else if (exception instanceof HttpException) {
-            // 이미 HttpException인 경우
             status = exception.getStatus();
             errorMessage = exception.getResponse();
         } else {
-            // 그 외 예외 (예: 시스템 오류)
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             errorMessage = {
                 code: 'INTERNAL_SERVER_ERROR',
