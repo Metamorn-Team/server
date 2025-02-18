@@ -4,6 +4,7 @@ import { Provider } from 'src/shared/types';
 export interface ErrorBody {
     message: string;
     userInfo?: {
+        id?: string;
         email?: string;
         name?: string;
         provider?: Provider;
@@ -24,6 +25,17 @@ export class UserNotFoundException extends NotFoundException {
     constructor(userInfo: { email: string; name: string; provider: Provider }) {
         super('존재하지 않는 사용자입니다.');
         this.name = 'User not found';
+        this.errorBody = {
+            message: this.message,
+            userInfo: userInfo,
+        };
+    }
+}
+
+export class SearchUserNotFoundException extends NotFoundException {
+    constructor(userInfo: { id: string }) {
+        super('검색한 회원번호는 존재하지 않는 사용자입니다.');
+        this.name = 'Searched User not found';
         this.errorBody = {
             message: this.message,
             userInfo: userInfo,
