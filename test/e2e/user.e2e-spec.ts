@@ -31,6 +31,65 @@ describe('UserController (e2e)', () => {
         await prisma.user.deleteMany();
     });
 
+    describe('(GET) /user/search?searchUserId=12345', () => {
+        it('유저 검색 정상 동작', async () => {
+            const { accessToken } = await login(app);
+
+            const user = await prisma.user.create({
+                data: generateUserEntity('test@email.com', 'test', '11111'),
+            });
+
+            const response = await request(app.getHttpServer())
+                .get(`/user/search?searchUserId=${user.id}`)
+                .set('Authorization', accessToken);
+
+            const { status } = response;
+
+            expect(status).toEqual(200);
+            expect(response.body).toHaveProperty('email', user.email);
+            expect(response.body).toHaveProperty('nickname', user.nickname);
+            expect(response.body).toHaveProperty('tag', user.tag);
+        });
+
+        it('유저 검색 유저ID 에러 동작', async () => {
+            const { accessToken } = await login(app);
+
+            const wrongUserId = 'wrongUserId';
+
+            const response = await request(app.getHttpServer())
+                .get(`/user/search?searchUserId=${wrongUserId}`)
+                .set('Authorization', accessToken);
+
+            const { status, body } = response;
+
+            expect(status).toEqual(404);
+            expect(body.message).toEqual(
+                '검색한 회원번호는 존재하지 않는 사용자입니다.',
+            );
+        });
+    });
+
+    describe('(GET) /user/myProfile', () => {
+        it('본인 프로필 상세 검색 정상 동작', async () => {
+            const { accessToken } = await login(app);
+
+            const response = await request(app.getHttpServer())
+                .get('/user/myProfile')
+                .set('Authorization', accessToken);
+
+            const { status } = response;
+
+            expect(status).toEqual(200);
+            expect(response.body).toHaveProperty(
+                'email',
+                'metamorn@metamorn.com',
+            );
+            expect(response.body).toHaveProperty('nickname', '메타몬');
+            expect(response.body).toHaveProperty('tag', 'metamorn');
+            expect(response.body).toHaveProperty('provider', 'GOOGLE');
+        });
+    });
+
     describe('(PATCH) /user/nickname - 닉네임 변경', () => {
         it('닉네임 변경 정상 동작', async () => {
             const { accessToken } = await login(app);
@@ -79,12 +138,10 @@ describe('UserController (e2e)', () => {
         });
 
         it('동일한 태그로 변경시 에러 동작', async () => {
-            // login 헬퍼를 통해 사용자 생성 (태그: 'metamorn')
             const { accessToken } = await login(app);
 
-            // 동일한 태그로 변경 요청
             const dto: ChangeTagRequest = {
-                tag: 'metamorn', // login 헬퍼에서 생성된 사용자의 태그와 동일
+                tag: 'metamorn',
             };
 
             const response = await request(app.getHttpServer())
