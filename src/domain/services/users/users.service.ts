@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
-    GetUserNotFoundException,
     TagConflictException,
+    UserNotFoundException,
 } from 'src/domain/exceptions/exceptions';
 import { UserRepository } from 'src/domain/interface/user.repository';
 
@@ -16,21 +16,7 @@ export class UserService {
         const user = await this.userRepository.findOneById(userId);
 
         if (!user) {
-            throw new GetUserNotFoundException({ id: userId });
-        }
-
-        return {
-            email: user.email,
-            nickname: user.nickname,
-            tag: user.tag,
-        };
-    }
-
-    async getMe(userId: string) {
-        const user = await this.userRepository.findOneById(userId);
-
-        if (!user) {
-            throw new GetUserNotFoundException({ id: userId });
+            throw new UserNotFoundException({ id: userId });
         }
 
         return user;

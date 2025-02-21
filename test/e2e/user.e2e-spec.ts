@@ -64,30 +64,7 @@ describe('UserController (e2e)', () => {
             const { status, body } = response;
 
             expect(status).toEqual(404);
-            expect(body.message).toEqual(
-                '검색한 회원번호는 존재하지 않는 사용자입니다.',
-            );
-        });
-    });
-
-    describe('(GET) /users/me', () => {
-        it('본인 프로필 상세 검색 정상 동작', async () => {
-            const { accessToken } = await login(app);
-
-            const response = await request(app.getHttpServer())
-                .get('/users/me')
-                .set('Authorization', accessToken);
-
-            const { status } = response;
-
-            expect(status).toEqual(200);
-            expect(response.body).toHaveProperty(
-                'email',
-                'metamorn@metamorn.com',
-            );
-            expect(response.body).toHaveProperty('nickname', '메타몬');
-            expect(response.body).toHaveProperty('tag', 'metamorn');
-            expect(response.body).toHaveProperty('provider', 'GOOGLE');
+            expect(body.message).toEqual('존재하지 않는 사용자입니다.');
         });
     });
 
