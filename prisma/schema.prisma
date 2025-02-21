@@ -20,7 +20,7 @@ enum OAuthProvider {
 }
 
 model User {
-  id String @id
+  id String @id @db.Uuid
   email String @db.VarChar(255)
   provider OAuthProvider
   nickname String
