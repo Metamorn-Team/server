@@ -5,9 +5,10 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
 import { login } from 'test/helper/login';
-import { ChangeNicknameRequest } from 'src/presentation/dto/user/request/change-nickname.request';
-import { ChangeTagRequest } from 'src/presentation/dto/user/request/change-tag.request';
+import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
+import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { generateUserEntity } from 'test/helper/generators';
+import { v4 } from 'uuid';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -31,7 +32,7 @@ describe('UserController (e2e)', () => {
         await prisma.user.deleteMany();
     });
 
-    describe('(GET) /user/search?searchUserId=12345', () => {
+    describe('(GET) /users/search?searchUserId=12345', () => {
         it('유저 검색 정상 동작', async () => {
             const { accessToken } = await login(app);
 
@@ -40,7 +41,7 @@ describe('UserController (e2e)', () => {
             });
 
             const response = await request(app.getHttpServer())
-                .get(`/user/search?searchUserId=${user.id}`)
+                .get(`/users/${user.id}`)
                 .set('Authorization', accessToken);
 
             const { status } = response;
@@ -54,10 +55,10 @@ describe('UserController (e2e)', () => {
         it('유저 검색 유저ID 에러 동작', async () => {
             const { accessToken } = await login(app);
 
-            const wrongUserId = 'wrongUserId';
+            const wrongUserId = v4();
 
             const response = await request(app.getHttpServer())
-                .get(`/user/search?searchUserId=${wrongUserId}`)
+                .get(`/users/${wrongUserId}`)
                 .set('Authorization', accessToken);
 
             const { status, body } = response;
@@ -69,12 +70,12 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    describe('(GET) /user/myProfile', () => {
+    describe('(GET) /users/me', () => {
         it('본인 프로필 상세 검색 정상 동작', async () => {
             const { accessToken } = await login(app);
 
             const response = await request(app.getHttpServer())
-                .get('/user/myProfile')
+                .get('/users/me')
                 .set('Authorization', accessToken);
 
             const { status } = response;
@@ -90,7 +91,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    describe('(PATCH) /user/nickname - 닉네임 변경', () => {
+    describe('(PATCH) /users/nickname - 닉네임 변경', () => {
         it('닉네임 변경 정상 동작', async () => {
             const { accessToken } = await login(app);
 
@@ -99,7 +100,7 @@ describe('UserController (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .patch('/user/nickname')
+                .patch('/users/nickname')
                 .send(dto)
                 .set('Authorization', accessToken);
             const { status } = response;
@@ -114,7 +115,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    describe('(PATCH) /user/tag - 태그 변경', () => {
+    describe('(PATCH) /users/tag - 태그 변경', () => {
         it('태그 변경 정상 동작', async () => {
             const { accessToken } = await login(app);
 
@@ -123,7 +124,7 @@ describe('UserController (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .patch('/user/tag')
+                .patch('/users/tag')
                 .send(dto)
                 .set('Authorization', accessToken);
             const { status } = response;
@@ -145,7 +146,7 @@ describe('UserController (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .patch('/user/tag')
+                .patch('/users/tag')
                 .send(dto)
                 .set('Authorization', accessToken);
             const { status, body } = response;
@@ -166,7 +167,7 @@ describe('UserController (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .patch('/user/tag')
+                .patch('/users/tag')
                 .send(dto)
                 .set('Authorization', accessToken);
             const { status, body } = response;
