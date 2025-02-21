@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
-    SearchUserNotFoundException,
+    GetUserNotFoundException,
     TagConflictException,
 } from 'src/domain/exceptions/exceptions';
 import { UserRepository } from 'src/domain/interface/user.repository';
@@ -12,11 +12,11 @@ export class UserService {
         private readonly userRepository: UserRepository,
     ) {}
 
-    async search(searchUserId: string) {
-        const user = await this.userRepository.findOneById(searchUserId);
+    async getUser(userId: string) {
+        const user = await this.userRepository.findOneById(userId);
 
         if (!user) {
-            throw new SearchUserNotFoundException({ id: searchUserId });
+            throw new GetUserNotFoundException({ id: userId });
         }
 
         return {
@@ -26,11 +26,11 @@ export class UserService {
         };
     }
 
-    async searchMyProfile(userId: string) {
+    async getMe(userId: string) {
         const user = await this.userRepository.findOneById(userId);
 
         if (!user) {
-            throw new SearchUserNotFoundException({ id: userId });
+            throw new GetUserNotFoundException({ id: userId });
         }
 
         return user;

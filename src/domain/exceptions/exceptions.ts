@@ -32,7 +32,7 @@ export class UserNotFoundException extends NotFoundException {
     }
 }
 
-export class SearchUserNotFoundException extends NotFoundException {
+export class GetUserNotFoundException extends NotFoundException {
     constructor(userInfo: { id: string }) {
         super('검색한 회원번호는 존재하지 않는 사용자입니다.');
         this.name = 'Searched User not found';

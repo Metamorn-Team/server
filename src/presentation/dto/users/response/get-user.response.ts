@@ -1,4 +1,4 @@
-export class SearchUserResponse {
+export class GetUserResponse {
     readonly email: string;
 
     readonly nickname: string;
