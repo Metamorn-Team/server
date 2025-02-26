@@ -1,12 +1,7 @@
-import {
-    CanActivate,
-    ExecutionContext,
-    Injectable,
-    UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { AccessTokenUnauthorizedException } from 'src/domain/exceptions/exceptions';
+import { TokenUnauthorizedException } from 'src/domain/exceptions/exceptions';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -29,14 +24,14 @@ export class AuthGuard implements CanActivate {
         try {
             return await this.jwtService.verifyAsync(accessToken);
         } catch (e: unknown) {
-            throw new AccessTokenUnauthorizedException();
+            throw new TokenUnauthorizedException();
         }
     }
 
     private extractAccessTokenFromHeader(request: Request) {
         const { authorization } = request.headers;
         if (!authorization || authorization.trim() === '') {
-            throw new AccessTokenUnauthorizedException();
+            throw new TokenUnauthorizedException();
         }
 
         return authorization.split(' ')[1];
