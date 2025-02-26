@@ -108,7 +108,7 @@ export class UnauthorizedException extends Error {
     }
 }
 
-export class AccessTokenUnauthorizedException extends UnauthorizedException {
+export class TokenUnauthorizedException extends UnauthorizedException {
     constructor() {
         super('유효한 토큰이 아닙니다.');
         this.name = 'Access Token Unauthorized';
