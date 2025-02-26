@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from 'src/domain/services/auth/auth.service';
 import { Provider } from 'src/shared/types';
@@ -7,6 +7,9 @@ import { LoginResponse } from 'src/presentation/dto/auth/response/login.response
 import { RegisterRequest } from 'src/presentation/dto/auth/request/register.request';
 import { RegisterResponse } from 'src/presentation/dto/auth/response/register.response';
 import { ConfigService } from '@nestjs/config';
+import { RefreshTokenGuard } from 'src/common/guard/refresh-token.guard';
+import { CurrentUser } from 'src/common/decorator/current-user.decorator';
+import { RefreshTokenResponse } from 'src/presentation/dto/auth/response/refresh-token.response';
 
 @Controller('auth')
 export class AuthController {
@@ -36,7 +39,7 @@ export class AuthController {
 
         const { refreshToken, ...responseWithoutRefresh } = loginResponse;
 
-        response.cookie('refreshToken', refreshToken, {
+        response.cookie('refresh_token', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
@@ -55,7 +58,7 @@ export class AuthController {
 
         const { refreshToken, ...responseWithoutRefresh } = registerResponse;
 
-        response.cookie('refreshToken', refreshToken, {
+        response.cookie('refresh_token', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
@@ -63,5 +66,13 @@ export class AuthController {
         });
 
         return responseWithoutRefresh;
+    }
+
+    @UseGuards(RefreshTokenGuard)
+    @Post('refresh')
+    async refreshToken(
+        @CurrentUser() userId: string,
+    ): Promise<RefreshTokenResponse> {
+        return await this.authService.refresToken(userId);
     }
 }

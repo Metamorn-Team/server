@@ -95,6 +95,15 @@ export class AuthService {
         };
     }
 
+    async refresToken(userId: string) {
+        return {
+            accessToken: await this.generateToken(
+                userId,
+                this.accessTokenExpiration,
+            ),
+        };
+    }
+
     private async generateToken(userId: string, expiredTime: string) {
         const paylod = { sub: userId };
         return await this.jwtService.signAsync(paylod, {
