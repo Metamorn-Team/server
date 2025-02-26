@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { TagConflictException } from 'src/domain/exceptions/exceptions';
+import {
+    TagConflictException,
+    UserNotFoundException,
+} from 'src/domain/exceptions/exceptions';
 import { UserRepository } from 'src/domain/interface/user.repository';
 
 @Injectable()
@@ -8,6 +11,16 @@ export class UserService {
         @Inject(UserRepository)
         private readonly userRepository: UserRepository,
     ) {}
+
+    async getUser(userId: string) {
+        const user = await this.userRepository.findOneById(userId);
+
+        if (!user) {
+            throw new UserNotFoundException({ id: userId });
+        }
+
+        return user;
+    }
 
     async updateNickname(userId: string, nickname: string) {
         await this.userRepository.update({ id: userId, nickname });
