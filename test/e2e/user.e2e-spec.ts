@@ -62,7 +62,6 @@ describe('UserController (e2e)', () => {
                 .set('Authorization', accessToken);
 
             const { status, body } = response;
-            console.log(body);
 
             expect(status).toEqual(404);
         });
