@@ -104,9 +104,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
             ip,
             request: `${method} ${path}`,
             referer,
-            body,
-            params,
-            query,
+            body: JSON.stringify(body, null, 2),
+            params: JSON.stringify(params, null, 2),
+            query: JSON.stringify(query, null, 2),
             timestamp: new Date().toISOString(),
         };
     }
