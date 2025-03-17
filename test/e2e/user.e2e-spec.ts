@@ -5,9 +5,10 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
 import { login } from 'test/helper/login';
-import { ChangeNicknameRequest } from 'src/presentation/dto/user/request/change-nickname.request';
-import { ChangeTagRequest } from 'src/presentation/dto/user/request/change-tag.request';
+import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
+import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { generateUserEntity } from 'test/helper/generators';
+import { v4 } from 'uuid';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -31,7 +32,43 @@ describe('UserController (e2e)', () => {
         await prisma.user.deleteMany();
     });
 
-    describe('(PATCH) /user/nickname - 닉네임 변경', () => {
+    describe('(GET) /users/search?searchUserId=12345', () => {
+        it('유저 검색 정상 동작', async () => {
+            const { accessToken } = await login(app);
+
+            const user = await prisma.user.create({
+                data: generateUserEntity('test@email.com', 'test', '11111'),
+            });
+
+            const response = await request(app.getHttpServer())
+                .get(`/users/${user.id}`)
+                .set('Authorization', accessToken);
+
+            const { status } = response;
+
+            expect(status).toEqual(200);
+            expect(response.body).toHaveProperty('email', user.email);
+            expect(response.body).toHaveProperty('nickname', user.nickname);
+            expect(response.body).toHaveProperty('tag', user.tag);
+        });
+
+        it('유저 검색 유저ID 에러 동작', async () => {
+            const { accessToken } = await login(app);
+
+            const wrongUserId = v4();
+
+            const response = await request(app.getHttpServer())
+                .get(`/users/${wrongUserId}`)
+                .set('Authorization', accessToken);
+
+            const { status, body } = response;
+
+            expect(status).toEqual(404);
+            expect(body.message).toEqual('존재하지 않는 사용자입니다.');
+        });
+    });
+
+    describe('(PATCH) /users/nickname - 닉네임 변경', () => {
         it('닉네임 변경 정상 동작', async () => {
             const { accessToken } = await login(app);
 
@@ -40,7 +77,7 @@ describe('UserController (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .patch('/user/nickname')
+                .patch('/users/nickname')
                 .send(dto)
                 .set('Authorization', accessToken);
             const { status } = response;
@@ -55,7 +92,7 @@ describe('UserController (e2e)', () => {
         });
     });
 
-    describe('(PATCH) /user/tag - 태그 변경', () => {
+    describe('(PATCH) /users/tag - 태그 변경', () => {
         it('태그 변경 정상 동작', async () => {
             const { accessToken } = await login(app);
 
@@ -64,7 +101,7 @@ describe('UserController (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .patch('/user/tag')
+                .patch('/users/tag')
                 .send(dto)
                 .set('Authorization', accessToken);
             const { status } = response;
@@ -79,16 +116,14 @@ describe('UserController (e2e)', () => {
         });
 
         it('동일한 태그로 변경시 에러 동작', async () => {
-            // login 헬퍼를 통해 사용자 생성 (태그: 'metamorn')
             const { accessToken } = await login(app);
 
-            // 동일한 태그로 변경 요청
             const dto: ChangeTagRequest = {
-                tag: 'metamorn', // login 헬퍼에서 생성된 사용자의 태그와 동일
+                tag: 'metamorn',
             };
 
             const response = await request(app.getHttpServer())
-                .patch('/user/tag')
+                .patch('/users/tag')
                 .send(dto)
                 .set('Authorization', accessToken);
             const { status, body } = response;
@@ -109,7 +144,7 @@ describe('UserController (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .patch('/user/tag')
+                .patch('/users/tag')
                 .send(dto)
                 .set('Authorization', accessToken);
             const { status, body } = response;
