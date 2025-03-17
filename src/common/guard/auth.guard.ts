@@ -1,7 +1,14 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+    CanActivate,
+    ExecutionContext,
+    HttpStatus,
+    Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { TokenUnauthorizedException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { INVALID_TOKEN_MESSAGE } from 'src/domain/exceptions/message';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -24,14 +31,22 @@ export class AuthGuard implements CanActivate {
         try {
             return await this.jwtService.verifyAsync(accessToken);
         } catch (e: unknown) {
-            throw new TokenUnauthorizedException();
+            throw new DomainException(
+                DomainExceptionType.InvalidToken,
+                HttpStatus.UNAUTHORIZED,
+                INVALID_TOKEN_MESSAGE,
+            );
         }
     }
 
     private extractAccessTokenFromHeader(request: Request) {
         const { authorization } = request.headers;
         if (!authorization || authorization.trim() === '') {
-            throw new TokenUnauthorizedException();
+            throw new DomainException(
+                DomainExceptionType.InvalidToken,
+                HttpStatus.UNAUTHORIZED,
+                INVALID_TOKEN_MESSAGE,
+            );
         }
 
         return authorization.split(' ')[1];
