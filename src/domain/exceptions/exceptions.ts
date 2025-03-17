@@ -1,6 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { Provider } from 'src/shared/types';
 
 export class DomainException<T = undefined> extends Error {
     errorType: DomainExceptionType;
