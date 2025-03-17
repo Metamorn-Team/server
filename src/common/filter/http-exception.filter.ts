@@ -8,14 +8,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import {
-    BadRequestException,
-    ConflictException,
-    ErrorBody,
-    ForbiddenException,
-    NotFoundException,
-    UnauthorizedException,
-} from 'src/domain/exceptions/exceptions';
+import { DomainException } from 'src/domain/exceptions/exceptions';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -26,67 +19,101 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const req = ctx.getRequest<Request>();
         const res = ctx.getResponse<Response>();
 
-        const body = req.body;
-        const params = req.params;
-        const query = req.query;
-        let status: number;
-        let errorMessage: string | object;
+        const status = this.getStatusCodeFromException(exception);
+        const requestInfo = this.generateRequestInfo(req);
+        const errorBody = this.getErrorBodyFromException(exception);
 
-        if (exception instanceof Error && 'errorBody' in exception) {
-            const errorWithBody = exception as unknown as {
-                errorBody: ErrorBody;
-            };
-            status = this.getStatusCodeFromException(exception);
-            errorMessage = errorWithBody.errorBody;
+        this.logging(status, requestInfo, errorBody);
 
-            exception = new HttpException(errorMessage, status);
-        } else if (exception instanceof HttpException) {
-            status = exception.getStatus();
-            errorMessage = exception.getResponse();
-        } else {
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-            errorMessage = {
-                code: 'INTERNAL_SERVER_ERROR',
-                message: '서버 내부 오류가 발생했습니다.',
-                body: body,
-            };
+        const { error, message, statusCode } = errorBody;
+        res.status(status).json({
+            status: statusCode,
+            message: statusCode === 500 ? 'Server Error' : message,
+            error,
+        });
+    }
+
+    private logging(
+        status: HttpStatus,
+        requestInfo: ReturnType<typeof this.generateRequestInfo>,
+        errorBody: ErrorBody,
+    ) {
+        if (process.env.NODE_ENV === 'test') return;
+
+        if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+            this.logger.error({ ...requestInfo, errorBody });
+            return;
         }
 
-        this.logger.error({
-            message: 'Exception occured',
-            status,
-            error: errorMessage,
-            path: req.url,
-            timestamp: new Date().toISOString(),
-            method: req.method,
-            body: body,
-            params: params,
-            query: query,
-        });
-
-        res.status(status).json({
-            statusCode: status,
-            ...(typeof errorMessage === 'object'
-                ? errorMessage
-                : { message: errorMessage }),
-            path: req.url,
-            timestamp: new Date().toISOString(),
-        });
+        this.logger.warn({ ...requestInfo, errorBody });
     }
 
     private getStatusCodeFromException(exception: Error): number {
-        if (exception instanceof BadRequestException) {
-            return HttpStatus.BAD_REQUEST;
-        } else if (exception instanceof UnauthorizedException) {
-            return HttpStatus.UNAUTHORIZED;
-        } else if (exception instanceof ForbiddenException) {
-            return HttpStatus.FORBIDDEN;
-        } else if (exception instanceof NotFoundException) {
-            return HttpStatus.NOT_FOUND;
-        } else if (exception instanceof ConflictException) {
-            return HttpStatus.CONFLICT;
-        } else {
-            return HttpStatus.INTERNAL_SERVER_ERROR;
+        if (exception instanceof HttpException) {
+            return exception.getStatus();
         }
+        if (exception instanceof DomainException) {
+            return exception.statusCode;
+        }
+        return HttpStatus.INTERNAL_SERVER_ERROR;
     }
+
+    private getErrorBodyFromException(exception: Error): ErrorBody {
+        if (exception instanceof HttpException) {
+            const body = exception.getResponse();
+            if (typeof body === 'string') {
+                return {
+                    message: body,
+                    error: exception.name,
+                    statusCode: exception.getStatus(),
+                };
+            }
+            return body as ErrorBody;
+        }
+
+        if (exception instanceof DomainException) {
+            let errorBody = {
+                message: exception.message,
+                statusCode: exception.statusCode,
+                error: exception.errorType,
+            };
+            if ('body' in exception && exception['body']) {
+                errorBody = {
+                    ...errorBody,
+                    ...exception.body,
+                };
+            }
+
+            return errorBody;
+        }
+
+        return {
+            message: exception.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: exception.name,
+        };
+    }
+
+    private generateRequestInfo(req: Request) {
+        const { ip, path, body, params, query, method } = req;
+        const agent = req.header('user-agent') || 'unknown';
+        const referer = req.header('referer') || 'unknown';
+
+        return {
+            agent,
+            ip,
+            request: `${method} ${path}`,
+            referer,
+            body: JSON.stringify(body, null, 2),
+            params: JSON.stringify(params, null, 2),
+            query: JSON.stringify(query, null, 2),
+            timestamp: new Date().toISOString(),
+        };
+    }
+}
+
+interface ErrorBody {
+    message: string;
+    error: string;
+    statusCode: number;
 }

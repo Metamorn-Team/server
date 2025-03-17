@@ -1,8 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { DomainException } from 'src/domain/exceptions/exceptions';
 import {
-    TagConflictException,
-    UserNotFoundException,
-} from 'src/domain/exceptions/exceptions';
+    TAG_CONFLICT_MESSAGE,
+    USER_NOT_FOUND_MESSAGE,
+} from 'src/domain/exceptions/message';
 import { UserRepository } from 'src/domain/interface/user.repository';
 
 @Injectable()
@@ -16,7 +18,11 @@ export class UserService {
         const user = await this.userRepository.findOneById(userId);
 
         if (!user) {
-            throw new UserNotFoundException({ id: userId });
+            throw new DomainException(
+                DomainExceptionType.UserNotFound,
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND_MESSAGE,
+            );
         }
 
         return user;
@@ -30,7 +36,11 @@ export class UserService {
         const userInfo = await this.userRepository.findOneByTag(tag);
 
         if (userInfo) {
-            throw new TagConflictException({ email: userInfo.email });
+            throw new DomainException(
+                DomainExceptionType.TagConflict,
+                HttpStatus.CONFLICT,
+                TAG_CONFLICT_MESSAGE,
+            );
         }
 
         await this.userRepository.update({ id: userId, tag });

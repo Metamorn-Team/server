@@ -1,7 +1,9 @@
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { TokenUnauthorizedException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { INVALID_TOKEN_MESSAGE } from 'src/domain/exceptions/message';
 
 export class RefreshTokenGuard implements CanActivate {
     constructor(private readonly jwtService: JwtService) {}
@@ -27,7 +29,11 @@ export class RefreshTokenGuard implements CanActivate {
         try {
             return await this.jwtService.verifyAsync(accessToken);
         } catch (e: unknown) {
-            throw new TokenUnauthorizedException();
+            throw new DomainException(
+                DomainExceptionType.InvalidToken,
+                HttpStatus.UNAUTHORIZED,
+                INVALID_TOKEN_MESSAGE,
+            );
         }
     }
 }
