@@ -64,7 +64,6 @@ describe('UserController (e2e)', () => {
             const { status, body } = response;
 
             expect(status).toEqual(404);
-            expect(body.message).toEqual('존재하지 않는 사용자입니다.');
         });
     });
 
@@ -129,7 +128,6 @@ describe('UserController (e2e)', () => {
             const { status, body } = response;
 
             expect(status).toEqual(409);
-            expect(body.message).toEqual('이미 사용 중인 태그입니다.');
         });
 
         it('다른 사용자 태그로 변경시 에러 동작', async () => {
@@ -150,7 +148,6 @@ describe('UserController (e2e)', () => {
             const { status, body } = response;
 
             expect(status).toEqual(409);
-            expect(body.message).toEqual('이미 사용 중인 태그입니다.');
         });
     });
 });

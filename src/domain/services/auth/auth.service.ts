@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { v4 } from 'uuid';
@@ -7,11 +7,14 @@ import { UserRepository } from 'src/domain/interface/user.repository';
 import { UserPrototype } from 'src/domain/types/uesr.types';
 import { OauthContext } from 'src/infrastructure/auth/context/auth-context';
 import { Provider } from 'src/shared/types';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { OauthUserInfo } from 'src/infrastructure/auth/strategy/oauth.strategy';
 import {
-    ProviderConflictException,
-    UserConflictException,
-    UserNotFoundException,
-} from 'src/domain/exceptions/exceptions';
+    PROVIDER_CONFLICT,
+    USER_EMAIL_CONFLIC_MESSAGE,
+    USER_NOT_REGISTERED_MESSAGE,
+} from 'src/domain/exceptions/message';
 
 @Injectable()
 export class AuthService {
@@ -38,13 +41,20 @@ export class AuthService {
         const user = await this.userRepository.findOneByEmail(userInfo.email);
 
         if (!user) {
-            throw new UserNotFoundException(userInfo);
+            throw new DomainException<OauthUserInfo>(
+                DomainExceptionType.UserNotRegistered,
+                HttpStatus.NOT_FOUND,
+                USER_NOT_REGISTERED_MESSAGE,
+                userInfo,
+            );
         }
         if (!(user.provider === provider)) {
-            throw new ProviderConflictException({
-                registeredProvider: provider,
-                ...userInfo,
-            });
+            throw new DomainException<OauthUserInfo>(
+                DomainExceptionType.ProviderConflict,
+                HttpStatus.CONFLICT,
+                PROVIDER_CONFLICT,
+                userInfo,
+            );
         }
 
         return {
@@ -69,10 +79,11 @@ export class AuthService {
         );
 
         if (userByEmail && userByEmail.provider === prototype.provider) {
-            throw new UserConflictException({
-                email: prototype.email,
-                provider: prototype.provider,
-            });
+            throw new DomainException(
+                DomainExceptionType.UserEmailConflict,
+                HttpStatus.CONFLICT,
+                USER_EMAIL_CONFLIC_MESSAGE,
+            );
         }
 
         const stdDate = new Date();
@@ -92,6 +103,15 @@ export class AuthService {
             email: user.email,
             nickname: user.nickname,
             tag: user.tag,
+        };
+    }
+
+    async refresToken(userId: string) {
+        return {
+            accessToken: await this.generateToken(
+                userId,
+                this.accessTokenExpiration,
+            ),
         };
     }
 
