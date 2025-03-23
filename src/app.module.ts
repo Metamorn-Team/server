@@ -7,15 +7,17 @@ import { AuthModule } from 'src/modules/auth/auth.module';
 import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { FilterModule } from 'src/common/filter/filter.module';
 import { InterceptorsModule } from 'src/common/interceptor/interceptors.module';
+import { GameModule } from 'src/modules/game/game.module';
 
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         InterceptorsModule,
+        FilterModule,
         PrismaModule,
         UserModule,
         AuthModule,
-        FilterModule,
+        GameModule,
     ],
     controllers: [AppController],
     providers: [AppService],
