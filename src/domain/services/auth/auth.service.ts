@@ -1,9 +1,8 @@
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { v4 } from 'uuid';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
-import { UserRepository } from 'src/domain/interface/user.repository';
 import { UserPrototype } from 'src/domain/types/uesr.types';
 import { OauthContext } from 'src/infrastructure/auth/context/auth-context';
 import { Provider } from 'src/shared/types';
@@ -12,9 +11,11 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { OauthUserInfo } from 'src/infrastructure/auth/strategy/oauth.strategy';
 import {
     PROVIDER_CONFLICT,
-    USER_EMAIL_CONFLIC_MESSAGE,
     USER_NOT_REGISTERED_MESSAGE,
 } from 'src/domain/exceptions/message';
+import { UserReader } from 'src/domain/components/users/user-redear.component';
+import { UserWriter } from 'src/domain/components/users/user-writer.component';
+import { UserChecker } from 'src/domain/components/users/user-checker.component';
 
 @Injectable()
 export class AuthService {
@@ -22,8 +23,9 @@ export class AuthService {
     private readonly refreshTokenExpiration: string;
 
     constructor(
-        @Inject(UserRepository)
-        private readonly userRepository: UserRepository,
+        private readonly userReader: UserReader,
+        private readonly userWriter: UserWriter,
+        private readonly userChecker: UserChecker,
         private readonly oauthContext: OauthContext,
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
@@ -38,7 +40,7 @@ export class AuthService {
 
     async login(provider: Provider, token: string) {
         const userInfo = await this.oauthContext.getUserInfo(provider, token);
-        const user = await this.userRepository.findOneByEmail(userInfo.email);
+        const user = await this.userReader.readOneByEmail(userInfo.email);
 
         if (!user) {
             throw new DomainException<OauthUserInfo>(
@@ -74,21 +76,14 @@ export class AuthService {
     }
 
     async register(prototype: UserPrototype) {
-        const userByEmail = await this.userRepository.findOneByEmail(
+        this.userChecker.checkDuplicateEmail(
             prototype.email,
+            prototype.provider,
         );
-
-        if (userByEmail && userByEmail.provider === prototype.provider) {
-            throw new DomainException(
-                DomainExceptionType.UserEmailConflict,
-                HttpStatus.CONFLICT,
-                USER_EMAIL_CONFLIC_MESSAGE,
-            );
-        }
 
         const stdDate = new Date();
         const user = UserEntity.create(prototype, v4, stdDate);
-        await this.userRepository.save(user);
+        await this.userWriter.create(user);
 
         return {
             id: user.id,
