@@ -77,7 +77,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
                 statusCode: exception.statusCode,
                 error: exception.errorType,
             };
-            if ('body' in exception && exception['body']) {
+            if (this.isExistBodyInException(exception)) {
                 errorBody = {
                     ...errorBody,
                     ...exception.body,
@@ -94,8 +94,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
         };
     }
 
+    private isExistBodyInException(
+        exception: DomainException<unknown>,
+    ): exception is DomainException<object> {
+        return 'body' in exception && typeof exception.body === 'object';
+    }
+
     private generateRequestInfo(req: Request) {
-        const { ip, path, body, params, query, method } = req;
+        const { ip, path, params, query, method } = req;
+        const body: unknown = req.body;
         const agent = req.header('user-agent') || 'unknown';
         const referer = req.header('referer') || 'unknown';
 

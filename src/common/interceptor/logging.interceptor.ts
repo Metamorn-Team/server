@@ -1,7 +1,6 @@
 import {
     CallHandler,
     ExecutionContext,
-    Inject,
     Injectable,
     Logger,
     NestInterceptor,
@@ -34,7 +33,8 @@ export class LoggingInterceptor implements NestInterceptor {
     }
 
     private generateMessage(req: Request, res: Response) {
-        const { ip, path, body, params, query, method } = req;
+        const { ip, path, params, query, method } = req;
+        const body: unknown = req.body;
         const agent = req.header('user-agent') || 'unknown';
         const referer = req.header('referer') || 'unknown';
         const status = res.statusCode;

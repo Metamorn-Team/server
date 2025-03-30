@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
-import { INVALID_TOKEN_MESSAGE } from 'src/domain/exceptions/message';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
@@ -32,7 +31,7 @@ export class RefreshTokenGuard implements CanActivate {
 
     private async verifyToken(Token: string) {
         try {
-            return await this.jwtService.verifyAsync(Token);
+            return await this.jwtService.verifyAsync<{ sub: string }>(Token);
         } catch (e: unknown) {
             throw new DomainException(
                 DomainExceptionType.InvalidToken,

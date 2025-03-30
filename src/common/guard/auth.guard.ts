@@ -29,7 +29,9 @@ export class AuthGuard implements CanActivate {
 
     private async verifyAccessToken(accessToken: string) {
         try {
-            return await this.jwtService.verifyAsync(accessToken);
+            return await this.jwtService.verifyAsync<{ sub: string }>(
+                accessToken,
+            );
         } catch (e: unknown) {
             throw new DomainException(
                 DomainExceptionType.InvalidToken,

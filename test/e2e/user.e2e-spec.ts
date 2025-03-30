@@ -61,7 +61,7 @@ describe('UserController (e2e)', () => {
                 .get(`/users/${wrongUserId}`)
                 .set('Authorization', accessToken);
 
-            const { status, body } = response;
+            const { status } = response;
 
             expect(status).toEqual(404);
         });
@@ -125,7 +125,7 @@ describe('UserController (e2e)', () => {
                 .patch('/users/tag')
                 .send(dto)
                 .set('Authorization', accessToken);
-            const { status, body } = response;
+            const { status } = response;
 
             expect(status).toEqual(409);
         });
@@ -145,7 +145,7 @@ describe('UserController (e2e)', () => {
                 .patch('/users/tag')
                 .send(dto)
                 .set('Authorization', accessToken);
-            const { status, body } = response;
+            const { status } = response;
 
             expect(status).toEqual(409);
         });
