@@ -13,9 +13,9 @@ import {
     PROVIDER_CONFLICT,
     USER_NOT_REGISTERED_MESSAGE,
 } from 'src/domain/exceptions/message';
-import { UserReader } from 'src/domain/components/users/user-redear.component';
-import { UserWriter } from 'src/domain/components/users/user-writer.component';
-import { UserChecker } from 'src/domain/components/users/user-checker.component';
+import { UserReader } from 'src/domain/components/users/user-redear';
+import { UserWriter } from 'src/domain/components/users/user-writer';
+import { UserChecker } from 'src/domain/components/users/user-checker';
 
 @Injectable()
 export class AuthService {

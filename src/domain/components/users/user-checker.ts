@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { UserReader } from './user-redear.component';
+import { UserReader } from './user-redear';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { USER_EMAIL_CONFLIC_MESSAGE } from 'src/domain/exceptions/message';
