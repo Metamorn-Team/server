@@ -8,6 +8,7 @@ import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { FilterModule } from 'src/common/filter/filter.module';
 import { InterceptorsModule } from 'src/common/interceptor/interceptors.module';
 import { GameModule } from 'src/modules/game/game.module';
+import { UserComponentModule } from './modules/users/users-component.module';
 
 @Module({
     imports: [
@@ -15,6 +16,7 @@ import { GameModule } from 'src/modules/game/game.module';
         InterceptorsModule,
         FilterModule,
         PrismaModule,
+        UserComponentModule,
         UserModule,
         AuthModule,
         GameModule,

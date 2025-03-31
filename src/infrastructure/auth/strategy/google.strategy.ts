@@ -19,14 +19,26 @@ export class GoogleStrategy implements OauthStrategy {
             );
         }
 
-        const body: GoogleUserInfo = await response.json();
-        const { name, email } = body;
+        const json: unknown = await response.json();
+        if (!this.isGoogleUserInfo(json)) throw new Error();
+        const { name, email } = json;
 
         return {
             name,
             email,
             provider: 'GOOGLE',
         };
+    }
+
+    isGoogleUserInfo(data: unknown): data is GoogleUserInfo {
+        if (typeof data !== 'object' || data === null) return false;
+
+        return (
+            'sub' in data &&
+            'name' in data &&
+            'email' in data &&
+            'email_verified' in data
+        );
     }
 }
 

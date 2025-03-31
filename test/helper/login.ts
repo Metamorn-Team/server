@@ -12,10 +12,10 @@ export const login = async (app: INestApplication) => {
         provider: 'GOOGLE',
     };
 
-    const response = await request(app.getHttpServer())
+    const response = (await request(app.getHttpServer())
         .post('/auth/register')
-        .send(dto);
-    const { body }: ResponseResult<LoginResponse> = response;
+        .send(dto)) as ResponseResult<LoginResponse>;
+    const { body } = response;
 
     if (!body?.accessToken) {
         throw new Error('Login failed: No access token returned');

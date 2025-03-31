@@ -1,48 +1,40 @@
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { UserReader } from 'src/domain/components/users/user-redear.component';
+import { UserWriter } from 'src/domain/components/users/user-writer.component';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
-import {
-    TAG_CONFLICT_MESSAGE,
-    USER_NOT_FOUND_MESSAGE,
-} from 'src/domain/exceptions/message';
-import { UserRepository } from 'src/domain/interface/user.repository';
+import { TAG_CONFLICT_MESSAGE } from 'src/domain/exceptions/message';
 
 @Injectable()
 export class UserService {
     constructor(
-        @Inject(UserRepository)
-        private readonly userRepository: UserRepository,
+        private readonly userReader: UserReader,
+        private readonly userWriter: UserWriter,
     ) {}
 
-    async getUser(userId: string) {
-        const user = await this.userRepository.findOneById(userId);
-
-        if (!user) {
-            throw new DomainException(
-                DomainExceptionType.UserNotFound,
-                HttpStatus.NOT_FOUND,
-                USER_NOT_FOUND_MESSAGE,
-            );
-        }
-
-        return user;
-    }
-
     async updateNickname(userId: string, nickname: string) {
-        await this.userRepository.update({ id: userId, nickname });
+        await this.userWriter.change({ id: userId, nickname });
     }
 
     async updateTag(userId: string, tag: string) {
-        const userInfo = await this.userRepository.findOneByTag(tag);
+        try {
+            const user = await this.userReader.readOneByTag(tag);
 
-        if (userInfo) {
-            throw new DomainException(
-                DomainExceptionType.TagConflict,
-                HttpStatus.CONFLICT,
-                TAG_CONFLICT_MESSAGE,
-            );
+            if (user) {
+                throw new DomainException(
+                    DomainExceptionType.TagConflict,
+                    HttpStatus.CONFLICT,
+                    TAG_CONFLICT_MESSAGE,
+                );
+            }
+        } catch (e: unknown) {
+            if (
+                e instanceof DomainException &&
+                e.errorType === DomainExceptionType.UserNotFound
+            ) {
+                return await this.userWriter.change({ id: userId, tag });
+            }
+            throw e;
         }
-
-        await this.userRepository.update({ id: userId, tag });
     }
 }

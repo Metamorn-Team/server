@@ -1,1 +1,4 @@
-export type ResponseResult<T> = { status: number; body: T };
+export type ResponseResult<T> = {
+    status: number;
+    body: T;
+};
