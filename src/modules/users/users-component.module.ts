@@ -3,7 +3,7 @@ import { UserChecker } from 'src/domain/components/users/user-checker';
 import { UserReader } from 'src/domain/components/users/user-redear';
 import { UserWriter } from 'src/domain/components/users/user-writer';
 import { UserRepository } from 'src/domain/interface/user.repository';
-import { UserPrismaRepository } from 'src/infrastructure/repositories/user-prisam.repository';
+import { UserPrismaRepository } from 'src/infrastructure/repositories/user-prisma.repository';
 
 @Module({
     providers: [
