@@ -1,6 +1,6 @@
 import * as request from 'supertest';
 
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
@@ -9,6 +9,10 @@ import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { generateUserEntity } from 'test/helper/generators';
 import { v4 } from 'uuid';
+import { Varient } from 'src/presentation/dto/users/request/search-users.request';
+import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
+import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { ResponseResult } from 'test/helper/types';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -148,6 +152,168 @@ describe('UserController (e2e)', () => {
             const { status } = response;
 
             expect(status).toEqual(409);
+        });
+    });
+
+    describe('(GET) /users/search - 유저 검색', () => {
+        const totalUsers = 20;
+
+        beforeEach(async () => {
+            await prisma.user.deleteMany();
+
+            const usersToCreate: UserEntity[] = Array.from(
+                { length: totalUsers },
+                (_, i) => {
+                    const currentIndex = i + 1;
+                    const nicknamePrefix =
+                        currentIndex <= 10 ? 'searchTarget' : 'another';
+                    const tagPrefix =
+                        currentIndex % 2 === 0 ? 'evenTag' : 'oddTag';
+                    return generateUserEntity(
+                        `user${currentIndex}@test.com`,
+                        `${nicknamePrefix}User${String(currentIndex).padStart(2, '0')}`,
+                        `${tagPrefix}${String(currentIndex).padStart(2, '0')}`,
+                    );
+                },
+            );
+
+            await prisma.user.createMany({
+                data: usersToCreate,
+                skipDuplicates: true,
+            });
+        });
+
+        it('닉네임으로 검색 (부분 일치)', async () => {
+            const limit = 5;
+
+            const response = (await request(app.getHttpServer())
+                .get('/users/search')
+                .query({
+                    search: 'searchTarget',
+                    varient: Varient.NICKNAME,
+                    limit: limit,
+                })) as ResponseResult<SearchUserResponse>;
+
+            const { status, body } = response;
+
+            expect(status).toEqual(200);
+            expect(body.data).toHaveLength(limit);
+            expect(body.data[0].nickname).toEqual('searchTargetUser01');
+            expect(body.nextCursor).not.toBeNull();
+        });
+
+        it('태그로 검색 (부분 일치, 첫 페이지)', async () => {
+            const limit = 3;
+            const response = (await request(app.getHttpServer())
+                .get('/users/search')
+                .query({
+                    search: 'evenTag',
+                    varient: Varient.TAG,
+                    limit,
+                })) as ResponseResult<SearchUserResponse>;
+            const { status, body } = response;
+
+            expect(status).toEqual(200);
+            expect(body.data).toHaveLength(limit);
+            expect(body.data[0].tag).toEqual('evenTag02');
+            expect(body.nextCursor).not.toBeNull();
+        });
+
+        it('검색 결과가 없는 경우', async () => {
+            const response = (await request(app.getHttpServer())
+                .get('/users/search')
+                .query({
+                    search: 'nonExistent',
+                    varient: Varient.NICKNAME,
+                })) as ResponseResult<SearchUserResponse>;
+            const { status, body } = response;
+
+            expect(status).toEqual(200);
+            expect(body.data).toHaveLength(0);
+            expect(body.nextCursor).toBeNull();
+        });
+
+        it('페이지네이션 (limit, cursor) - 닉네임 검색', async () => {
+            const limit = 4;
+            const searchTerm = 'searchTarget';
+            const expectedTotal = 10;
+            let fetchedUsersCount = 0;
+            let nextCursor: string | null = null;
+
+            for (let page = 0; ; page++) {
+                const queryParams: any = {
+                    search: searchTerm,
+                    varient: Varient.NICKNAME,
+                    limit,
+                };
+                if (nextCursor) {
+                    queryParams.cursor = nextCursor;
+                }
+
+                const response = (await request(app.getHttpServer())
+                    .get('/users/search')
+                    .query(queryParams)) as ResponseResult<SearchUserResponse>;
+                const { status, body } = response;
+
+                expect(status).toEqual(200);
+
+                fetchedUsersCount += body.data.length;
+
+                if (body.data.length > 0) {
+                    const expectedFirstNickname = `${searchTerm}User${String(page * limit + 1).padStart(2, '0')}`;
+                    expect(body.data[0].nickname).toEqual(
+                        expectedFirstNickname,
+                    );
+                }
+
+                if (body.nextCursor) {
+                    nextCursor = body.nextCursor;
+                } else {
+                    expect(body.nextCursor).toBeNull();
+                    break;
+                }
+                if (page > Math.ceil(expectedTotal / limit)) {
+                    throw new Error(
+                        'Pagination test exceeded expected page count.',
+                    );
+                }
+            }
+            expect(fetchedUsersCount).toEqual(expectedTotal);
+        });
+
+        it('필수 파라미터(search) 누락 시 400 에러', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/users/search')
+                .query({ varient: Varient.NICKNAME });
+            expect(response.status).toEqual(400);
+        });
+        it('필수 파라미터(varient) 누락 시 400 에러', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/users/search')
+                .query({ search: 'test' });
+            expect(response.status).toEqual(400);
+        });
+        it('잘못된 varient 값 입력 시 400 에러', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/users/search')
+                .query({ search: 'test', varient: 'INVALID_VARIENT' });
+            expect(response.status).toEqual(400);
+        });
+        it('limit에 숫자가 아닌 값 입력 시 400 에러', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/users/search')
+                .query({
+                    search: 'test',
+                    varient: Varient.NICKNAME,
+                    limit: 'abc',
+                });
+            expect(response.status).toEqual(400);
+        });
+        it('limit에 1 미만의 값 입력 시 400 에러', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/users/search')
+                .query({ search: 'test', varient: Varient.NICKNAME, limit: 0 });
+            expect(response.status).toEqual(400);
         });
     });
 });

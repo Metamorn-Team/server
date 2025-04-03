@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { UserReader } from 'src/domain/components/users/user-redear.component';
-import { UserWriter } from 'src/domain/components/users/user-writer.component';
+import { UserReader } from 'src/domain/components/users/user-redear';
+import { UserWriter } from 'src/domain/components/users/user-writer';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { TAG_CONFLICT_MESSAGE } from 'src/domain/exceptions/message';

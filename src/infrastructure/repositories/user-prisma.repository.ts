@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from 'src/domain/interface/user.repository';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
-import { UserInfo } from 'src/domain/types/uesr.types';
+import { PaginatedUsers, UserInfo } from 'src/domain/types/uesr.types';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 
 @Injectable()
@@ -59,6 +59,74 @@ export class UserPrismaRepository implements UserRepository {
                 deletedAt: null,
             },
         });
+    }
+
+    async findStartWithNickname(
+        nickname: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedUsers> {
+        const cursorOption = cursor ? { id: cursor } : undefined;
+
+        const data = await this.prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                nickname: true,
+                tag: true,
+                provider: true,
+            },
+            where: {
+                nickname: {
+                    startsWith: nickname,
+                },
+                deletedAt: null,
+            },
+            take: limit + 1,
+            cursor: cursorOption,
+            orderBy: [{ nickname: 'asc' }, { id: 'asc' }],
+        });
+
+        let nextCursor: string | null = null;
+        if (data.length > limit) {
+            const nextItem = data.pop();
+            nextCursor = nextItem?.id ?? null;
+        }
+
+        return { data, nextCursor };
+    }
+
+    async findStartWithTag(
+        tag: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedUsers> {
+        const cursorOption = cursor ? { id: cursor } : undefined;
+        const data = await this.prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                nickname: true,
+                tag: true,
+                provider: true,
+            },
+            where: {
+                tag: {
+                    startsWith: tag,
+                },
+                deletedAt: null,
+            },
+            take: limit + 1,
+            cursor: cursorOption,
+            orderBy: [{ tag: 'asc' }, { id: 'asc' }],
+        });
+
+        let nextCursor: string | null = null;
+        if (data.length > limit) {
+            const nextItem = data.pop();
+            nextCursor = nextItem?.id ?? null;
+        }
+        return { data, nextCursor };
     }
 
     async update(data: Partial<UserEntity>): Promise<void> {

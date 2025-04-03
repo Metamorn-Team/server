@@ -1,7 +1,8 @@
-import { IsIn, Length } from 'class-validator';
+import { IsEmail, IsIn, Length } from 'class-validator';
 import { Provider } from 'src/shared/types';
 
 export class RegisterRequest {
+    @IsEmail({}, { message: '이메일 형식이 아닙니다.' })
     readonly email: string;
 
     @Length(2, 20)

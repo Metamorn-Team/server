@@ -6,15 +6,18 @@ import {
     HttpStatus,
     Param,
     Patch,
+    Query,
     UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
-import { UserReader } from 'src/domain/components/users/user-redear.component';
+import { UserReader } from 'src/domain/components/users/user-redear';
 import { UserService } from 'src/domain/services/users/users.service';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
+import { SearchUsersRequest } from 'src/presentation/dto/users/request/search-users.request';
 import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.response';
+import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 
 @Controller('users')
 export class UserController {
@@ -22,6 +25,16 @@ export class UserController {
         private readonly userService: UserService,
         private readonly userReader: UserReader,
     ) {}
+
+    // @UseGuards(AuthGuard)
+    @Get('search')
+    async searchUser(
+        @Query() query: SearchUsersRequest,
+    ): Promise<SearchUserResponse> {
+        const { search, varient, cursor, limit = 10 } = query;
+
+        return await this.userReader.search(search, varient, limit, cursor);
+    }
 
     @UseGuards(AuthGuard)
     @Get(':id')
