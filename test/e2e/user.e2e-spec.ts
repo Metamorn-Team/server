@@ -12,6 +12,7 @@ import { v4 } from 'uuid';
 import { Varient } from 'src/presentation/dto/users/request/search-users.request';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { ResponseResult } from 'test/helper/types';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -23,13 +24,6 @@ describe('UserController (e2e)', () => {
         }).compile();
 
         app = moduleFixture.createNestApplication();
-        app.useGlobalPipes(
-            new ValidationPipe({
-                whitelist: true,
-                forbidNonWhitelisted: true,
-                transform: true,
-            }),
-        );
         prisma = moduleFixture.get<PrismaService>(PrismaService);
         await app.init();
     });
@@ -167,19 +161,22 @@ describe('UserController (e2e)', () => {
         beforeEach(async () => {
             await prisma.user.deleteMany();
 
-            const usersToCreate: UserEntity[] = [];
-            for (let i = 1; i <= totalUsers; i++) {
-                const nicknamePrefix = i <= 10 ? 'searchTarget' : 'another';
-                const tagPrefix = i % 2 === 0 ? 'evenTag' : 'oddTag';
+            const usersToCreate: UserEntity[] = Array.from(
+                { length: totalUsers },
+                (_, i) => {
+                    const currentIndex = i + 1;
+                    const nicknamePrefix =
+                        currentIndex <= 10 ? 'searchTarget' : 'another';
+                    const tagPrefix =
+                        currentIndex % 2 === 0 ? 'evenTag' : 'oddTag';
+                    return generateUserEntity(
+                        `user${currentIndex}@test.com`,
+                        `${nicknamePrefix}User${String(currentIndex).padStart(2, '0')}`,
+                        `${tagPrefix}${String(currentIndex).padStart(2, '0')}`,
+                    );
+                },
+            );
 
-                usersToCreate.push(
-                    generateUserEntity(
-                        `user${i}@test.com`,
-                        `${nicknamePrefix}User${String(i).padStart(2, '0')}`,
-                        `${tagPrefix}${String(i).padStart(2, '0')}`,
-                    ),
-                );
-            }
             await prisma.user.createMany({
                 data: usersToCreate,
                 skipDuplicates: true,
@@ -189,46 +186,51 @@ describe('UserController (e2e)', () => {
         it('닉네임으로 검색 (부분 일치)', async () => {
             const limit = 5;
 
-            const response = await request(app.getHttpServer())
+            const response = (await request(app.getHttpServer())
                 .get('/users/search')
                 .query({
                     search: 'searchTarget',
                     varient: Varient.NICKNAME,
                     limit: limit,
-                });
+                })) as ResponseResult<SearchUserResponse>;
 
-            expect(response.status).toEqual(200);
-            const body = response.body as SearchUserResponse;
+            const { status, body } = response;
+
+            expect(status).toEqual(200);
             expect(body.data).toHaveLength(limit);
-            expect(body.meta.count).toEqual(limit);
             expect(body.data[0].nickname).toEqual('searchTargetUser01');
-            expect(body.meta.nextCursor).not.toBeNull();
+            expect(body.nextCursor).not.toBeNull();
         });
 
         it('태그로 검색 (부분 일치, 첫 페이지)', async () => {
             const limit = 3;
-            const response = await request(app.getHttpServer())
+            const response = (await request(app.getHttpServer())
                 .get('/users/search')
-                .query({ search: 'evenTag', varient: Varient.TAG, limit });
+                .query({
+                    search: 'evenTag',
+                    varient: Varient.TAG,
+                    limit,
+                })) as ResponseResult<SearchUserResponse>;
+            const { status, body } = response;
 
-            expect(response.status).toEqual(200);
-            const body = response.body as SearchUserResponse;
+            expect(status).toEqual(200);
             expect(body.data).toHaveLength(limit);
-            expect(body.meta.count).toEqual(limit);
             expect(body.data[0].tag).toEqual('evenTag02');
-            expect(body.meta.nextCursor).not.toBeNull();
+            expect(body.nextCursor).not.toBeNull();
         });
 
         it('검색 결과가 없는 경우', async () => {
-            const response = await request(app.getHttpServer())
+            const response = (await request(app.getHttpServer())
                 .get('/users/search')
-                .query({ search: 'nonExistent', varient: Varient.NICKNAME });
+                .query({
+                    search: 'nonExistent',
+                    varient: Varient.NICKNAME,
+                })) as ResponseResult<SearchUserResponse>;
+            const { status, body } = response;
 
-            expect(response.status).toEqual(200);
-            const body = response.body as SearchUserResponse;
+            expect(status).toEqual(200);
             expect(body.data).toHaveLength(0);
-            expect(body.meta.count).toEqual(0);
-            expect(body.meta.nextCursor).toBeNull();
+            expect(body.nextCursor).toBeNull();
         });
 
         it('페이지네이션 (limit, cursor) - 닉네임 검색', async () => {
@@ -248,15 +250,14 @@ describe('UserController (e2e)', () => {
                     queryParams.cursor = nextCursor;
                 }
 
-                const response = await request(app.getHttpServer())
+                const response = (await request(app.getHttpServer())
                     .get('/users/search')
-                    .query(queryParams);
+                    .query(queryParams)) as ResponseResult<SearchUserResponse>;
+                const { status, body } = response;
 
-                expect(response.status).toEqual(200);
-                const body = response.body as SearchUserResponse;
+                expect(status).toEqual(200);
 
                 fetchedUsersCount += body.data.length;
-                expect(body.meta.count).toEqual(body.data.length);
 
                 if (body.data.length > 0) {
                     const expectedFirstNickname = `${searchTerm}User${String(page * limit + 1).padStart(2, '0')}`;
@@ -265,10 +266,10 @@ describe('UserController (e2e)', () => {
                     );
                 }
 
-                if (body.meta.nextCursor) {
-                    nextCursor = body.meta.nextCursor;
+                if (body.nextCursor) {
+                    nextCursor = body.nextCursor;
                 } else {
-                    expect(body.meta.nextCursor).toBeNull();
+                    expect(body.nextCursor).toBeNull();
                     break;
                 }
                 if (page > Math.ceil(expectedTotal / limit)) {
