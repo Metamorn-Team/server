@@ -34,3 +34,25 @@ model User {
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
 }
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model FriendRequest {
+  id          String  @id @db.Uuid
+  senderId    String  @db.Uuid
+  receiverId  String  @db.Uuid
+  status      FriendRequestStatus @default(PENDING)
+  createdAt   DateTime @map("created_at")
+  updatedAt   DateTime @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@unique([senderId, receiverId])
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+}
