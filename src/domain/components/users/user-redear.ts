@@ -3,6 +3,7 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { USER_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { UserRepository } from 'src/domain/interface/user.repository';
+import { PaginatedUsers } from 'src/domain/types/uesr.types';
 
 @Injectable()
 export class UserReader {
@@ -51,5 +52,21 @@ export class UserReader {
         }
 
         return user;
+    }
+
+    async readManyByNickname(
+        nickname: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedUsers> {
+        return await this.userRepository.findManyByNickname(
+            nickname,
+            limit,
+            cursor,
+        );
+    }
+
+    async readManyByTag(tag: string, limit: number, cursor?: string) {
+        return await this.userRepository.findManyByTag(tag, limit, cursor);
     }
 }

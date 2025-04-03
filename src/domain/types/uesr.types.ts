@@ -14,3 +14,8 @@ export interface UserPrototype {
     readonly tag: string;
     readonly provider: Provider;
 }
+
+export interface PaginatedUsers {
+    users: UserInfo[];
+    nextCursor: string | null;
+}

@@ -6,15 +6,22 @@ import {
     HttpStatus,
     Param,
     Patch,
+    Query,
     UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-redear';
 import { UserService } from 'src/domain/services/users/users.service';
+import { PaginatedUsers } from 'src/domain/types/uesr.types';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
+import {
+    SearchUsersRequest,
+    Varient,
+} from 'src/presentation/dto/users/request/search-users.request';
 import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.response';
+import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 
 @Controller('users')
 export class UserController {
@@ -22,6 +29,36 @@ export class UserController {
         private readonly userService: UserService,
         private readonly userReader: UserReader,
     ) {}
+
+    // @UseGuards(AuthGuard)
+    @Get('search')
+    async searchUser(
+        @Query() query: SearchUsersRequest,
+    ): Promise<SearchUserResponse> {
+        const { search, varient, cursor, limit = 10 } = query;
+
+        let result: PaginatedUsers;
+
+        if (varient === Varient.NICKNAME) {
+            result = await this.userReader.readManyByNickname(
+                search,
+                limit,
+                cursor,
+            );
+        } else if (varient === Varient.TAG) {
+            result = await this.userReader.readManyByTag(search, limit, cursor);
+        } else {
+            result = { users: [], nextCursor: null };
+        }
+
+        return {
+            data: result.users,
+            meta: {
+                nextCursor: result.nextCursor,
+                count: result.users.length,
+            },
+        };
+    }
 
     @UseGuards(AuthGuard)
     @Get(':id')
