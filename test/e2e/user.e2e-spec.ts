@@ -9,10 +9,7 @@ import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { generateUserEntity } from 'test/helper/generators';
 import { v4 } from 'uuid';
-import {
-    SearchUsersRequest,
-    Varient,
-} from 'src/presentation/dto/users/request/search-users.request';
+import { Varient } from 'src/presentation/dto/users/request/search-users.request';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 
