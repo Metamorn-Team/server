@@ -1,9 +1,13 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
-import { USER_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
+import {
+    INVALID_INPUT_MESSAGE,
+    USER_NOT_FOUND_MESSAGE,
+} from 'src/domain/exceptions/message';
 import { UserRepository } from 'src/domain/interface/user.repository';
 import { PaginatedUsers } from 'src/domain/types/uesr.types';
+import { Varient } from 'src/presentation/dto/users/request/search-users.request';
 
 @Injectable()
 export class UserReader {
@@ -54,19 +58,46 @@ export class UserReader {
         return user;
     }
 
-    async readManyByNickname(
+    async search(
+        search: string,
+        varient: Varient,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedUsers> {
+        if (varient === Varient.NICKNAME) {
+            return await this.userRepository.findStartWithNickname(
+                search,
+                limit,
+                cursor,
+            );
+        } else if (varient === Varient.TAG) {
+            return await this.userRepository.findStartWithTag(
+                search,
+                limit,
+                cursor,
+            );
+        } else {
+            throw new DomainException(
+                DomainExceptionType.InvalidInput,
+                HttpStatus.BAD_REQUEST,
+                INVALID_INPUT_MESSAGE,
+            );
+        }
+    }
+
+    async searchByNickname(
         nickname: string,
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers> {
-        return await this.userRepository.findManyByNickname(
+        return await this.userRepository.findStartWithNickname(
             nickname,
             limit,
             cursor,
         );
     }
 
-    async readManyByTag(tag: string, limit: number, cursor?: string) {
-        return await this.userRepository.findManyByTag(tag, limit, cursor);
+    async searchByTag(tag: string, limit: number, cursor?: string) {
+        return await this.userRepository.findStartWithTag(tag, limit, cursor);
     }
 }

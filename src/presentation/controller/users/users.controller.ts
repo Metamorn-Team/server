@@ -13,13 +13,9 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-redear';
 import { UserService } from 'src/domain/services/users/users.service';
-import { PaginatedUsers } from 'src/domain/types/uesr.types';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
-import {
-    SearchUsersRequest,
-    Varient,
-} from 'src/presentation/dto/users/request/search-users.request';
+import { SearchUsersRequest } from 'src/presentation/dto/users/request/search-users.request';
 import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.response';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 
@@ -37,27 +33,7 @@ export class UserController {
     ): Promise<SearchUserResponse> {
         const { search, varient, cursor, limit = 10 } = query;
 
-        let result: PaginatedUsers;
-
-        if (varient === Varient.NICKNAME) {
-            result = await this.userReader.readManyByNickname(
-                search,
-                limit,
-                cursor,
-            );
-        } else if (varient === Varient.TAG) {
-            result = await this.userReader.readManyByTag(search, limit, cursor);
-        } else {
-            result = { users: [], nextCursor: null };
-        }
-
-        return {
-            data: result.users,
-            meta: {
-                nextCursor: result.nextCursor,
-                count: result.users.length,
-            },
-        };
+        return await this.userReader.search(search, varient, limit, cursor);
     }
 
     @UseGuards(AuthGuard)

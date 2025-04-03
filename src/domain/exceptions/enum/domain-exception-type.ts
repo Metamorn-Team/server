@@ -5,4 +5,5 @@ export enum DomainExceptionType {
     UserNotFound = 'UserNotFound',
     TagConflict = 'TagConflict',
     InvalidToken = 'InvalidToken',
+    InvalidInput = 'InvalidInput',
 }
