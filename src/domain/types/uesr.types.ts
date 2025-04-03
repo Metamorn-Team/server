@@ -16,6 +16,6 @@ export interface UserPrototype {
 }
 
 export interface PaginatedUsers {
-    users: UserInfo[];
+    data: UserInfo[];
     nextCursor: string | null;
 }

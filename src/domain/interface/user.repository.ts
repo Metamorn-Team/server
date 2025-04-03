@@ -6,12 +6,12 @@ export interface UserRepository {
     findOneById(searchUserId: string): Promise<UserInfo | null>;
     findOneByEmail(emial: string): Promise<UserInfo | null>;
     findOneByTag(tag: string): Promise<UserInfo | null>;
-    findManyByNickname(
+    findStartWithNickname(
         nickname: string,
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers>;
-    findManyByTag(
+    findStartWithTag(
         tag: string,
         limit: number,
         cursor?: string,

@@ -1,17 +1,6 @@
+import { UserInfo } from 'src/domain/types/uesr.types';
 export class SearchUserResponse {
-    readonly data: {
-        readonly id: string;
+    readonly data: UserInfo[];
 
-        readonly email: string;
-
-        readonly nickname: string;
-
-        readonly tag: string;
-
-        readonly provider: string;
-    }[];
-    readonly meta: {
-        readonly nextCursor: string | null;
-        readonly count: number;
-    };
+    readonly nextCursor: string | null;
 }

@@ -61,14 +61,14 @@ export class UserPrismaRepository implements UserRepository {
         });
     }
 
-    async findManyByNickname(
+    async findStartWithNickname(
         nickname: string,
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers> {
         const cursorOption = cursor ? { id: cursor } : undefined;
 
-        const users = await this.prisma.user.findMany({
+        const data = await this.prisma.user.findMany({
             select: {
                 id: true,
                 email: true,
@@ -87,22 +87,22 @@ export class UserPrismaRepository implements UserRepository {
             orderBy: [{ nickname: 'asc' }, { id: 'asc' }],
         });
 
-        let nextCursor: string | undefined = undefined;
-        if (users.length > limit) {
-            const nextItem = users.pop();
-            nextCursor = nextItem?.id;
+        let nextCursor: string | null = null;
+        if (data.length > limit) {
+            const nextItem = data.pop();
+            nextCursor = nextItem?.id ?? null;
         }
 
-        return { users, nextCursor: nextCursor ?? null };
+        return { data, nextCursor };
     }
 
-    async findManyByTag(
+    async findStartWithTag(
         tag: string,
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers> {
         const cursorOption = cursor ? { id: cursor } : undefined;
-        const users = await this.prisma.user.findMany({
+        const data = await this.prisma.user.findMany({
             select: {
                 id: true,
                 email: true,
@@ -121,12 +121,12 @@ export class UserPrismaRepository implements UserRepository {
             orderBy: [{ tag: 'asc' }, { id: 'asc' }],
         });
 
-        let nextCursor: string | undefined = undefined;
-        if (users.length > limit) {
-            const nextItem = users.pop();
-            nextCursor = nextItem?.id;
+        let nextCursor: string | null = null;
+        if (data.length > limit) {
+            const nextItem = data.pop();
+            nextCursor = nextItem?.id ?? null;
         }
-        return { users, nextCursor: nextCursor ?? null };
+        return { data, nextCursor };
     }
 
     async update(data: Partial<UserEntity>): Promise<void> {
