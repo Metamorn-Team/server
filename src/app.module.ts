@@ -9,12 +9,14 @@ import { FilterModule } from 'src/common/filter/filter.module';
 import { InterceptorsModule } from 'src/common/interceptor/interceptors.module';
 import { GameModule } from 'src/modules/game/game.module';
 import { UserComponentModule } from './modules/users/users-component.module';
+import { PipeModule } from './common/pipe/pipe.module';
 
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         InterceptorsModule,
         FilterModule,
+        PipeModule,
         PrismaModule,
         UserComponentModule,
         UserModule,
