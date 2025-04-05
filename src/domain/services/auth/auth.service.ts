@@ -40,39 +40,48 @@ export class AuthService {
 
     async login(provider: Provider, token: string) {
         const userInfo = await this.oauthContext.getUserInfo(provider, token);
-        const user = await this.userReader.readOneByEmail(userInfo.email);
 
-        if (!user) {
-            throw new DomainException<OauthUserInfo>(
-                DomainExceptionType.UserNotRegistered,
-                HttpStatus.NOT_FOUND,
-                USER_NOT_REGISTERED_MESSAGE,
-                userInfo,
-            );
-        }
-        if (!(user.provider === provider)) {
-            throw new DomainException<OauthUserInfo>(
-                DomainExceptionType.ProviderConflict,
-                HttpStatus.CONFLICT,
-                PROVIDER_CONFLICT,
-                userInfo,
-            );
-        }
+        try {
+            const user = await this.userReader.readOneByEmail(userInfo.email);
 
-        return {
-            id: user.id,
-            accessToken: await this.generateToken(
-                user.id,
-                this.accessTokenExpiration,
-            ),
-            refreshToken: await this.generateToken(
-                user.id,
-                this.refreshTokenExpiration,
-            ),
-            email: user.email,
-            nickname: user.nickname,
-            tag: user.tag,
-        };
+            if (!(user.provider === provider)) {
+                throw new DomainException<OauthUserInfo>(
+                    DomainExceptionType.ProviderConflict,
+                    HttpStatus.CONFLICT,
+                    PROVIDER_CONFLICT,
+                    userInfo,
+                );
+            }
+
+            return {
+                id: user.id,
+                accessToken: await this.generateToken(
+                    user.id,
+                    this.accessTokenExpiration,
+                ),
+                refreshToken: await this.generateToken(
+                    user.id,
+                    this.refreshTokenExpiration,
+                ),
+                email: user.email,
+                nickname: user.nickname,
+                tag: user.tag,
+            };
+        } catch (e) {
+            if (
+                e instanceof DomainException &&
+                e.errorType === DomainExceptionType.UserNotFound
+            ) {
+                throw new DomainException<OauthUserInfo>(
+                    DomainExceptionType.UserNotRegistered,
+                    HttpStatus.NOT_FOUND,
+                    USER_NOT_REGISTERED_MESSAGE,
+                    userInfo,
+                );
+            }
+
+            throw e;
+        }
     }
 
     async register(prototype: UserPrototype) {
