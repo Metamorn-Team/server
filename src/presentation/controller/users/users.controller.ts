@@ -37,6 +37,12 @@ export class UserController {
     }
 
     @UseGuards(AuthGuard)
+    @Get('my')
+    async getMyProfile(@CurrentUser() userId: string) {
+        return await this.userReader.readProfile(userId);
+    }
+
+    @UseGuards(AuthGuard)
     @Get(':id')
     async getUser(@Param('id') userId: string): Promise<GetUserResponse> {
         return await this.userReader.readProfile(userId);
