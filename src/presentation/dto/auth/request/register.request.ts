@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsIn, Length } from 'class-validator';
+import { IsEmail, IsIn, IsString, Length } from 'class-validator';
 import { Provider } from 'src/shared/types';
 
 export class RegisterRequest {
@@ -22,5 +22,6 @@ export class RegisterRequest {
     readonly provider: Provider;
 
     @ApiProperty()
+    @IsString()
     readonly avatarKey: string;
 }

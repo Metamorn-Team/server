@@ -184,6 +184,8 @@ describe('UserController (e2e)', () => {
         });
 
         it('닉네임으로 검색 (부분 일치)', async () => {
+            const { accessToken } = await login(app);
+
             const limit = 5;
 
             const response = (await request(app.getHttpServer())
@@ -192,7 +194,11 @@ describe('UserController (e2e)', () => {
                     search: 'searchTarget',
                     varient: Varient.NICKNAME,
                     limit: limit,
-                })) as ResponseResult<SearchUserResponse>;
+                })
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<SearchUserResponse>;
 
             const { status, body } = response;
 
@@ -203,14 +209,21 @@ describe('UserController (e2e)', () => {
         });
 
         it('태그로 검색 (부분 일치, 첫 페이지)', async () => {
+            const { accessToken } = await login(app);
+
             const limit = 3;
             const response = (await request(app.getHttpServer())
                 .get('/users/search')
+                .set('Authorization', accessToken)
                 .query({
                     search: 'evenTag',
                     varient: Varient.TAG,
                     limit,
-                })) as ResponseResult<SearchUserResponse>;
+                })
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<SearchUserResponse>;
             const { status, body } = response;
 
             expect(status).toEqual(200);
@@ -220,12 +233,18 @@ describe('UserController (e2e)', () => {
         });
 
         it('검색 결과가 없는 경우', async () => {
+            const { accessToken } = await login(app);
+
             const response = (await request(app.getHttpServer())
                 .get('/users/search')
                 .query({
                     search: 'nonExistent',
                     varient: Varient.NICKNAME,
-                })) as ResponseResult<SearchUserResponse>;
+                })
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<SearchUserResponse>;
             const { status, body } = response;
 
             expect(status).toEqual(200);
@@ -234,6 +253,8 @@ describe('UserController (e2e)', () => {
         });
 
         it('페이지네이션 (limit, cursor) - 닉네임 검색', async () => {
+            const { accessToken } = await login(app);
+
             const limit = 4;
             const searchTerm = 'searchTarget';
             const expectedTotal = 10;
@@ -252,7 +273,11 @@ describe('UserController (e2e)', () => {
 
                 const response = (await request(app.getHttpServer())
                     .get('/users/search')
-                    .query(queryParams)) as ResponseResult<SearchUserResponse>;
+                    .query(queryParams)
+                    .set(
+                        'Authorization',
+                        accessToken,
+                    )) as ResponseResult<SearchUserResponse>;
                 const { status, body } = response;
 
                 expect(status).toEqual(200);
@@ -282,37 +307,52 @@ describe('UserController (e2e)', () => {
         });
 
         it('필수 파라미터(search) 누락 시 400 에러', async () => {
+            const { accessToken } = await login(app);
+
             const response = await request(app.getHttpServer())
                 .get('/users/search')
-                .query({ varient: Varient.NICKNAME });
+                .query({ varient: Varient.NICKNAME })
+                .set('Authorization', accessToken);
             expect(response.status).toEqual(400);
         });
         it('필수 파라미터(varient) 누락 시 400 에러', async () => {
+            const { accessToken } = await login(app);
+
             const response = await request(app.getHttpServer())
                 .get('/users/search')
-                .query({ search: 'test' });
+                .query({ search: 'test' })
+                .set('Authorization', accessToken);
             expect(response.status).toEqual(400);
         });
         it('잘못된 varient 값 입력 시 400 에러', async () => {
+            const { accessToken } = await login(app);
+
             const response = await request(app.getHttpServer())
                 .get('/users/search')
-                .query({ search: 'test', varient: 'INVALID_VARIENT' });
+                .query({ search: 'test', varient: 'INVALID_VARIENT' })
+                .set('Authorization', accessToken);
             expect(response.status).toEqual(400);
         });
         it('limit에 숫자가 아닌 값 입력 시 400 에러', async () => {
+            const { accessToken } = await login(app);
+
             const response = await request(app.getHttpServer())
                 .get('/users/search')
                 .query({
                     search: 'test',
                     varient: Varient.NICKNAME,
                     limit: 'abc',
-                });
+                })
+                .set('Authorization', accessToken);
             expect(response.status).toEqual(400);
         });
         it('limit에 1 미만의 값 입력 시 400 에러', async () => {
+            const { accessToken } = await login(app);
+
             const response = await request(app.getHttpServer())
                 .get('/users/search')
-                .query({ search: 'test', varient: Varient.NICKNAME, limit: 0 });
+                .query({ search: 'test', varient: Varient.NICKNAME, limit: 0 })
+                .set('Authorization', accessToken);
             expect(response.status).toEqual(400);
         });
     });

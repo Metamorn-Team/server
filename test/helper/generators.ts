@@ -7,11 +7,12 @@ export const generateUserEntity = (
     nickname: string,
     tag: string,
     provider: Provider = 'GOOGLE',
+    avatarKey = 'pawn',
     stdDate: Date = new Date(),
     updatedAt?: Date,
 ): UserEntity =>
     UserEntity.create(
-        { email, nickname, tag, provider },
+        { email, nickname, tag, provider, avatarKey },
         v4,
         stdDate,
         updatedAt ? updatedAt : undefined,

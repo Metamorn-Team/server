@@ -10,6 +10,7 @@ export const login = async (app: INestApplication) => {
         nickname: '메타몬',
         tag: 'metamorn',
         provider: 'GOOGLE',
+        avatarKey: 'pawn',
     };
 
     const response = (await request(app.getHttpServer())
