@@ -20,19 +20,20 @@ enum OAuthProvider {
 }
 
 model User {
-  id String @id @db.Uuid
-  email String @db.VarChar(255)
-  provider OAuthProvider
-  nickname String
-  tag String
-  createdAt DateTime @map("created_at")
-  updatedAt DateTime @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id        String        @id @db.Uuid
+  email     String        @db.VarChar(255)
+  provider  OAuthProvider
+  nickname  String
+  tag       String
+  createdAt DateTime      @map("created_at")
+  updatedAt DateTime      @map("updated_at")
+  deletedAt DateTime?     @map("deleted_at")
 
-  @@index([nickname, id])
-  @@index([tag, id])
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
+  @@index([nickname, id])
+  @@index([tag, id])
+  @@map("user")
 }
 
 enum FriendRequestStatus {
@@ -41,7 +42,7 @@ enum FriendRequestStatus {
   REJECTED
 }
 
-model FriendRequest {
+model friend_request {
   id          String  @id @db.Uuid
   senderId    String  @db.Uuid
   receiverId  String  @db.Uuid
@@ -56,3 +57,4 @@ model FriendRequest {
   @@index([receiverId])
   @@index([status])
 }
+

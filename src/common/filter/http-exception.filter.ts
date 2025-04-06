@@ -25,11 +25,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
         this.logging(status, requestInfo, errorBody);
 
-        const { error, message, statusCode } = errorBody;
+        const { statusCode, message } = errorBody;
         res.status(status).json({
-            status: statusCode,
+            ...errorBody,
             message: statusCode === 500 ? 'Server Error' : message,
-            error,
         });
     }
 
