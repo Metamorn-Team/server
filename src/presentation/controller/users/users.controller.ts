@@ -25,6 +25,7 @@ import { UserService } from 'src/domain/services/users/users.service';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { SearchUsersRequest } from 'src/presentation/dto/users/request/search-users.request';
+import { GetMyResponse } from 'src/presentation/dto/users/response/get-me.response';
 import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.response';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 
@@ -96,7 +97,7 @@ export class UserController {
     @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @Get('my')
-    async getMyProfile(@CurrentUser() userId: string) {
+    async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
         return await this.userReader.readProfile(userId);
     }
 

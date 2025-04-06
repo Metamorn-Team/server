@@ -66,6 +66,7 @@ export class AuthService {
                 email: user.email,
                 nickname: user.nickname,
                 tag: user.tag,
+                avatarKey: user.avatarKey,
             };
         } catch (e) {
             if (
@@ -85,7 +86,7 @@ export class AuthService {
     }
 
     async register(prototype: UserPrototype) {
-        this.userChecker.checkDuplicateEmail(
+        await this.userChecker.checkDuplicateEmail(
             prototype.email,
             prototype.provider,
         );
@@ -107,6 +108,7 @@ export class AuthService {
             email: user.email,
             nickname: user.nickname,
             tag: user.tag,
+            avatarKey: user.avatarKey,
         };
     }
 
