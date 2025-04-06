@@ -2,6 +2,7 @@ import { Player, Room, RoomType } from 'src/domain/types/game.types';
 
 export interface GameStorage {
     getPlayer(clientId: string): Player | null;
+    getPlayerById(playerId: string): Player | null;
     addPlayer(clientId: string, player: Player): void;
     deletePlayer(clientId: string): void;
 
