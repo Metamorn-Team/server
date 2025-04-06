@@ -8,6 +8,7 @@ export class UserEntity {
         readonly nickname: string,
         readonly tag: string,
         readonly provider: Provider,
+        readonly avatarKey: string,
         readonly createdAt: Date,
         readonly updatedAt: Date,
     ) {}
@@ -24,6 +25,7 @@ export class UserEntity {
             input.nickname,
             input.tag,
             input.provider,
+            input.avatarKey,
             stdDate,
             updatedAt ? updatedAt : stdDate,
         );

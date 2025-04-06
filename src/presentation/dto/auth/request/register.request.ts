@@ -15,4 +15,6 @@ export class RegisterRequest {
         message: 'provider는 GOOGLE, KAKAO, NAVER만 가능합니다.',
     })
     readonly provider: Provider;
+
+    readonly avatarKey: string;
 }

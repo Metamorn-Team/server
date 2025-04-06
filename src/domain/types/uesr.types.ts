@@ -13,6 +13,7 @@ export interface UserPrototype {
     readonly nickname: string;
     readonly tag: string;
     readonly provider: Provider;
+    readonly avatarKey: string;
 }
 
 export interface PaginatedUsers {
