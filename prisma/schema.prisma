@@ -43,7 +43,7 @@ enum FriendRequestStatus {
   REJECTED
 }
 
-model friend_request {
+model FriendRequest {
   id          String  @id @db.Uuid
   senderId    String  @db.Uuid
   receiverId  String  @db.Uuid
@@ -57,5 +57,6 @@ model friend_request {
   @@index([senderId])
   @@index([receiverId])
   @@index([status])
+  @@map("friend_request")
 }
 
