@@ -9,6 +9,15 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiOperation,
+    ApiParam,
+    ApiQuery,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-redear';
@@ -16,9 +25,11 @@ import { UserService } from 'src/domain/services/users/users.service';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { SearchUsersRequest } from 'src/presentation/dto/users/request/search-users.request';
+import { GetMyResponse } from 'src/presentation/dto/users/response/get-me.response';
 import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.response';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 
+@ApiTags('users')
 @Controller('users')
 export class UserController {
     constructor(
@@ -26,7 +37,43 @@ export class UserController {
         private readonly userReader: UserReader,
     ) {}
 
-    // @UseGuards(AuthGuard)
+    @ApiOperation({
+        summary: '유저 검색 (닉네임 또는 태그)',
+        description:
+            '닉네임 또는 태그를 기준으로 사용자를 검색합니다.(커서기반 페이지네이션)',
+    })
+    @ApiQuery({
+        name: 'search',
+        description: '검색할 닉네임 또는 태그',
+        required: true,
+        type: String,
+    })
+    @ApiQuery({
+        name: 'varient',
+        enum: ['NICKNAME', 'TAG'],
+        description: '검색 기준 (닉네임 또는 태그)',
+        required: true,
+    })
+    @ApiQuery({
+        name: 'limit',
+        description: '한 페이지에 보여줄 유저 수 (기본값 10)',
+        required: false,
+        type: Number,
+    })
+    @ApiQuery({
+        name: 'cursor',
+        description: '다음 페이지 시작점 ID',
+        required: false,
+        type: String,
+    })
+    @ApiResponse({
+        status: 200,
+        description: '검색 성공',
+        type: SearchUserResponse,
+    })
+    @ApiResponse({ status: 400, description: '잘못된 요청 파라미터' })
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
     @Get('search')
     async searchUser(
         @Query() query: SearchUsersRequest,
@@ -36,18 +83,57 @@ export class UserController {
         return await this.userReader.search(search, varient, limit, cursor);
     }
 
+    @ApiOperation({
+        summary: '내 프로필 정보 조회',
+        description: '로그인한 사용자의 프로필 정보를 조회합니다.',
+    })
+    @ApiResponse({
+        status: 200,
+        description: '조회 성공',
+        type: GetUserResponse,
+    })
+    @ApiResponse({ status: 401, description: '인증 실패' })
+    @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
+    @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @Get('my')
-    async getMyProfile(@CurrentUser() userId: string) {
+    async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
         return await this.userReader.readProfile(userId);
     }
 
+    @ApiOperation({
+        summary: '특정 유저 정보 조회',
+        description:
+            '사용자 ID를 이용하여 특정 사용자의 프로필 정보를 조회합니다.',
+    })
+    @ApiParam({
+        name: 'id',
+        description: '조회할 사용자 ID (UUID)',
+        type: String,
+    })
+    @ApiBearerAuth()
+    @ApiResponse({
+        status: 200,
+        description: '조회 성공',
+        type: GetUserResponse,
+    })
+    @ApiResponse({ status: 401, description: '인증 실패' })
+    @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
     @UseGuards(AuthGuard)
     @Get(':id')
     async getUser(@Param('id') userId: string): Promise<GetUserResponse> {
         return await this.userReader.readProfile(userId);
     }
 
+    @ApiOperation({
+        summary: '닉네임 변경',
+        description: '로그인한 사용자의 닉네임을 변경합니다.',
+    })
+    @ApiBody({ type: ChangeNicknameRequest })
+    @ApiBearerAuth()
+    @ApiResponse({ status: 204, description: '닉네임 변경 성공 (No Content)' })
+    @ApiResponse({ status: 400, description: '잘못된 닉네임 형식' })
+    @ApiResponse({ status: 401, description: '인증 실패' })
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('nickname')
@@ -58,6 +144,16 @@ export class UserController {
         await this.userService.updateNickname(userId, dto.nickname);
     }
 
+    @ApiOperation({
+        summary: '태그 변경',
+        description:
+            '로그인한 사용자의 태그를 변경합니다. 태그는 고유해야 합니다.',
+    })
+    @ApiBody({ type: ChangeTagRequest })
+    @ApiBearerAuth()
+    @ApiResponse({ status: 204, description: '태그 변경 성공 (No Content)' })
+    @ApiResponse({ status: 400, description: '잘못된 태그 형식' })
+    @ApiResponse({ status: 401, description: '인증 실패' })
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('tag')

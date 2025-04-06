@@ -10,7 +10,16 @@ import { ConfigService } from '@nestjs/config';
 import { RefreshTokenGuard } from 'src/common/guard/refresh-token.guard';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { RefreshTokenResponse } from 'src/presentation/dto/auth/response/refresh-token.response';
+import {
+    ApiBody,
+    ApiCookieAuth,
+    ApiOperation,
+    ApiParam,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
     private readonly refreshCookieTime: number;
@@ -24,6 +33,27 @@ export class AuthController {
         ) as number;
     }
 
+    @ApiOperation({
+        summary: '소셜 로그인',
+        description:
+            '지정된 Provider(GOOGLE, KAKAO, NAVER)와 Acess Token을 사용하여 로그인합니다. 성공 시 Access Token과 Refresh Token(Cookie)을 발급합니다.',
+    })
+    @ApiParam({
+        name: 'provider',
+        enum: ['GOOGLE', 'KAKAO', 'NAMVER'],
+        description: '소셜 로그인 제공자',
+    })
+    @ApiBody({ type: LoginRequest })
+    @ApiResponse({
+        status: 201,
+        description: '로그인 성공',
+        type: LoginResponse,
+    }) // 성공 응답 설명
+    @ApiResponse({ status: 404, description: '가입되지 않은 회원' })
+    @ApiResponse({
+        status: 409,
+        description: '다른 플랫폼으로 가입한 이력 존재',
+    })
     @Post(':provider/login')
     async login(
         @Param('provider') provider: Provider,
@@ -49,6 +79,18 @@ export class AuthController {
         return responseWithoutRefresh;
     }
 
+    @ApiOperation({
+        summary: '회원가입',
+        description:
+            '새로운 사용자를 시스템에 등록합니다. 성공 시 Access Token과 Refresh Token(Cookie)을 발급합니다.',
+    })
+    @ApiBody({ type: RegisterRequest })
+    @ApiResponse({
+        status: 201,
+        description: '회원가입 성공',
+        type: RegisterResponse,
+    })
+    @ApiResponse({ status: 409, description: '이미 존재하는 이메일 또는 태그' })
     @Post('register')
     async register(
         @Body() dto: RegisterRequest,
@@ -68,6 +110,18 @@ export class AuthController {
         return responseWithoutRefresh;
     }
 
+    @ApiOperation({
+        summary: 'Access Token 갱신',
+        description:
+            '유효한 Refresh Token(Cookie)을 사용하여 새로운 Access Token을 발급받습니다.',
+    })
+    @ApiCookieAuth('refresh_token')
+    @ApiResponse({
+        status: 201,
+        description: '토큰 갱신 성공',
+        type: RefreshTokenResponse,
+    })
+    @ApiResponse({ status: 401, description: '유효하지 않은 Refresh Token' })
     @UseGuards(RefreshTokenGuard)
     @Post('refresh')
     async refreshToken(

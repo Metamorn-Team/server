@@ -1,11 +1,12 @@
 import { Provider } from 'src/shared/types';
 
-export interface UserInfo {
+export class UserInfo {
     readonly id: string;
     readonly email: string;
     readonly nickname: string;
     readonly tag: string;
     readonly provider: Provider;
+    readonly avatarKey: string;
 }
 
 export interface UserPrototype {
@@ -13,6 +14,7 @@ export interface UserPrototype {
     readonly nickname: string;
     readonly tag: string;
     readonly provider: Provider;
+    readonly avatarKey: string;
 }
 
 export interface PaginatedUsers {
