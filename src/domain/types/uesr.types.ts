@@ -6,6 +6,7 @@ export interface UserInfo {
     readonly nickname: string;
     readonly tag: string;
     readonly provider: Provider;
+    readonly avatarKey: string;
 }
 
 export interface UserPrototype {
