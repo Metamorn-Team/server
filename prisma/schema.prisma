@@ -25,6 +25,7 @@ model User {
   provider  OAuthProvider
   nickname  String
   tag       String
+  avatarKey String
   createdAt DateTime      @map("created_at")
   updatedAt DateTime      @map("updated_at")
   deletedAt DateTime?     @map("deleted_at")
