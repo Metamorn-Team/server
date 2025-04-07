@@ -1,5 +1,5 @@
 import { Logger, UseGuards } from '@nestjs/common';
-import { Namespace, Server, Socket } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import {
     ConnectedSocket,
     MessageBody,
@@ -14,7 +14,8 @@ import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorat
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { ZoneService } from 'src/domain/services/game/zone.service';
 import { UserReader } from 'src/domain/components/users/user-redear';
-import { RoomType } from 'src/domain/types/game.types';
+import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
+import { TypedSocket } from 'src/presentation/dto/game/socket/type';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -38,8 +39,8 @@ export class GameZoneGateway
 
     @SubscribeMessage('playerJoin')
     async handlePlayerJoin(
-        @ConnectedSocket() client: Socket,
-        @MessageBody() data: { x: number; y: number; type: RoomType },
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody() data: PlayerJoinRequest,
         @CurrentUserFromSocket() userId: string,
     ) {
         const kickedPlayer = this.zoneService.kickPlayerById(userId);
@@ -51,29 +52,31 @@ export class GameZoneGateway
             kickedClient?.to(roomId).emit('playerLeft', { id: playerId });
             kickedClient?.leave(roomId);
         }
-        const { type, x, y } = data;
+        const { roomType, x, y } = data;
 
         this.logger.log(`joined player : ${client.id}`);
         this.logger.debug(data);
 
-        const availableRoom = this.zoneService.getAvailableRoom(type);
+        const availableRoom = this.zoneService.getAvailableRoom(roomType);
 
         const activeUsers =
             this.zoneService.getActiveUsers(availableRoom.id) || [];
 
-        client.emit('activeUsers', activeUsers);
+        client.emit('activePlayers', activeUsers);
 
         const user = await this.userReader.readProfile(userId);
         this.logger.debug(user);
 
-        const { id, nickname } = user;
+        const { id, nickname, avatarKey, tag } = user;
         this.zoneService.joinRoom(availableRoom.id, client.id, {
             id,
             nickname,
-            clientId: client.id,
-            roomId: availableRoom.id,
+            tag,
+            avatarKey,
             x,
             y,
+            clientId: client.id,
+            roomId: availableRoom.id,
         });
 
         client.join(availableRoom.id);
@@ -82,7 +85,7 @@ export class GameZoneGateway
     }
 
     @SubscribeMessage('playerLeft')
-    handlePlayerLeft(@ConnectedSocket() client: Socket) {
+    handlePlayerLeft(@ConnectedSocket() client: TypedSocket) {
         const player = this.zoneService.getPlayer(client.id);
         if (!player) return;
 
@@ -97,7 +100,7 @@ export class GameZoneGateway
     @SubscribeMessage('playerMoved')
     handlePlayerMoved(
         @MessageBody() data: { x: number; y: number },
-        @ConnectedSocket() client: Socket,
+        @ConnectedSocket() client: TypedSocket,
     ) {
         this.logger.log(`${client.id}: move to { x: ${data.x}, y: ${data.y} }`);
 
@@ -119,11 +122,11 @@ export class GameZoneGateway
         this.logger.debug('GameGateway Initialized!!');
     }
 
-    handleConnection(client: Socket) {
+    handleConnection(client: TypedSocket) {
         this.logger.log(`Connected new client to Zone: ${client.id}`);
     }
 
-    handleDisconnect(client: Socket) {
+    handleDisconnect(client: TypedSocket) {
         const player = this.zoneService.getPlayer(client.id);
         if (!player) return;
 
