@@ -1,10 +1,10 @@
 import { Socket } from 'socket.io';
-import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
-import { PlayerMovedRequest } from 'src/presentation/dto/game/request/player-moved.request';
-import { ActivePlayerResponse } from 'src/presentation/dto/game/response/active-players.response';
-import { PlayerJoinResponse } from 'src/presentation/dto/game/response/player-join.response';
-import { PlayerLeftResponse } from 'src/presentation/dto/game/response/player-left.response';
-import { PlayerMovedResponse } from 'src/presentation/dto/game/response/player-moved.response';
+import { PlayerJoinRequest } from '../request/player-join.request';
+import { PlayerMovedRequest } from '../request/player-moved.request';
+import { PlayerJoinResponse } from '../response/player-join.response';
+import { PlayerLeftResponse } from '../response/player-left.response';
+import { PlayerMovedResponse } from '../response/player-moved.response';
+import { ActivePlayerResponse } from '../response/active-players.response';
 
 export interface ClientToServer {
     playerJoin: (data: PlayerJoinRequest) => void;

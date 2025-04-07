@@ -1,4 +1,4 @@
-import { RoomType } from 'src/domain/types/game.types';
+import { RoomType } from '../../shared';
 
 export interface PlayerJoinRequest {
     readonly x: number;

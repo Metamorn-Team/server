@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Provider } from 'src/shared/types';
+import { Provider } from '../../shared';
 
 export class GetMyResponse {
     @ApiProperty({
