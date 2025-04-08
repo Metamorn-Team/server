@@ -16,6 +16,8 @@ import { ZoneService } from 'src/domain/services/game/zone.service';
 import { UserReader } from 'src/domain/components/users/user-redear';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import { TypedSocket } from 'src/presentation/dto/game/socket/type';
+import { SendMessageRequest } from 'src/presentation/dto/game/request/send-message.request';
+import { v4 } from 'uuid';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -114,6 +116,25 @@ export class GameZoneGateway
                 y: data.y,
             });
         }
+    }
+
+    @SubscribeMessage('sendMessage')
+    handleSendMessage(
+        @MessageBody() data: SendMessageRequest,
+        @ConnectedSocket() client: TypedSocket,
+        @CurrentUserFromSocket() senderId: string,
+    ) {
+        // 채팅 저장 비동기
+        const sender = this.zoneService.getPlayer(senderId);
+
+        if (!sender) return;
+
+        const { roomId } = sender;
+
+        client.emit('messageSent', { messageId: v4(), message: data.message });
+        client
+            .to(roomId)
+            .emit('receiveMessage', { senderId, message: data.message });
     }
 
     // -----------------------------------------------------------
