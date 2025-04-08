@@ -13,7 +13,7 @@ import {
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { ZoneService } from 'src/domain/services/game/zone.service';
-import { UserReader } from 'src/domain/components/users/user-redear';
+import { UserReader } from 'src/domain/components/users/user-reader';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import { TypedSocket } from 'src/presentation/dto/game/socket/type';
 

@@ -20,7 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
-import { UserReader } from 'src/domain/components/users/user-redear';
+import { UserReader } from 'src/domain/components/users/user-reader';
 import { UserService } from 'src/domain/services/users/users.service';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
