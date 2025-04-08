@@ -1,0 +1,21 @@
+{
+    "name": "mmorn-type",
+    "version": "1.0.1",
+    "description": "mmorn dto type",
+    "typings": "./types/index.d.ts",
+    "files": [
+        "package.json",
+        "./types/**/*.d.ts"
+    ],
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "clean": "rimraf ./types",
+        "build": "npm run clean && tsc",
+        "pub": "npm run build && npm publish && npm run clean"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "rimraf": "^6.0.1"
+    }
+}

@@ -4,9 +4,11 @@ export type SocketClientId = string;
 
 export interface Player {
     id: string;
-    roomId: string;
     nickname: string;
+    tag: string;
+    avatarKey: string;
     clientId: string;
+    roomId: string;
     x: number;
     y: number;
 }

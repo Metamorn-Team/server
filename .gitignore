@@ -1,6 +1,6 @@
 # compiled output
 /dist
-/node_modules
+node_modules
 
 # Logs
 logs
@@ -40,3 +40,7 @@ lerna-debug.log*
 
 # 내 노트
 note.md
+
+# dto
+src/presentation/dto/package-lock.json
+src/presentation/dto/types
