@@ -70,7 +70,7 @@ export class GameZoneGateway
         this.logger.debug(user);
 
         const { id, nickname, avatarKey, tag } = user;
-        this.zoneService.joinRoom(availableRoom.id, client.id, {
+        await this.zoneService.joinRoom(availableRoom.id, client.id, {
             id,
             nickname,
             tag,

@@ -4,6 +4,8 @@ import { GameStorage } from 'src/domain/interface/storages/game-storage';
 import { Player, RoomType, SocketClientId } from 'src/domain/types/game.types';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
+import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
+import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 
 @Injectable()
 export class ZoneService {
@@ -11,6 +13,7 @@ export class ZoneService {
         @Inject(GameStorage)
         private readonly gameStorage: GameStorage,
         private readonly islandWriter: IslandWriter,
+        private readonly islandJoinWriter: IslandJoinWriter,
     ) {}
 
     createRoom(type: RoomType) {
@@ -54,10 +57,18 @@ export class ZoneService {
         return this.createRoom(type);
     }
 
-    joinRoom(roomId: string, clientId: string, user: Player) {
+    async joinRoom(islandId: string, clientId: string, user: Player) {
+        const stdDate = new Date();
+        const islandJoin = IslandJoinEntity.create(
+            { islandId, userId: user.id },
+            v4,
+            stdDate,
+        );
+        await this.islandJoinWriter.create(islandJoin);
+
         this.gameStorage.addPlayer(clientId, user);
 
-        const room = this.gameStorage.getRoom(roomId);
+        const room = this.gameStorage.getRoom(islandId);
         if (!room) throw new Error('없는 방');
 
         room.players.add(clientId);
