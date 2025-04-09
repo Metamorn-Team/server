@@ -87,13 +87,13 @@ export class GameZoneGateway
     }
 
     @SubscribeMessage('playerLeft')
-    handlePlayerLeft(@ConnectedSocket() client: TypedSocket) {
+    async handlePlayerLeft(@ConnectedSocket() client: TypedSocket) {
         const player = this.zoneService.getPlayer(client.id);
         if (!player) return;
 
         const { roomId } = player;
         client.leave(player.roomId);
-        this.zoneService.leaveRoom(player.roomId, client.id);
+        await this.zoneService.leaveRoom(player.roomId, client.id);
         this.logger.log(`Leave cilent: ${client.id}`);
 
         client.to(roomId).emit('playerLeft', { id: player.id });

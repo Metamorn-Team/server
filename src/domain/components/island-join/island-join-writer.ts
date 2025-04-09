@@ -12,4 +12,8 @@ export class IslandJoinWriter {
     async create(islandJoin: IslandJoinEntity) {
         await this.islandJoinRepository.save(islandJoin);
     }
+
+    async left(islandId: string, userId: string) {
+        await this.islandJoinRepository.update(userId, islandId, new Date());
+    }
 }

@@ -74,8 +74,13 @@ export class ZoneService {
         room.players.add(clientId);
     }
 
-    leaveRoom(roomId: string, clientId: string) {
-        const room = this.gameStorage.getRoom(roomId);
+    async leaveRoom(islandId: string, clientId: string) {
+        const player = this.gameStorage.getPlayer(clientId);
+
+        if (!player) throw new Error();
+
+        await this.islandJoinWriter.left(islandId, player.id);
+        const room = this.gameStorage.getRoom(islandId);
 
         if (!room) throw new Error('없는 방');
 
