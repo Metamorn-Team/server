@@ -2,29 +2,37 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
 import { Player, RoomType, SocketClientId } from 'src/domain/types/game.types';
+import { IslandWriter } from 'src/domain/components/islands/island-writer';
+import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 
 @Injectable()
 export class ZoneService {
     constructor(
         @Inject(GameStorage)
         private readonly gameStorage: GameStorage,
+        private readonly islandWriter: IslandWriter,
     ) {}
 
     createRoom(type: RoomType) {
-        const roomId = v4();
+        const stdDate = new Date();
+        const island = IslandEntity.create({ tag: type }, v4, stdDate);
+        this.islandWriter.create(island);
+
+        const { id } = island;
+
         const room = {
-            id: roomId,
+            id,
             max: 5,
             players: new Set<SocketClientId>(),
             type,
         };
-        this.gameStorage.createRoom(roomId, room);
+        this.gameStorage.createRoom(id, room);
         const roomOfTypes = this.gameStorage.getRoomOfType(type);
 
         if (roomOfTypes) {
-            roomOfTypes.add(roomId);
+            roomOfTypes.add(id);
         } else {
-            this.gameStorage.addRoomOfType(type, roomId);
+            this.gameStorage.addRoomOfType(type, id);
         }
 
         return room;
