@@ -1,5 +1,5 @@
 import { Logger, UseGuards } from '@nestjs/common';
-import { Namespace, Socket } from 'socket.io';
+import { Namespace } from 'socket.io';
 import {
     ConnectedSocket,
     MessageBody,
@@ -10,12 +10,14 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
+import { v4 } from 'uuid';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { ZoneService } from 'src/domain/services/game/zone.service';
 import { UserReader } from 'src/domain/components/users/user-redear';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import { TypedSocket } from 'src/presentation/dto/game/socket/type';
+import { SendMessageRequest } from 'src/presentation/dto/game/request/send-message.request';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -114,6 +116,28 @@ export class GameZoneGateway
                 y: data.y,
             });
         }
+    }
+
+    @SubscribeMessage('sendMessage')
+    handleSendMessage(
+        @MessageBody() data: SendMessageRequest,
+        @ConnectedSocket() client: TypedSocket,
+        @CurrentUserFromSocket() senderId: string,
+    ) {
+        this.logger.debug(`전송자: ${senderId}`);
+        this.logger.debug(`메시지: ${data.message}`);
+
+        // 채팅 저장 비동기
+        const sender = this.zoneService.getPlayer(client.id);
+
+        if (!sender) return;
+
+        const { roomId } = sender;
+
+        client.emit('messageSent', { messageId: v4(), message: data.message });
+        client
+            .to(roomId)
+            .emit('receiveMessage', { senderId, message: data.message });
     }
 
     // -----------------------------------------------------------

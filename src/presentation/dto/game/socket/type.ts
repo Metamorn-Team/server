@@ -5,11 +5,15 @@ import { PlayerJoinResponse } from '../response/player-join.response';
 import { PlayerLeftResponse } from '../response/player-left.response';
 import { PlayerMovedResponse } from '../response/player-moved.response';
 import { ActivePlayerResponse } from '../response/active-players.response';
+import { SendMessageRequest } from '../request/send-message.request';
+import { ReceiveMessage } from '../response/receive-message';
+import { MessageSent } from '../response/message-sent.response';
 
 export interface ClientToServer {
     playerJoin: (data: PlayerJoinRequest) => void;
     playerLeft: () => void;
     playerMoved: (data: PlayerMovedRequest) => void;
+    sendMessage: (data: SendMessageRequest) => void;
 }
 
 export interface ServerToClient {
@@ -17,6 +21,8 @@ export interface ServerToClient {
     playerLeft: (data: PlayerLeftResponse) => void;
     playerMoved: (data: PlayerMovedResponse) => void;
     activePlayers: (data: ActivePlayerResponse) => void;
+    receiveMessage: (data: ReceiveMessage) => void;
+    messageSent: (data: MessageSent) => void;
 }
 
 export type TypedSocket = Socket<ClientToServer, ServerToClient>;
