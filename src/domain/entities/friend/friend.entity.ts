@@ -1,10 +1,4 @@
-import { FriendPrototype } from 'src/domain/types/friend.types';
-
-enum FriendStatus {
-    PENDING = 'PENDING',
-    ACCEPTED = 'ACCEPTED',
-    REJECTED = 'REJECTED',
-}
+import { FriendPrototype, FriendStatus } from 'src/domain/types/friend.types';
 
 export class FriendEntity {
     constructor(
@@ -26,7 +20,7 @@ export class FriendEntity {
             idGen(),
             input.senderId,
             input.receiverId,
-            FriendStatus.PENDING,
+            'PENDING',
             stdDate,
             updatedAt ? updatedAt : stdDate,
         );
