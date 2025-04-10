@@ -6,7 +6,7 @@ import {
     USER_NOT_FOUND_MESSAGE,
 } from 'src/domain/exceptions/message';
 import { UserRepository } from 'src/domain/interface/user.repository';
-import { PaginatedUsers } from 'src/domain/types/uesr.types';
+import { PaginatedUsers, UserInfo } from 'src/domain/types/uesr.types';
 import { Varient } from 'src/presentation/dto/users/request/search-users.request';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class UserReader {
         private readonly userRepository: UserRepository,
     ) {}
 
-    async readProfile(userId: string) {
+    async readProfile(userId: string): Promise<UserInfo> {
         const user = await this.userRepository.findOneById(userId);
 
         if (!user) {

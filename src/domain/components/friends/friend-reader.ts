@@ -3,6 +3,7 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { FRIEND_REQUEST_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { FriendRepository } from 'src/domain/interface/friend.repository';
+import { FriendRequestDirection } from 'src/domain/types/friend.types';
 
 @Injectable()
 export class FriendReader {
@@ -27,5 +28,26 @@ export class FriendReader {
         }
 
         return friendRequest;
+    }
+
+    async readFriendsRequests(
+        userId: string,
+        direction: FriendRequestDirection,
+        limit: number,
+        cursor?: string,
+    ) {
+        if (direction === 'received') {
+            return await this.friendRepository.findReceivedRequestsByUserId(
+                userId,
+                limit,
+                cursor,
+            );
+        }
+
+        return await this.friendRepository.findSentRequestsByUserId(
+            userId,
+            limit,
+            cursor,
+        );
     }
 }
