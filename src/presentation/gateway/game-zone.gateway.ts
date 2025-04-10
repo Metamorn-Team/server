@@ -18,6 +18,7 @@ import { UserReader } from 'src/domain/components/users/user-redear';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import { TypedSocket } from 'src/presentation/dto/game/socket/type';
 import { SendMessageRequest } from 'src/presentation/dto/game/request/send-message.request';
+import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -36,6 +37,7 @@ export class GameZoneGateway
 
     constructor(
         private readonly zoneService: ZoneService,
+        private readonly chatMessageService: ChatMessageService,
         private readonly userReader: UserReader,
     ) {}
 
@@ -56,10 +58,10 @@ export class GameZoneGateway
         }
         const { roomType, x, y } = data;
 
-        this.logger.log(`joined player : ${client.id}`);
+        this.logger.log(`joined player : ${userId}`);
         this.logger.debug(data);
 
-        const availableRoom = this.zoneService.getAvailableRoom(roomType);
+        const availableRoom = await this.zoneService.getAvailableRoom(roomType);
 
         const activeUsers =
             this.zoneService.getActiveUsers(availableRoom.id) || [];
@@ -70,7 +72,7 @@ export class GameZoneGateway
         this.logger.debug(user);
 
         const { id, nickname, avatarKey, tag } = user;
-        await this.zoneService.joinRoom(availableRoom.id, client.id, {
+        await this.zoneService.joinRoom(availableRoom.id, userId, {
             id,
             nickname,
             tag,
@@ -87,13 +89,16 @@ export class GameZoneGateway
     }
 
     @SubscribeMessage('playerLeft')
-    async handlePlayerLeft(@ConnectedSocket() client: TypedSocket) {
-        const player = this.zoneService.getPlayer(client.id);
+    async handlePlayerLeft(
+        @ConnectedSocket() client: TypedSocket,
+        @CurrentUserFromSocket() userId: string,
+    ) {
+        const player = this.zoneService.getPlayer(userId);
         if (!player) return;
 
         const { roomId } = player;
         client.leave(player.roomId);
-        await this.zoneService.leaveRoom(player.roomId, client.id);
+        await this.zoneService.leaveRoom(player.roomId, userId);
         this.logger.log(`Leave cilent: ${client.id}`);
 
         client.to(roomId).emit('playerLeft', { id: player.id });
@@ -103,10 +108,11 @@ export class GameZoneGateway
     handlePlayerMoved(
         @MessageBody() data: { x: number; y: number },
         @ConnectedSocket() client: TypedSocket,
+        @CurrentUserFromSocket() userId: string,
     ) {
-        this.logger.log(`${client.id}: move to { x: ${data.x}, y: ${data.y} }`);
+        this.logger.log(`${userId}: move to { x: ${data.x}, y: ${data.y} }`);
 
-        const player = this.zoneService.getPlayer(client.id);
+        const player = this.zoneService.getPlayer(userId);
         if (player) {
             player.x = data.x;
             player.y = data.y;
@@ -119,7 +125,7 @@ export class GameZoneGateway
     }
 
     @SubscribeMessage('sendMessage')
-    handleSendMessage(
+    async handleSendMessage(
         @MessageBody() data: SendMessageRequest,
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() senderId: string,
@@ -127,12 +133,17 @@ export class GameZoneGateway
         this.logger.debug(`전송자: ${senderId}`);
         this.logger.debug(`메시지: ${data.message}`);
 
-        // 채팅 저장 비동기
-        const sender = this.zoneService.getPlayer(client.id);
+        const player = this.zoneService.getPlayer(senderId);
+        if (!player) throw new Error('없는 플레이어');
 
-        if (!sender) return;
-
-        const { roomId } = sender;
+        const { message } = data;
+        const { roomId } = player;
+        await this.chatMessageService.create(
+            senderId,
+            roomId,
+            message,
+            'island',
+        );
 
         client.emit('messageSent', { messageId: v4(), message: data.message });
         client
@@ -150,14 +161,17 @@ export class GameZoneGateway
         this.logger.log(`Connected new client to Zone: ${client.id}`);
     }
 
-    handleDisconnect(client: TypedSocket) {
-        const player = this.zoneService.getPlayer(client.id);
+    handleDisconnect(client: TypedSocket & { userId: string }) {
+        const player = this.zoneService.getPlayer(client.userId);
+        this.logger.debug(
+            `call disconnect id from Zone:${client.userId} disconnected`,
+        );
         if (!player) return;
 
         const { roomId } = player;
         client.leave(roomId);
-        this.zoneService.leaveRoom(roomId, client.id);
+        this.zoneService.leaveRoom(roomId, player.id);
         client.to(roomId).emit('playerLeft', { id: player.id });
-        this.logger.debug(`Cliend id from Zone:${client.id} disconnected`);
+        this.logger.debug(`Cliend id from Zone:${player.id} disconnected`);
     }
 }

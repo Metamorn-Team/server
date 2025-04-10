@@ -16,10 +16,10 @@ export class ZoneService {
         private readonly islandJoinWriter: IslandJoinWriter,
     ) {}
 
-    createRoom(type: RoomType) {
+    async createRoom(type: RoomType) {
         const stdDate = new Date();
         const island = IslandEntity.create({ tag: type }, v4, stdDate);
-        this.islandWriter.create(island);
+        await this.islandWriter.create(island);
 
         const { id } = island;
 
@@ -41,7 +41,7 @@ export class ZoneService {
         return room;
     }
 
-    getAvailableRoom(type: RoomType) {
+    async getAvailableRoom(type: RoomType) {
         const roomIds = this.gameStorage.getRoomIdsByType(type);
 
         if (roomIds) {
@@ -54,7 +54,7 @@ export class ZoneService {
             }
         }
 
-        return this.createRoom(type);
+        return await this.createRoom(type);
     }
 
     async joinRoom(islandId: string, clientId: string, user: Player) {
@@ -74,18 +74,20 @@ export class ZoneService {
         room.players.add(clientId);
     }
 
-    async leaveRoom(islandId: string, clientId: string) {
-        const player = this.gameStorage.getPlayer(clientId);
+    async leaveRoom(islandId: string, playerId: string) {
+        const player = this.gameStorage.getPlayer(playerId);
+        if (!player) return;
 
-        if (!player) throw new Error();
+        this.gameStorage.deletePlayer(playerId);
+
+        const room = this.gameStorage.getRoom(islandId);
+        if (!room) return;
 
         await this.islandJoinWriter.left(islandId, player.id);
-        const room = this.gameStorage.getRoom(islandId);
 
-        if (!room) throw new Error('없는 방');
+        room.players.delete(playerId);
 
-        room.players.delete(clientId);
-        this.gameStorage.deletePlayer(clientId);
+        return player;
     }
 
     getActiveUsers(roomId: string) {
