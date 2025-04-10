@@ -42,9 +42,9 @@ export class FriendChecker {
                 e.errorType === DomainExceptionType.FriendRequestNotFound
             ) {
                 return;
-            } else {
-                throw e;
             }
+
+            throw e;
         }
     }
 }
