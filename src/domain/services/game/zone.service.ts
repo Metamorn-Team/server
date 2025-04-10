@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import { Player, RoomType, SocketClientId } from 'src/domain/types/game.types';
+import { Player, IslandTag, SocketClientId } from 'src/domain/types/game.types';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
@@ -16,9 +16,9 @@ export class ZoneService {
         private readonly islandJoinWriter: IslandJoinWriter,
     ) {}
 
-    async createRoom(type: RoomType) {
+    async createRoom(tag: IslandTag) {
         const stdDate = new Date();
-        const island = IslandEntity.create({ tag: type }, v4, stdDate);
+        const island = IslandEntity.create({ tag }, v4, stdDate);
         await this.islandWriter.create(island);
 
         const { id } = island;
@@ -27,26 +27,26 @@ export class ZoneService {
             id,
             max: 5,
             players: new Set<SocketClientId>(),
-            type,
+            type: tag,
         };
-        this.gameStorage.createRoom(id, room);
-        const roomOfTypes = this.gameStorage.getRoomOfType(type);
+        this.gameStorage.createIsland(id, room);
+        const roomOfTags = this.gameStorage.getIslandOfTag(tag);
 
-        if (roomOfTypes) {
-            roomOfTypes.add(id);
+        if (roomOfTags) {
+            roomOfTags.add(id);
         } else {
-            this.gameStorage.addRoomOfType(type, id);
+            this.gameStorage.addIslandOfTag(tag, id);
         }
 
         return room;
     }
 
-    async getAvailableRoom(type: RoomType) {
-        const roomIds = this.gameStorage.getRoomIdsByType(type);
+    async getAvailableRoom(tag: IslandTag) {
+        const roomIds = this.gameStorage.getIslandIdsByTag(tag);
 
         if (roomIds) {
             for (const roomId of roomIds) {
-                const room = this.gameStorage.getRoom(roomId);
+                const room = this.gameStorage.getIsland(roomId);
 
                 if (room && room.players.size < room.max) {
                     return room;
@@ -54,24 +54,24 @@ export class ZoneService {
             }
         }
 
-        return await this.createRoom(type);
+        return await this.createRoom(tag);
     }
 
-    async joinRoom(islandId: string, clientId: string, user: Player) {
+    async joinRoom(islandId: string, playerId: string, player: Player) {
         const stdDate = new Date();
         const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: user.id },
+            { islandId, userId: player.id },
             v4,
             stdDate,
         );
         await this.islandJoinWriter.create(islandJoin);
 
-        this.gameStorage.addPlayer(clientId, user);
+        this.gameStorage.addPlayer(playerId, player);
 
-        const room = this.gameStorage.getRoom(islandId);
+        const room = this.gameStorage.getIsland(islandId);
         if (!room) throw new Error('없는 방');
 
-        room.players.add(clientId);
+        room.players.add(playerId);
     }
 
     async leaveRoom(islandId: string, playerId: string) {
@@ -80,7 +80,7 @@ export class ZoneService {
 
         this.gameStorage.deletePlayer(playerId);
 
-        const room = this.gameStorage.getRoom(islandId);
+        const room = this.gameStorage.getIsland(islandId);
         if (!room) return;
 
         await this.islandJoinWriter.left(islandId, player.id);
@@ -90,8 +90,8 @@ export class ZoneService {
         return player;
     }
 
-    getActiveUsers(roomId: string) {
-        const room = this.gameStorage.getRoom(roomId);
+    getActiveUsers(islandId: string) {
+        const room = this.gameStorage.getIsland(islandId);
         if (!room) throw new Error('없는 방');
 
         const activeUsers: Player[] = [];
@@ -114,13 +114,13 @@ export class ZoneService {
         }
     }
 
-    getPlayer(clientId: string) {
-        return this.gameStorage.getPlayer(clientId);
+    getPlayer(playerId: string) {
+        return this.gameStorage.getPlayer(playerId);
     }
 
     loggingStore(logger: Logger) {
         logger.debug('전체 회원', this.gameStorage.getPlayerStore());
-        logger.debug('전체 방', this.gameStorage.getRoomStore());
-        logger.debug('타입별 방', this.gameStorage.getRoomOfTypeStore());
+        logger.debug('전체 방', this.gameStorage.getIslandStore());
+        logger.debug('타입별 방', this.gameStorage.getIslandOfTagStore());
     }
 }
