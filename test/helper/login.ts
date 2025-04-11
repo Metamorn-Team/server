@@ -23,6 +23,7 @@ export const login = async (app: INestApplication) => {
     }
 
     return {
+        userId: body.id,
         accessToken: `Bearer ${body.accessToken}`,
         nickname: dto.nickname,
         tag: dto.tag,

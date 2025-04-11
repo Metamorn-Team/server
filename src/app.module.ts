@@ -10,6 +10,7 @@ import { InterceptorsModule } from 'src/common/interceptor/interceptors.module';
 import { GameModule } from 'src/modules/game/game.module';
 import { UserComponentModule } from './modules/users/users-component.module';
 import { PipeModule } from './common/pipe/pipe.module';
+import { FriendsModule } from './modules/friends/friends.module';
 
 @Module({
     imports: [
@@ -22,6 +23,7 @@ import { PipeModule } from './common/pipe/pipe.module';
         UserModule,
         AuthModule,
         GameModule,
+        FriendsModule,
     ],
     controllers: [AppController],
     providers: [AppService],
