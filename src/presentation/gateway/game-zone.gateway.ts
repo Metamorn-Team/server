@@ -31,7 +31,7 @@ export class GameZoneGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
     @WebSocketServer()
-    private readonly server: Namespace;
+    private readonly wss: Namespace;
 
     private readonly logger = new Logger(GameZoneGateway.name);
 
@@ -50,7 +50,7 @@ export class GameZoneGateway
         const kickedPlayer = this.zoneService.kickPlayerById(userId);
         if (kickedPlayer) {
             const { clientId, roomId, id: playerId } = kickedPlayer;
-            const kickedClient = this.server.sockets.get(clientId);
+            const kickedClient = this.wss.sockets.get(clientId);
 
             // NOTE left 말고 kicked 해야할듯?
             kickedClient?.to(roomId).emit('playerLeft', { id: playerId });
@@ -84,6 +84,7 @@ export class GameZoneGateway
         });
 
         client.join(availableRoom.id);
+        client.emit('playerJoinSuccess', { x, y });
         client.to(availableRoom.id).emit('playerJoin', { ...user, x, y });
         this.zoneService.loggingStore(this.logger);
     }
