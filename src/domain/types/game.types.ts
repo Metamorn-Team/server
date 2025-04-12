@@ -11,6 +11,7 @@ export interface Player {
     roomId: string;
     x: number;
     y: number;
+    isFacingRight: boolean;
 }
 
 export interface Island {

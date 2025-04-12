@@ -16,7 +16,11 @@ import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { ZoneService } from 'src/domain/services/game/zone.service';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
-import { TypedSocket } from 'src/presentation/dto/game/socket/type';
+import {
+    ClientToServer,
+    ServerToClient,
+    TypedSocket,
+} from 'src/presentation/dto/game/socket/type';
 import { SendMessageRequest } from 'src/presentation/dto/game/request/send-message.request';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
 
@@ -31,7 +35,7 @@ export class GameZoneGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
     @WebSocketServer()
-    private readonly wss: Namespace;
+    private readonly wss: Namespace<ClientToServer, ServerToClient>;
 
     private readonly logger = new Logger(GameZoneGateway.name);
 
@@ -81,6 +85,7 @@ export class GameZoneGateway
             y,
             clientId: client.id,
             roomId: availableRoom.id,
+            isFacingRight: true,
         });
 
         client.join(availableRoom.id);
@@ -115,6 +120,13 @@ export class GameZoneGateway
 
         const player = this.zoneService.getPlayer(userId);
         if (player) {
+            if (player.x < data.x) {
+                player.isFacingRight = true;
+            }
+            if (player.x > data.x) {
+                player.isFacingRight = false;
+            }
+
             player.x = data.x;
             player.y = data.y;
             client.to(player.roomId).emit('playerMoved', {
@@ -123,6 +135,24 @@ export class GameZoneGateway
                 y: data.y,
             });
         }
+    }
+
+    @SubscribeMessage('attack')
+    async handleAttack(@CurrentUserFromSocket() userId: string) {
+        this.logger.log('공격');
+
+        // NOTE 현재는 플레이어만
+        const attacker = this.zoneService.getPlayer(userId);
+        if (!attacker) return;
+
+        const attackedPlayers = this.zoneService.attack(attacker);
+        if (!attackedPlayers) return;
+
+        this.logger.debug(attackedPlayers);
+        this.wss.to(attacker.roomId).emit('attacked', {
+            attackerId: attacker.id,
+            attackedPlayerIds: attackedPlayers.map((player) => player.id),
+        });
     }
 
     @SubscribeMessage('sendMessage')

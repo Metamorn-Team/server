@@ -6,6 +6,7 @@ import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
+import { ATTACK_BOX_SIZE } from 'src/constants/game';
 
 @Injectable()
 export class ZoneService {
@@ -55,6 +56,10 @@ export class ZoneService {
         }
 
         return await this.createRoom(tag);
+    }
+
+    getIsland(islandId: string) {
+        return this.gameStorage.getIsland(islandId);
     }
 
     async joinRoom(islandId: string, playerId: string, player: Player) {
@@ -116,6 +121,41 @@ export class ZoneService {
 
     getPlayer(playerId: string) {
         return this.gameStorage.getPlayer(playerId);
+    }
+
+    attack(attacker: Player) {
+        const island = this.gameStorage.getIsland(attacker.roomId);
+        if (!island || island.players.size === 0) return;
+
+        const boxSize = ATTACK_BOX_SIZE.PAWN;
+        const attackBox = {
+            x: attacker.isFacingRight
+                ? attacker.x + boxSize.width / 2
+                : attacker.x - boxSize.width / 2,
+            y: attacker.y,
+            width: boxSize.width,
+            height: boxSize.height,
+        };
+
+        const attackedPlayer = Array.from(island.players)
+            .map((playerId) => this.getPlayer(playerId))
+            .filter((player) => player !== null)
+            .filter((player) => player.id !== attacker.id)
+            .filter((player) => this.isInAttackBox(player, attackBox));
+
+        return attackedPlayer;
+    }
+
+    isInAttackBox(
+        player: Player,
+        box: { x: number; y: number; width: number; height: number },
+    ) {
+        return (
+            player.x >= box.x - box.width / 2 &&
+            player.x <= box.x + box.width / 2 &&
+            player.y >= box.y - box.height / 2 &&
+            player.y <= box.y + box.height / 2
+        );
     }
 
     loggingStore(logger: Logger) {
