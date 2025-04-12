@@ -23,6 +23,7 @@ import {
 } from 'src/presentation/dto/game/socket/type';
 import { SendMessageRequest } from 'src/presentation/dto/game/request/send-message.request';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
+import { MOVING_THRESHOLD } from 'src/constants/threshold';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -86,6 +87,7 @@ export class GameZoneGateway
             clientId: client.id,
             roomId: availableRoom.id,
             isFacingRight: true,
+            lastMoved: Date.now(),
         });
 
         client.join(availableRoom.id);
@@ -116,9 +118,12 @@ export class GameZoneGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        this.logger.log(`${userId}: move to { x: ${data.x}, y: ${data.y} }`);
-
+        this.logger.debug('무빙..');
         const player = this.zoneService.getPlayer(userId);
+        if (!player) return;
+        if (player.lastMoved + MOVING_THRESHOLD > Date.now()) return;
+        if (player.x === data.x && player.y === data.y) return;
+
         if (player) {
             if (player.x < data.x) {
                 player.isFacingRight = true;
@@ -134,6 +139,8 @@ export class GameZoneGateway
                 x: data.x,
                 y: data.y,
             });
+            player.lastMoved = Date.now();
+            this.logger.debug(`위치 전송 x: ${data.x}, y: ${data.y}`);
         }
     }
 

@@ -12,6 +12,7 @@ export interface Player {
     x: number;
     y: number;
     isFacingRight: boolean;
+    lastMoved: number;
 }
 
 export interface Island {
