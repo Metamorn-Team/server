@@ -6,7 +6,8 @@ import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
-import { ATTACK_BOX_SIZE } from 'src/constants/game';
+import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
+import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 
 @Injectable()
 export class ZoneService {
@@ -154,7 +155,7 @@ export class ZoneService {
         box: { x: number; y: number; width: number; height: number },
     ) {
         // 캐릭터 추가되면 상수로 관리
-        const playerRadius = 20;
+        const playerRadius = PLAYER_HIT_BOX.PAWN.RADIUS;
 
         const boxLeft = box.x - box.width / 2;
         const boxRight = box.x + box.width / 2;
