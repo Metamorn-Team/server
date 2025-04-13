@@ -153,12 +153,32 @@ export class ZoneService {
         player: Player,
         box: { x: number; y: number; width: number; height: number },
     ) {
-        return (
-            player.x >= box.x - box.width / 2 &&
-            player.x <= box.x + box.width / 2 &&
-            player.y >= box.y - box.height / 2 &&
-            player.y <= box.y + box.height / 2
-        );
+        // 캐릭터 추가되면 상수로 관리
+        const playerRadius = 20;
+
+        const boxLeft = box.x - box.width / 2;
+        const boxRight = box.x + box.width / 2;
+        const boxTop = box.y - box.height / 2;
+        const boxBottom = box.y + box.height / 2;
+
+        if (
+            player.x >= boxLeft &&
+            player.x <= boxRight &&
+            player.y >= boxTop &&
+            player.y <= boxBottom
+        ) {
+            return true;
+        }
+
+        const closestX = Math.max(boxLeft, Math.min(player.x, boxRight));
+        const closestY = Math.max(boxTop, Math.min(player.y, boxBottom));
+
+        const distanceX = player.x - closestX;
+        const distanceY = player.y - closestY;
+
+        const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+
+        return distanceSquared < playerRadius * playerRadius;
     }
 
     loggingStore(logger: Logger) {
