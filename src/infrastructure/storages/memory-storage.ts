@@ -19,9 +19,9 @@ export class MemoryStorage implements GameStorage {
         return this.players.get(playerId) ?? null;
     }
 
-    getPlayerById(playerId: string): Player | null {
+    getPlayerByClientId(clientId: string): Player | null {
         for (const player of this.players.values()) {
-            if (player.id === playerId) {
+            if (player.clientId === clientId) {
                 return player;
             }
         }

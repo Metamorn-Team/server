@@ -83,13 +83,12 @@ export class ZoneService {
         const player = this.gameStorage.getPlayer(playerId);
         if (!player) return;
 
-        this.gameStorage.deletePlayer(playerId);
-
         const room = this.gameStorage.getIsland(islandId);
         if (!room) return;
 
         await this.islandJoinWriter.left(islandId, player.id);
 
+        this.gameStorage.deletePlayer(playerId);
         room.players.delete(playerId);
 
         return player;
@@ -112,15 +111,19 @@ export class ZoneService {
     }
 
     kickPlayerById(playerId: string) {
-        const player = this.gameStorage.getPlayerById(playerId);
+        const player = this.gameStorage.getPlayer(playerId);
         if (player) {
-            this.leaveRoom(player.roomId, player.clientId);
+            this.leaveRoom(player.roomId, playerId);
             return player;
         }
     }
 
     getPlayer(playerId: string) {
         return this.gameStorage.getPlayer(playerId);
+    }
+
+    getPlayerByClientId(clientId: string) {
+        return this.gameStorage.getPlayerByClientId(clientId);
     }
 
     attack(attacker: Player) {

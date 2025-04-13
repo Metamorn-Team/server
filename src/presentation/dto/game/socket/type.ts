@@ -14,6 +14,7 @@ import { AttackedResponse } from '../response/attacked.response';
 export interface ClientToServer {
     playerJoin: (data: PlayerJoinRequest) => void;
     playerLeft: () => void;
+    playerKicked: () => void;
     playerMoved: (data: PlayerMovedRequest) => void;
     attack: () => void;
     sendMessage: (data: SendMessageRequest) => void;
@@ -22,6 +23,7 @@ export interface ClientToServer {
 export interface ServerToClient {
     playerJoin: (data: PlayerJoinResponse) => void;
     playerJoinSuccess: (data: PlayerJoinSuccessResponse) => void;
+    playerKicked: () => void;
     playerLeft: (data: PlayerLeftResponse) => void;
     playerMoved: (data: PlayerMovedResponse) => void;
     activePlayers: (data: ActivePlayerResponse) => void;

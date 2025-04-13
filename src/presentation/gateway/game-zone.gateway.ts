@@ -54,17 +54,19 @@ export class GameZoneGateway
     ) {
         const kickedPlayer = this.zoneService.kickPlayerById(userId);
         if (kickedPlayer) {
-            const { clientId, roomId, id: playerId } = kickedPlayer;
+            const { clientId, roomId, id } = kickedPlayer;
             const kickedClient = this.wss.sockets.get(clientId);
 
-            // NOTE left 말고 kicked 해야할듯?
-            kickedClient?.to(roomId).emit('playerLeft', { id: playerId });
+            await this.zoneService.leaveRoom(roomId, id);
             kickedClient?.leave(roomId);
+
+            client.to(roomId).emit('playerLeft', { id });
+            kickedClient?.emit('playerKicked');
         }
+
         const { roomType, x, y } = data;
 
         this.logger.log(`joined player : ${userId}`);
-        this.logger.debug(data);
 
         const availableRoom = await this.zoneService.getAvailableRoom(roomType);
 
@@ -74,7 +76,6 @@ export class GameZoneGateway
         client.emit('activePlayers', activeUsers);
 
         const user = await this.userReader.readProfile(userId);
-        this.logger.debug(user);
 
         const { id, nickname, avatarKey, tag } = user;
         await this.zoneService.joinRoom(availableRoom.id, userId, {
@@ -93,7 +94,6 @@ export class GameZoneGateway
         client.join(availableRoom.id);
         client.emit('playerJoinSuccess', { x, y });
         client.to(availableRoom.id).emit('playerJoin', { ...user, x, y });
-        this.zoneService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerLeft')
@@ -200,11 +200,12 @@ export class GameZoneGateway
     }
 
     handleDisconnect(client: TypedSocket & { userId: string }) {
-        const player = this.zoneService.getPlayer(client.userId);
+        const userId = client.userId;
+        const player = this.zoneService.getPlayer(userId);
         this.logger.debug(
             `call disconnect id from Zone:${client.userId} disconnected`,
         );
-        if (!player) return;
+        if (!player || player.clientId !== client.id) return;
 
         const { roomId } = player;
         client.leave(roomId);

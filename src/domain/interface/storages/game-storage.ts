@@ -2,7 +2,7 @@ import { Player, Island, IslandTag } from 'src/domain/types/game.types';
 
 export interface GameStorage {
     getPlayer(playerId: string): Player | null;
-    getPlayerById(playerId: string): Player | null;
+    getPlayerByClientId(clientId: string): Player | null;
     addPlayer(playerId: string, player: Player): void;
     deletePlayer(playerId: string): void;
 
