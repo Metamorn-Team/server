@@ -1,9 +1,5 @@
 import { FriendEntity } from '../entities/friend/friend.entity';
-import {
-    FriendData,
-    ReceivedPaginatedFriendRequests,
-    SentPaginatedFriendRequests,
-} from '../types/friend.types';
+import { FriendData, PaginatedFriendRequests } from '../types/friend.types';
 
 export interface FriendRepository {
     save(data: FriendEntity): Promise<void>;
@@ -15,12 +11,12 @@ export interface FriendRepository {
         userId: string,
         limit: number,
         cursor?: string,
-    ): Promise<ReceivedPaginatedFriendRequests>;
+    ): Promise<PaginatedFriendRequests>;
     findSentRequestsByUserId(
         userId: string,
         limit: number,
         cursor?: string,
-    ): Promise<SentPaginatedFriendRequests>;
+    ): Promise<PaginatedFriendRequests>;
 }
 
 export const FriendRepository = Symbol('FriendRepository');

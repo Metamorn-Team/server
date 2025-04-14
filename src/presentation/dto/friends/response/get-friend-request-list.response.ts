@@ -21,6 +21,9 @@ export class FriendRequestItemDto {
             '상대방 유저 정보 (direction=received 이면 보낸 사람, direction=sent 이면 받은 사람)',
     })
     readonly user: FriendRequestUserInfoDto;
+
+    @ApiProperty({ description: '친구 요청 보낸/받은 시간' })
+    readonly createdAt: Date;
 }
 
 export class GetFriendRequestsResponseDto {

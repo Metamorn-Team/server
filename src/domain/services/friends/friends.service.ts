@@ -5,16 +5,11 @@ import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import {
     FriendPrototype,
     FriendRequestDirection,
-    ReceivedFriendRequestsData,
-    SentFriendRequestsData,
 } from 'src/domain/types/friend.types';
 import { v4 } from 'uuid';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { UserReader } from 'src/domain/components/users/user-reader';
-import {
-    FriendRequestItemDto,
-    GetFriendRequestsResponseDto,
-} from 'src/presentation/dto/friends/response/get-friend-request-list.response';
+import { GetFriendRequestsResponseDto } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
 
 @Injectable()
 export class FriendsService {
@@ -58,29 +53,6 @@ export class FriendsService {
             return { data: [], nextCursor: null };
         }
 
-        const responseData: FriendRequestItemDto[] = [];
-
-        for (const req of requestList) {
-            const friendUserId =
-                direction === 'received'
-                    ? (req as ReceivedFriendRequestsData).senderId
-                    : (req as SentFriendRequestsData).receiverId;
-
-            const userProfile = await this.userReader.readProfile(friendUserId);
-
-            if (userProfile) {
-                responseData.push({
-                    id: req.id,
-                    user: {
-                        id: userProfile.id,
-                        nickname: userProfile.nickname,
-                        tag: userProfile.tag,
-                        avatarKey: userProfile.avatarKey,
-                    },
-                });
-            }
-        }
-
-        return { data: responseData, nextCursor };
+        return { data: requestList, nextCursor };
     }
 }

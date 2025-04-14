@@ -12,24 +12,21 @@ export interface FriendData {
     readonly receiverId: string;
     readonly status: FriendStatus;
 }
-export interface ReceivedFriendRequestsData {
+
+export interface FriendInfo {
     readonly id: string;
-    readonly senderId: string;
+    readonly nickname: string;
+    readonly tag: string;
+    readonly avatarKey: string;
+}
+
+export interface FriendRequestsData {
+    readonly id: string;
+    readonly user: FriendInfo;
     readonly createdAt: Date;
 }
 
-export interface SentFriendRequestsData {
-    readonly id: string;
-    readonly receiverId: string;
-    readonly createdAt: Date;
-}
-
-export interface ReceivedPaginatedFriendRequests {
-    readonly data: ReceivedFriendRequestsData[];
-    readonly nextCursor: string | null;
-}
-
-export interface SentPaginatedFriendRequests {
-    readonly data: SentFriendRequestsData[];
+export interface PaginatedFriendRequests {
+    readonly data: FriendRequestsData[];
     readonly nextCursor: string | null;
 }

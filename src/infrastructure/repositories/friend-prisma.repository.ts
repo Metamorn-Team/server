@@ -4,8 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import {
     FriendData,
-    ReceivedPaginatedFriendRequests,
-    SentPaginatedFriendRequests,
+    FriendInfo,
+    PaginatedFriendRequests,
 } from 'src/domain/types/friend.types';
 
 @Injectable()
@@ -44,11 +44,22 @@ export class FriendPrismaRepository implements FriendRepository {
         userId: string,
         limit: number,
         cursor?: string,
-    ): Promise<ReceivedPaginatedFriendRequests> {
+    ): Promise<PaginatedFriendRequests> {
         const cursorOption = cursor ? { id: cursor } : undefined;
 
         const requests = await this.prisma.friendRequest.findMany({
-            select: { id: true, senderId: true, createdAt: true },
+            select: {
+                id: true,
+                sender: {
+                    select: {
+                        id: true,
+                        nickname: true,
+                        tag: true,
+                        avatarKey: true,
+                    },
+                },
+                createdAt: true,
+            },
             where: { receiverId: userId, status: 'PENDING', deletedAt: null },
             orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
             take: limit + 1,
@@ -62,18 +73,37 @@ export class FriendPrismaRepository implements FriendRepository {
             nextCursor = nextItem?.id ?? null;
         }
 
-        return { data: requests, nextCursor };
+        const mappedRequests = requests.map((request) => {
+            return {
+                id: request.id,
+                user: request.sender as FriendInfo,
+                createdAt: request.createdAt,
+            };
+        });
+
+        return { data: mappedRequests, nextCursor };
     }
 
     async findSentRequestsByUserId(
         userId: string,
         limit: number,
         cursor?: string,
-    ): Promise<SentPaginatedFriendRequests> {
+    ): Promise<PaginatedFriendRequests> {
         const cursorOption = cursor ? { id: cursor } : undefined;
 
         const requests = await this.prisma.friendRequest.findMany({
-            select: { id: true, receiverId: true, createdAt: true },
+            select: {
+                id: true,
+                receiver: {
+                    select: {
+                        id: true,
+                        nickname: true,
+                        tag: true,
+                        avatarKey: true,
+                    },
+                },
+                createdAt: true,
+            },
             where: { senderId: userId, status: 'PENDING', deletedAt: null },
             orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
             take: limit + 1,
@@ -87,6 +117,14 @@ export class FriendPrismaRepository implements FriendRepository {
             nextCursor = nextItem?.id ?? null;
         }
 
-        return { data: requests, nextCursor };
+        const mappedRequests = requests.map((request) => {
+            return {
+                id: request.id,
+                user: request.receiver as FriendInfo,
+                createdAt: request.createdAt,
+            };
+        });
+
+        return { data: mappedRequests, nextCursor };
     }
 }
