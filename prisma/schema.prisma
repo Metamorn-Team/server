@@ -32,6 +32,8 @@ model User {
 
   IslandJoins  IslandJoin[]
   ChatMessages ChatMessage[]
+  FriendRequestsSent     FriendRequest[] @relation("Sender")
+  FriendRequestsReceived FriendRequest[] @relation("Receiver")
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -54,6 +56,9 @@ model FriendRequest {
   createdAt  DateTime            @map("created_at")
   updatedAt  DateTime            @map("updated_at")
   deletedAt  DateTime?           @map("deleted_at")
+
+  sender  User @relation("Sender", fields: [senderId], references: [id])
+  receiver User @relation("Receiver", fields: [receiverId], references: [id])
 
   @@index([senderId])
   @@index([receiverId])

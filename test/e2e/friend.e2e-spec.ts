@@ -1,5 +1,4 @@
 import * as request from 'supertest';
-
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
@@ -8,6 +7,12 @@ import { generateUserEntity } from 'test/helper/generators';
 import { login } from 'test/helper/login';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 import { v4 } from 'uuid';
+import {
+    FriendRequestDirection,
+    GetFriendRequestsResponseDto,
+} from 'src/presentation/dto/friends';
+import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { FriendRequest as FriendRequestPrisma } from '@prisma/client';
 
 describe('FriendController (e2e)', () => {
     let app: INestApplication;
@@ -23,49 +28,50 @@ describe('FriendController (e2e)', () => {
         await app.init();
     });
 
-    afterAll(() => {
+    afterAll(async () => {
         app.close();
     });
 
     afterEach(async () => {
         await prisma.friendRequest.deleteMany();
+        await prisma.user.deleteMany();
     });
 
     describe('POST /friends/requests', () => {
         it('친구 요청을 전송 정상 동작', async () => {
-            const { accessToken, userId } = await login(app);
+            const currentUser = await login(app);
 
-            const recivedUser = await prisma.user.create({
+            const receivedUser = await prisma.user.create({
                 data: generateUserEntity(
-                    'reciver@email.com',
+                    'receiver@email.com',
                     'testNickname',
                     'testTag',
                 ),
             });
 
             const dto: SendFriendRequest = {
-                targetUserId: recivedUser.id,
+                targetUserId: receivedUser.id,
             };
 
             const response = await request(app.getHttpServer())
                 .post('/friends/requests')
                 .send(dto)
-                .set('Authorization', accessToken);
+                .set('Authorization', currentUser.accessToken);
 
             const { status } = response;
             const createdFriendRequest = await prisma.friendRequest.findFirst({
                 where: {
-                    senderId: userId,
-                    receiverId: recivedUser.id,
+                    senderId: currentUser.userId,
+                    receiverId: receivedUser.id,
                 },
             });
 
-            expect(status).toBe(204);
+            expect(status).toBe(HttpStatus.NO_CONTENT);
             expect(createdFriendRequest).not.toBeNull();
         });
 
         it('이미 보낸 요청이 있을 경우 409 Conflict 에러 반환', async () => {
-            const { accessToken, userId } = await login(app);
+            const currentUser = await login(app);
 
             const receivedUser = await prisma.user.create({
                 data: generateUserEntity(
@@ -82,7 +88,7 @@ describe('FriendController (e2e)', () => {
             await prisma.friendRequest.create({
                 data: {
                     id: v4(),
-                    senderId: userId,
+                    senderId: currentUser.userId,
                     receiverId: receivedUser.id,
                     status: 'PENDING',
                     createdAt: new Date(),
@@ -93,13 +99,13 @@ describe('FriendController (e2e)', () => {
             const response = await request(app.getHttpServer())
                 .post('/friends/requests')
                 .send(dto)
-                .set('Authorization', accessToken);
+                .set('Authorization', currentUser.accessToken);
 
             expect(response.status).toBe(HttpStatus.CONFLICT);
 
             const requestCount = await prisma.friendRequest.count({
                 where: {
-                    senderId: userId,
+                    senderId: currentUser.userId,
                     receiverId: receivedUser.id,
                 },
             });
@@ -107,18 +113,141 @@ describe('FriendController (e2e)', () => {
         });
 
         it('자신에게 친구 요청을 보낼 경우 400 Bad Request 에러 반환', async () => {
-            const { accessToken, userId } = await login(app);
+            const currentUser = await login(app);
 
             const dto: SendFriendRequest = {
-                targetUserId: userId,
+                targetUserId: currentUser.userId,
             };
 
             const response = await request(app.getHttpServer())
                 .post('/friends/requests')
                 .send(dto)
-                .set('Authorization', accessToken);
+                .set('Authorization', currentUser.accessToken);
 
-            expect(response.status).toBe(HttpStatus.BAD_REQUEST); // 400 확인
+            expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+        });
+    });
+
+    describe('GET /friends/requests - 친구 요청 목록 조회 (정상 동작)', () => {
+        let userB: UserEntity;
+        let userC: UserEntity;
+        let requestBtoA: FriendRequestPrisma;
+        let requestAtoC: FriendRequestPrisma;
+
+        const setupTestData = async (currentUserId: string) => {
+            userB = await prisma.user.create({
+                data: generateUserEntity('userB@test.com', 'UserB', 'tagB'),
+            });
+            userC = await prisma.user.create({
+                data: generateUserEntity('userC@test.com', 'UserC', 'tagC'),
+            });
+
+            requestBtoA = await prisma.friendRequest.create({
+                data: {
+                    id: v4(),
+                    senderId: userB.id,
+                    receiverId: currentUserId,
+                    status: 'PENDING',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+
+            requestAtoC = await prisma.friendRequest.create({
+                data: {
+                    id: v4(),
+                    senderId: currentUserId,
+                    receiverId: userC.id,
+                    status: 'PENDING',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+        };
+
+        it('받은 친구 요청 목록을 정상적으로 조회한다', async () => {
+            const currentUser = await login(app);
+            await setupTestData(currentUser.userId);
+
+            const response = await request(app.getHttpServer())
+                .get('/friends/requests')
+                .query({ direction: FriendRequestDirection.RECEIVED })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.OK);
+
+            const body = response.body as GetFriendRequestsResponseDto;
+            expect(body.data).toHaveLength(1);
+            const requestItem = body.data[0];
+            expect(requestItem.id).toBe(requestBtoA.id);
+            expect(requestItem.user.id).toBe(userB.id);
+            expect(requestItem.user.nickname).toBe(userB.nickname);
+            expect(requestItem.user.tag).toBe(userB.tag);
+            expect(body.nextCursor).toBeNull();
+        });
+
+        it('보낸 친구 요청 목록을 정상적으로 조회한다', async () => {
+            const currentUser = await login(app);
+            await setupTestData(currentUser.userId);
+
+            const response = await request(app.getHttpServer())
+                .get('/friends/requests')
+                .query({ direction: FriendRequestDirection.SENT })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.OK);
+
+            const body = response.body as GetFriendRequestsResponseDto;
+            expect(body.data).toHaveLength(1);
+            const requestItem = body.data[0];
+            expect(requestItem.id).toBe(requestAtoC.id);
+            expect(requestItem.user.id).toBe(userC.id);
+            expect(requestItem.user.nickname).toBe(userC.nickname);
+            expect(requestItem.user.tag).toBe(userC.tag);
+            expect(body.nextCursor).toBeNull();
+        });
+
+        it('인증 토큰 없이 요청 시 401 Unauthorized 에러를 반환한다', async () => {
+            await request(app.getHttpServer())
+                .get('/friends/requests')
+                .query({ direction: FriendRequestDirection.RECEIVED })
+                .expect(HttpStatus.UNAUTHORIZED);
+        });
+
+        it('잘못된 direction 값을 사용하면 400 Bad Request 에러를 반환한다', async () => {
+            const currentUser = await login(app);
+            await request(app.getHttpServer())
+                .get('/friends/requests')
+                .query({ direction: 'invalid_direction' })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.BAD_REQUEST);
+        });
+
+        it('direction 파라미터가 누락되면 400 Bad Request 에러를 반환한다', async () => {
+            const currentUser = await login(app);
+            await request(app.getHttpServer())
+                .get('/friends/requests')
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.BAD_REQUEST);
+        });
+
+        it('limit 파라미터에 숫자가 아닌 값을 넣으면 400 Bad Request 에러를 반환한다', async () => {
+            const currentUser = await login(app);
+            await request(app.getHttpServer())
+                .get('/friends/requests')
+                .query({
+                    direction: FriendRequestDirection.RECEIVED,
+                    limit: 'abc',
+                })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.BAD_REQUEST);
+        });
+
+        it('limit 파라미터에 0 이하의 값을 넣으면 400 Bad Request 에러를 반환한다', async () => {
+            const currentUser = await login(app);
+            await request(app.getHttpServer())
+                .get('/friends/requests')
+                .query({ direction: FriendRequestDirection.RECEIVED, limit: 0 })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.BAD_REQUEST);
         });
     });
 });

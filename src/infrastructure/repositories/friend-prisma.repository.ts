@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { FriendRepository } from 'src/domain/interface/friend.repository';
 import { PrismaService } from '../prisma/prisma.service';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
-import { FriendData } from 'src/domain/types/friend.types';
+import {
+    FriendData,
+    FriendInfo,
+    PaginatedFriendRequests,
+} from 'src/domain/types/friend.types';
 
 @Injectable()
 export class FriendPrismaRepository implements FriendRepository {
@@ -34,5 +38,93 @@ export class FriendPrismaRepository implements FriendRepository {
                 ],
             },
         });
+    }
+
+    async findReceivedRequestsByUserId(
+        userId: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedFriendRequests> {
+        const cursorOption = cursor ? { id: cursor } : undefined;
+
+        const requests = await this.prisma.friendRequest.findMany({
+            select: {
+                id: true,
+                sender: {
+                    select: {
+                        id: true,
+                        nickname: true,
+                        tag: true,
+                        avatarKey: true,
+                    },
+                },
+                createdAt: true,
+            },
+            where: { receiverId: userId, status: 'PENDING', deletedAt: null },
+            orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+            take: limit + 1,
+            cursor: cursorOption,
+            skip: cursor ? 1 : 0,
+        });
+
+        let nextCursor: string | null = null;
+        if (requests.length > limit) {
+            const nextItem = requests.pop();
+            nextCursor = nextItem?.id ?? null;
+        }
+
+        const mappedRequests = requests.map((request) => {
+            return {
+                id: request.id,
+                user: request.sender as FriendInfo,
+                createdAt: request.createdAt,
+            };
+        });
+
+        return { data: mappedRequests, nextCursor };
+    }
+
+    async findSentRequestsByUserId(
+        userId: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedFriendRequests> {
+        const cursorOption = cursor ? { id: cursor } : undefined;
+
+        const requests = await this.prisma.friendRequest.findMany({
+            select: {
+                id: true,
+                receiver: {
+                    select: {
+                        id: true,
+                        nickname: true,
+                        tag: true,
+                        avatarKey: true,
+                    },
+                },
+                createdAt: true,
+            },
+            where: { senderId: userId, status: 'PENDING', deletedAt: null },
+            orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+            take: limit + 1,
+            cursor: cursorOption,
+            skip: cursor ? 1 : 0,
+        });
+
+        let nextCursor: string | null = null;
+        if (requests.length > limit) {
+            const nextItem = requests.pop();
+            nextCursor = nextItem?.id ?? null;
+        }
+
+        const mappedRequests = requests.map((request) => {
+            return {
+                id: request.id,
+                user: request.receiver as FriendInfo,
+                createdAt: request.createdAt,
+            };
+        });
+
+        return { data: mappedRequests, nextCursor };
     }
 }
