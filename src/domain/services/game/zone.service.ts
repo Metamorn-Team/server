@@ -1,41 +1,54 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import { Player, RoomType, SocketClientId } from 'src/domain/types/game.types';
+import { Player, IslandTag, SocketClientId } from 'src/domain/types/game.types';
+import { IslandWriter } from 'src/domain/components/islands/island-writer';
+import { IslandEntity } from 'src/domain/entities/islands/island.entity';
+import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
+import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
+import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
+import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 
 @Injectable()
 export class ZoneService {
     constructor(
         @Inject(GameStorage)
         private readonly gameStorage: GameStorage,
+        private readonly islandWriter: IslandWriter,
+        private readonly islandJoinWriter: IslandJoinWriter,
     ) {}
 
-    createRoom(type: RoomType) {
-        const roomId = v4();
+    async createRoom(tag: IslandTag) {
+        const stdDate = new Date();
+        const island = IslandEntity.create({ tag }, v4, stdDate);
+        await this.islandWriter.create(island);
+
+        const { id } = island;
+
         const room = {
-            id: roomId,
+            id,
             max: 5,
             players: new Set<SocketClientId>(),
-            type,
+            type: tag,
         };
-        this.gameStorage.createRoom(roomId, room);
-        const roomOfTypes = this.gameStorage.getRoomOfType(type);
+        this.gameStorage.createIsland(id, room);
+        const roomOfTags = this.gameStorage.getIslandOfTag(tag);
 
-        if (roomOfTypes) {
-            roomOfTypes.add(roomId);
+        if (roomOfTags) {
+            roomOfTags.add(id);
         } else {
-            this.gameStorage.addRoomOfType(type, roomId);
+            this.gameStorage.addIslandOfTag(tag, id);
         }
 
         return room;
     }
 
-    getAvailableRoom(type: RoomType) {
-        const roomIds = this.gameStorage.getRoomIdsByType(type);
+    async getAvailableRoom(tag: IslandTag) {
+        const roomIds = this.gameStorage.getIslandIdsByTag(tag);
 
         if (roomIds) {
             for (const roomId of roomIds) {
-                const room = this.gameStorage.getRoom(roomId);
+                const room = this.gameStorage.getIsland(roomId);
 
                 if (room && room.players.size < room.max) {
                     return room;
@@ -43,29 +56,47 @@ export class ZoneService {
             }
         }
 
-        return this.createRoom(type);
+        return await this.createRoom(tag);
     }
 
-    joinRoom(roomId: string, clientId: string, user: Player) {
-        this.gameStorage.addPlayer(clientId, user);
+    getIsland(islandId: string) {
+        return this.gameStorage.getIsland(islandId);
+    }
 
-        const room = this.gameStorage.getRoom(roomId);
+    async joinRoom(islandId: string, playerId: string, player: Player) {
+        const stdDate = new Date();
+        const islandJoin = IslandJoinEntity.create(
+            { islandId, userId: player.id },
+            v4,
+            stdDate,
+        );
+        await this.islandJoinWriter.create(islandJoin);
+
+        this.gameStorage.addPlayer(playerId, player);
+
+        const room = this.gameStorage.getIsland(islandId);
         if (!room) throw new Error('없는 방');
 
-        room.players.add(clientId);
+        room.players.add(playerId);
     }
 
-    leaveRoom(roomId: string, clientId: string) {
-        const room = this.gameStorage.getRoom(roomId);
+    async leaveRoom(islandId: string, playerId: string) {
+        const player = this.gameStorage.getPlayer(playerId);
+        if (!player) return;
 
-        if (!room) throw new Error('없는 방');
+        const room = this.gameStorage.getIsland(islandId);
+        if (!room) return;
 
-        room.players.delete(clientId);
-        this.gameStorage.deletePlayer(clientId);
+        await this.islandJoinWriter.left(islandId, player.id);
+
+        this.gameStorage.deletePlayer(playerId);
+        room.players.delete(playerId);
+
+        return player;
     }
 
-    getActiveUsers(roomId: string) {
-        const room = this.gameStorage.getRoom(roomId);
+    getActiveUsers(islandId: string) {
+        const room = this.gameStorage.getIsland(islandId);
         if (!room) throw new Error('없는 방');
 
         const activeUsers: Player[] = [];
@@ -81,20 +112,79 @@ export class ZoneService {
     }
 
     kickPlayerById(playerId: string) {
-        const player = this.gameStorage.getPlayerById(playerId);
+        const player = this.gameStorage.getPlayer(playerId);
         if (player) {
-            this.leaveRoom(player.roomId, player.clientId);
+            this.leaveRoom(player.roomId, playerId);
             return player;
         }
     }
 
-    getPlayer(clientId: string) {
-        return this.gameStorage.getPlayer(clientId);
+    getPlayer(playerId: string) {
+        return this.gameStorage.getPlayer(playerId);
+    }
+
+    getPlayerByClientId(clientId: string) {
+        return this.gameStorage.getPlayerByClientId(clientId);
+    }
+
+    attack(attacker: Player) {
+        const island = this.gameStorage.getIsland(attacker.roomId);
+        if (!island || island.players.size === 0) return;
+
+        const boxSize = ATTACK_BOX_SIZE.PAWN;
+        const attackBox = {
+            x: attacker.isFacingRight
+                ? attacker.x + boxSize.width / 2
+                : attacker.x - boxSize.width / 2,
+            y: attacker.y,
+            width: boxSize.width,
+            height: boxSize.height,
+        };
+
+        const attackedPlayer = Array.from(island.players)
+            .map((playerId) => this.getPlayer(playerId))
+            .filter((player) => player !== null)
+            .filter((player) => player.id !== attacker.id)
+            .filter((player) => this.isInAttackBox(player, attackBox));
+
+        return attackedPlayer;
+    }
+
+    isInAttackBox(
+        player: Player,
+        box: { x: number; y: number; width: number; height: number },
+    ) {
+        // 캐릭터 추가되면 상수로 관리
+        const playerRadius = PLAYER_HIT_BOX.PAWN.RADIUS;
+
+        const boxLeft = box.x - box.width / 2;
+        const boxRight = box.x + box.width / 2;
+        const boxTop = box.y - box.height / 2;
+        const boxBottom = box.y + box.height / 2;
+
+        if (
+            player.x >= boxLeft &&
+            player.x <= boxRight &&
+            player.y >= boxTop &&
+            player.y <= boxBottom
+        ) {
+            return true;
+        }
+
+        const closestX = Math.max(boxLeft, Math.min(player.x, boxRight));
+        const closestY = Math.max(boxTop, Math.min(player.y, boxBottom));
+
+        const distanceX = player.x - closestX;
+        const distanceY = player.y - closestY;
+
+        const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+
+        return distanceSquared < playerRadius * playerRadius;
     }
 
     loggingStore(logger: Logger) {
         logger.debug('전체 회원', this.gameStorage.getPlayerStore());
-        logger.debug('전체 방', this.gameStorage.getRoomStore());
-        logger.debug('타입별 방', this.gameStorage.getRoomOfTypeStore());
+        logger.debug('전체 방', this.gameStorage.getIslandStore());
+        logger.debug('타입별 방', this.gameStorage.getIslandOfTagStore());
     }
 }

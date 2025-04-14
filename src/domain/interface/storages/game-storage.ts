@@ -1,20 +1,20 @@
-import { Player, Room, RoomType } from 'src/domain/types/game.types';
+import { Player, Island, IslandTag } from 'src/domain/types/game.types';
 
 export interface GameStorage {
-    getPlayer(clientId: string): Player | null;
-    getPlayerById(playerId: string): Player | null;
-    addPlayer(clientId: string, player: Player): void;
-    deletePlayer(clientId: string): void;
+    getPlayer(playerId: string): Player | null;
+    getPlayerByClientId(clientId: string): Player | null;
+    addPlayer(playerId: string, player: Player): void;
+    deletePlayer(playerId: string): void;
 
-    createRoom(roomId: string, room: Room): void;
-    getRoom(roomId: string): Room | null;
-    getRoomOfType(type: RoomType): Set<string> | null;
-    getRoomIdsByType(type: RoomType): string[];
-    addRoomOfType(type: RoomType, roomId: string): void;
+    createIsland(islandId: string, island: Island): void;
+    getIsland(islandId: string): Island | null;
+    getIslandOfTag(tag: IslandTag): Set<string> | null;
+    getIslandIdsByTag(tag: IslandTag): string[];
+    addIslandOfTag(tag: IslandTag, islandId: string): void;
 
     getPlayerStore(): Record<string, Player>;
-    getRoomStore(): Record<string, Room>;
-    getRoomOfTypeStore(): Record<RoomType, Set<string>>;
+    getIslandStore(): Record<string, Island>;
+    getIslandOfTagStore(): Record<IslandTag, Set<string>>;
 }
 
 export const GameStorage = Symbol('GameStorage');

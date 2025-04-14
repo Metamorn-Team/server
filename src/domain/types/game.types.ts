@@ -1,4 +1,4 @@
-export type RoomType = 'dev' | 'design';
+export type IslandTag = 'dev' | 'design';
 
 export type SocketClientId = string;
 
@@ -11,11 +11,13 @@ export interface Player {
     roomId: string;
     x: number;
     y: number;
+    isFacingRight: boolean;
+    lastMoved: number;
 }
 
-export interface Room {
+export interface Island {
     id: string;
     players: Set<string>;
-    type: RoomType;
+    type: IslandTag;
     max: number;
 }

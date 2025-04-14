@@ -8,19 +8,26 @@ import { ActivePlayerResponse } from '../response/active-players.response';
 import { SendMessageRequest } from '../request/send-message.request';
 import { ReceiveMessage } from '../response/receive-message';
 import { MessageSent } from '../response/message-sent.response';
+import { PlayerJoinSuccessResponse } from '../response/player-join-success.response';
+import { AttackedResponse } from '../response/attacked.response';
 
 export interface ClientToServer {
     playerJoin: (data: PlayerJoinRequest) => void;
     playerLeft: () => void;
+    playerKicked: () => void;
     playerMoved: (data: PlayerMovedRequest) => void;
+    attack: () => void;
     sendMessage: (data: SendMessageRequest) => void;
 }
 
 export interface ServerToClient {
     playerJoin: (data: PlayerJoinResponse) => void;
+    playerJoinSuccess: (data: PlayerJoinSuccessResponse) => void;
+    playerKicked: () => void;
     playerLeft: (data: PlayerLeftResponse) => void;
     playerMoved: (data: PlayerMovedResponse) => void;
     activePlayers: (data: ActivePlayerResponse) => void;
+    attacked: (data: AttackedResponse) => void;
     receiveMessage: (data: ReceiveMessage) => void;
     messageSent: (data: MessageSent) => void;
 }

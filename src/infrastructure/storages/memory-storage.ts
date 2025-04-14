@@ -1,27 +1,27 @@
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
 import {
     Player,
-    Room,
-    RoomType,
+    Island,
+    IslandTag,
     SocketClientId,
 } from 'src/domain/types/game.types';
 
 export class MemoryStorage implements GameStorage {
     private players = new Map<SocketClientId, Player>();
-    private rooms = new Map<string, Room>();
-    private roomsOfTypes = new Map<RoomType, Set<string>>();
+    private islands = new Map<string, Island>();
+    private islandsOfTags = new Map<IslandTag, Set<string>>();
 
-    addPlayer(clientId: string, player: Player): void {
-        this.players.set(clientId, player);
+    addPlayer(playerId: string, player: Player): void {
+        this.players.set(playerId, player);
     }
 
-    getPlayer(clientId: string): Player | null {
-        return this.players.get(clientId) ?? null;
+    getPlayer(playerId: string): Player | null {
+        return this.players.get(playerId) ?? null;
     }
 
-    getPlayerById(playerId: string): Player | null {
+    getPlayerByClientId(clientId: string): Player | null {
         for (const player of this.players.values()) {
-            if (player.id === playerId) {
+            if (player.clientId === clientId) {
                 return player;
             }
         }
@@ -29,33 +29,33 @@ export class MemoryStorage implements GameStorage {
         return null;
     }
 
-    deletePlayer(clientId: string): void {
-        this.players.delete(clientId);
+    deletePlayer(playerId: string): void {
+        this.players.delete(playerId);
     }
 
-    createRoom(roomId: string, room: Room): void {
-        this.rooms.set(roomId, room);
+    createIsland(islandId: string, island: Island): void {
+        this.islands.set(islandId, island);
     }
 
-    getRoom(roomId: string): Room | null {
-        return this.rooms.get(roomId) ?? null;
+    getIsland(islandId: string): Island | null {
+        return this.islands.get(islandId) ?? null;
     }
 
-    getRoomOfType(type: RoomType): Set<string> | null {
-        return this.roomsOfTypes.get(type) ?? null;
+    getIslandOfTag(tag: IslandTag): Set<string> | null {
+        return this.islandsOfTags.get(tag) ?? null;
     }
 
-    getRoomIdsByType(type: RoomType): string[] {
-        return Array.from(this.roomsOfTypes.get(type) ?? []);
+    getIslandIdsByTag(tag: IslandTag): string[] {
+        return Array.from(this.islandsOfTags.get(tag) ?? []);
     }
 
-    addRoomOfType(type: RoomType, roomId: string): void {
-        const roomOfTypes = this.roomsOfTypes.get(type);
+    addIslandOfTag(tag: IslandTag, islandId: string): void {
+        const roomOfTypes = this.islandsOfTags.get(tag);
 
         if (roomOfTypes) {
-            roomOfTypes.add(roomId);
+            roomOfTypes.add(islandId);
         } else {
-            this.roomsOfTypes.set(type, new Set([roomId]));
+            this.islandsOfTags.set(tag, new Set([islandId]));
         }
     }
 
@@ -63,16 +63,16 @@ export class MemoryStorage implements GameStorage {
         return Object.fromEntries(this.players.entries());
     }
 
-    getRoomStore(): Record<string, Room> {
-        return Object.fromEntries(this.rooms.entries());
+    getIslandStore(): Record<string, Island> {
+        return Object.fromEntries(this.islands.entries());
     }
 
-    getRoomOfTypeStore(): Record<RoomType, Set<string>> {
-        const result: Record<RoomType, Set<string>> = {} as Record<
-            RoomType,
+    getIslandOfTagStore(): Record<IslandTag, Set<string>> {
+        const result: Record<IslandTag, Set<string>> = {} as Record<
+            IslandTag,
             Set<string>
         >;
-        this.roomsOfTypes.forEach((value, key) => {
+        this.islandsOfTags.forEach((value, key) => {
             result[key] = value;
         });
         return result;
