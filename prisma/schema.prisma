@@ -30,6 +30,9 @@ model User {
   updatedAt DateTime      @map("updated_at")
   deletedAt DateTime?     @map("deleted_at")
 
+  IslandJoins  IslandJoin[]
+  ChatMessages ChatMessage[]
+
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
   @@index([nickname, id])
@@ -44,13 +47,13 @@ enum FriendRequestStatus {
 }
 
 model FriendRequest {
-  id          String  @id @db.Uuid
-  senderId    String  @db.Uuid
-  receiverId  String  @db.Uuid
-  status      FriendRequestStatus @default(PENDING)
-  createdAt   DateTime @map("created_at")
-  updatedAt   DateTime @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
+  id         String              @id @db.Uuid
+  senderId   String              @db.Uuid
+  receiverId String              @db.Uuid
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @map("created_at")
+  updatedAt  DateTime            @map("updated_at")
+  deletedAt  DateTime?           @map("deleted_at")
 
   @@index([senderId])
   @@index([receiverId])
@@ -58,3 +61,40 @@ model FriendRequest {
   @@map("friend_request")
 }
 
+model Island {
+  id        String    @id @db.Uuid
+  tag       String    @db.VarChar(50)
+  createdAt DateTime  @map("created_at")
+  updatedAt DateTime  @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  IslandJoins IslandJoin[]
+
+  @@map("island")
+}
+
+model IslandJoin {
+  id       String    @id @db.Uuid
+  islandId String    @map("island_id") @db.Uuid
+  userId   String    @map("user_id") @db.Uuid
+  joinedAt DateTime  @map("joined_at")
+  leftAt   DateTime? @map("left_at")
+
+  island Island @relation(fields: [islandId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("island_join")
+}
+
+model ChatMessage {
+  id        String   @id @db.Uuid
+  senderId  String   @map("sender_id") @db.Uuid
+  type      String   @db.VarChar(20)
+  contextId String   @map("context_id") @db.Uuid
+  message   String
+  sentAt    DateTime @map("sent_at")
+
+  sender User @relation(fields: [senderId], references: [id])
+
+  @@map("chat_message")
+}
