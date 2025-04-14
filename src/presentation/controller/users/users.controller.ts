@@ -14,7 +14,6 @@ import {
     ApiBody,
     ApiOperation,
     ApiParam,
-    ApiQuery,
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
@@ -41,30 +40,6 @@ export class UserController {
         summary: '유저 검색 (닉네임 또는 태그)',
         description:
             '닉네임 또는 태그를 기준으로 사용자를 검색합니다.(커서기반 페이지네이션)',
-    })
-    @ApiQuery({
-        name: 'search',
-        description: '검색할 닉네임 또는 태그',
-        required: true,
-        type: String,
-    })
-    @ApiQuery({
-        name: 'varient',
-        enum: ['NICKNAME', 'TAG'],
-        description: '검색 기준 (닉네임 또는 태그)',
-        required: true,
-    })
-    @ApiQuery({
-        name: 'limit',
-        description: '한 페이지에 보여줄 유저 수 (기본값 10)',
-        required: false,
-        type: Number,
-    })
-    @ApiQuery({
-        name: 'cursor',
-        description: '다음 페이지 시작점 ID',
-        required: false,
-        type: String,
     })
     @ApiResponse({
         status: 200,
