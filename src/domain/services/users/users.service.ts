@@ -37,4 +37,8 @@ export class UserService {
             throw e;
         }
     }
+
+    async changeAvatar(userId: string, avatarKey: string) {
+        await this.userWriter.updateAvatarKey(userId, avatarKey);
+    }
 }

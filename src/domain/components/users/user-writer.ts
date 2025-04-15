@@ -20,4 +20,8 @@ export class UserWriter {
     async updateTag(id: string, tag: string) {
         await this.userRepository.update(id, { tag });
     }
+
+    async updateAvatarKey(id: string, avatarKey: string) {
+        await this.userRepository.update(id, { avatarKey });
+    }
 }

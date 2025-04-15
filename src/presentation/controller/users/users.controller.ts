@@ -21,6 +21,7 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { UserService } from 'src/domain/services/users/users.service';
+import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { SearchUsersRequest } from 'src/presentation/dto/users/request/search-users.request';
@@ -122,5 +123,19 @@ export class UserController {
         @CurrentUser() userId: string,
     ) {
         await this.userService.changeTag(userId, dto.tag);
+    }
+
+    @ApiOperation({
+        summary: '아바타 변경',
+        description: '로그인한 사용자의 아바타를 변경합니다.',
+    })
+    @ApiResponse({ status: 204, description: '아바타 변경 성공 (No Content)' })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Patch('avatar')
+    async changeAvatar(
+        @Body() dto: ChangeAvatarRequest,
+        @CurrentUser() userId: string,
+    ) {
+        await this.userService.changeAvatar(userId, dto.avatarKey);
     }
 }
