@@ -101,7 +101,6 @@ export class UserController {
         summary: '닉네임 변경',
         description: '로그인한 사용자의 닉네임을 변경합니다.',
     })
-    @ApiBody({ type: ChangeNicknameRequest })
     @ApiResponse({ status: 204, description: '닉네임 변경 성공 (No Content)' })
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
@@ -118,7 +117,6 @@ export class UserController {
         description:
             '로그인한 사용자의 태그를 변경합니다. 태그는 고유해야 합니다.',
     })
-    @ApiBody({ type: ChangeTagRequest })
     @ApiResponse({ status: 204, description: '태그 변경 성공 (No Content)' })
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
