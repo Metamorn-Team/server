@@ -12,7 +12,10 @@ import {
     GetFriendRequestsResponseDto,
 } from 'src/presentation/dto/friends';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
-import { FriendRequest as FriendRequestPrisma } from '@prisma/client';
+import {
+    FriendRequest as FriendRequestPrisma,
+    FriendRequestStatus,
+} from '@prisma/client';
 
 describe('FriendController (e2e)', () => {
     let app: INestApplication;
@@ -28,7 +31,7 @@ describe('FriendController (e2e)', () => {
         await app.init();
     });
 
-    afterAll(async () => {
+    afterAll(() => {
         app.close();
     });
 
@@ -248,6 +251,119 @@ describe('FriendController (e2e)', () => {
                 .query({ direction: FriendRequestDirection.RECEIVED, limit: 0 })
                 .set('Authorization', currentUser.accessToken)
                 .expect(HttpStatus.BAD_REQUEST);
+        });
+    });
+
+    describe('PATCH /friends/requests/:requestId - 친구 요청 수락', () => {
+        let currentUser: {
+            userId: string;
+            accessToken: string;
+            nickname: string;
+            tag: string;
+        };
+        let senderUser: UserEntity;
+        let friendRequest: FriendRequestPrisma;
+
+        beforeEach(async () => {
+            currentUser = await login(app);
+            senderUser = await prisma.user.create({
+                data: generateUserEntity(
+                    'sender.patch@test.com',
+                    'SenderPatch',
+                    'tag_sender_patch',
+                ),
+            });
+
+            friendRequest = await prisma.friendRequest.create({
+                data: {
+                    id: v4(),
+                    senderId: senderUser.id,
+                    receiverId: currentUser.userId,
+                    status: 'PENDING',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+        });
+
+        it('친구 요청을 정상적으로 수락한다', async () => {
+            const requestId = friendRequest.id;
+            const response = await request(app.getHttpServer())
+                .patch(`/friends/requests/${requestId}`)
+                .set('Authorization', currentUser.accessToken);
+
+            expect(response.status).toBe(HttpStatus.NO_CONTENT);
+
+            const updatedRequest = await prisma.friendRequest.findUnique({
+                where: { id: requestId },
+            });
+            expect(updatedRequest).not.toBeNull();
+            expect(updatedRequest?.status).toBe(FriendRequestStatus.ACCEPTED);
+            expect(updatedRequest?.updatedAt).not.toEqual(
+                friendRequest.updatedAt,
+            );
+        });
+
+        it('존재하지 않는 친구 요청 ID로 수락 시 404 Not Found 에러를 반환한다', async () => {
+            const nonExistentRequestId = v4();
+            const response = await request(app.getHttpServer())
+                .patch(`/friends/requests/${nonExistentRequestId}`)
+                .set('Authorization', currentUser.accessToken);
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+        });
+
+        it('이미 수락된 요청을 다시 수락시 404 Not Found 에러를 반환한다', async () => {
+            await prisma.friendRequest.update({
+                where: { id: friendRequest.id },
+                data: { status: FriendRequestStatus.ACCEPTED },
+            });
+
+            const requestId = friendRequest.id;
+            const response = await request(app.getHttpServer())
+                .patch(`/friends/requests/${requestId}`)
+                .set('Authorization', currentUser.accessToken);
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+        });
+
+        it('자신이 보내지 않고 받지도 않은 요청을 수락 시 404 Not Found 에러를 반환한다', async () => {
+            const userOther1 = await prisma.user.create({
+                data: generateUserEntity(
+                    'other1@test.com',
+                    'Other1',
+                    'tag_other1',
+                ),
+            });
+            const userOther2 = await prisma.user.create({
+                data: generateUserEntity(
+                    'other2@test.com',
+                    'Other2',
+                    'tag_other2',
+                ),
+            });
+            const otherRequest = await prisma.friendRequest.create({
+                data: {
+                    id: v4(),
+                    senderId: userOther1.id,
+                    receiverId: userOther2.id,
+                    status: FriendRequestStatus.PENDING,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+
+            const requestId = otherRequest.id;
+            const response = await request(app.getHttpServer())
+                .patch(`/friends/requests/${requestId}`)
+                .set('Authorization', currentUser.accessToken);
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+        });
+
+        it('인증 없이 요청 시 401 Unauthorized 에러를 반환한다', async () => {
+            const reqeustId = friendRequest.id;
+            const response = await request(app.getHttpServer()).patch(
+                `/friends/requests/${reqeustId}`,
+            );
+            expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
         });
     });
 });
