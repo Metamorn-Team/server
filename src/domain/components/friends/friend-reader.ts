@@ -36,18 +36,16 @@ export class FriendReader {
         limit: number,
         cursor?: string,
     ) {
-        if (direction === 'received') {
-            return await this.friendRepository.findReceivedRequestsByUserId(
-                userId,
-                limit,
-                cursor,
-            );
-        }
-
-        return await this.friendRepository.findSentRequestsByUserId(
-            userId,
-            limit,
-            cursor,
-        );
+        return direction === 'received'
+            ? await this.friendRepository.findReceivedRequestsByUserId(
+                  userId,
+                  limit,
+                  cursor,
+              )
+            : await this.friendRepository.findSentRequestsByUserId(
+                  userId,
+                  limit,
+                  cursor,
+              );
     }
 }
