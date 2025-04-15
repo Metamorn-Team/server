@@ -4,6 +4,8 @@ import {
     Get,
     HttpCode,
     HttpStatus,
+    Param,
+    Patch,
     Post,
     Query,
     UseGuards,
@@ -11,6 +13,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
+import { FriendWriter } from 'src/domain/components/friends/friend-writer';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import {
     GetFriendRequestListRequest,
@@ -20,7 +23,10 @@ import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-fri
 
 @Controller('friends')
 export class FriendsController {
-    constructor(private readonly friendsService: FriendsService) {}
+    constructor(
+        private readonly friendsService: FriendsService,
+        private readonly friendWriter: FriendWriter,
+    ) {}
 
     @ApiOperation({ summary: '친구 요청 전송' })
     @ApiResponse({
@@ -84,5 +90,15 @@ export class FriendsController {
             limit,
             cursor,
         );
+    }
+
+    @UseGuards(AuthGuard)
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Patch('requests/:requestId')
+    async acceptFriendRequest(
+        @CurrentUser() userId: string,
+        @Param('requestId') requestId: string,
+    ): Promise<void> {
+        await this.friendWriter.changeRequestStatusToAccept(userId, requestId);
     }
 }

@@ -17,6 +17,11 @@ export interface FriendRepository {
         limit: number,
         cursor?: string,
     ): Promise<PaginatedFriendRequests>;
+    updateRequestStatusToAccept(friendshipId: string): Promise<void>;
+    findMyPendingOneById(
+        userId: string,
+        requestId: string,
+    ): Promise<FriendData | null>;
 }
 
 export const FriendRepository = Symbol('FriendRepository');

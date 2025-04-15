@@ -127,4 +127,41 @@ export class FriendPrismaRepository implements FriendRepository {
 
         return { data: mappedRequests, nextCursor };
     }
+
+    async updateRequestStatusToAccept(friendshipId: string): Promise<void> {
+        await this.prisma.friendRequest.update({
+            where: { id: friendshipId },
+            data: { status: 'ACCEPTED', updatedAt: new Date() },
+        });
+    }
+
+    async findMyPendingOneById(
+        userId: string,
+        requestId: string,
+    ): Promise<FriendData | null> {
+        return this.prisma.friendRequest.findFirst({
+            where: {
+                OR: [
+                    {
+                        id: requestId,
+                        senderId: userId,
+                        status: 'PENDING',
+                        deletedAt: null,
+                    },
+                    {
+                        id: requestId,
+                        receiverId: userId,
+                        status: 'PENDING',
+                        deletedAt: null,
+                    },
+                ],
+            },
+            select: {
+                id: true,
+                senderId: true,
+                receiverId: true,
+                status: true,
+            },
+        });
+    }
 }
