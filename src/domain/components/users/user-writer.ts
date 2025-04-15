@@ -13,7 +13,11 @@ export class UserWriter {
         await this.userRepository.save(user);
     }
 
-    async change(user: { id: string; nickname?: string; tag?: string }) {
-        await this.userRepository.update(user);
+    async updateNickname(id: string, nickname: string) {
+        await this.userRepository.update(id, { nickname });
+    }
+
+    async updateTag(id: string, tag: string) {
+        await this.userRepository.update(id, { tag });
     }
 }

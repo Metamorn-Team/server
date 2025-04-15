@@ -16,7 +16,7 @@ export interface UserRepository {
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers>;
-    update(data: Partial<UserEntity>): Promise<void>;
+    update(id: string, data: Partial<UserEntity>): Promise<void>;
 }
 
 export const UserRepository = Symbol('UserRepository');

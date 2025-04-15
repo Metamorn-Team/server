@@ -106,7 +106,7 @@ export class UserController {
         @Body() dto: ChangeNicknameRequest,
         @CurrentUser() userId: string,
     ) {
-        await this.userService.updateNickname(userId, dto.nickname);
+        await this.userService.changeNickname(userId, dto.nickname);
     }
 
     @ApiOperation({
@@ -121,6 +121,6 @@ export class UserController {
         @Body() dto: ChangeTagRequest,
         @CurrentUser() userId: string,
     ) {
-        await this.userService.updateTag(userId, dto.tag);
+        await this.userService.changeTag(userId, dto.tag);
     }
 }
