@@ -254,7 +254,7 @@ describe('FriendController (e2e)', () => {
         });
     });
 
-    describe('PATCH /friends/requests/:requestId - 친구 요청 수락', () => {
+    describe('PATCH /friends/requests/:requestId/accept - 친구 요청 수락', () => {
         let currentUser: {
             userId: string;
             accessToken: string;
@@ -364,6 +364,57 @@ describe('FriendController (e2e)', () => {
                 `/friends/requests/${reqeustId}/accept`,
             );
             expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+        });
+    });
+
+    describe('PATCH /friends/requests/:requestId/reject - 친구 요청 거절', () => {
+        let currentUser: {
+            userId: string;
+            accessToken: string;
+            nickname: string;
+            tag: string;
+        };
+        let senderUser: UserEntity;
+        let friendRequest: FriendRequestPrisma;
+
+        beforeEach(async () => {
+            currentUser = await login(app);
+            senderUser = await prisma.user.create({
+                data: generateUserEntity(
+                    'sender.patch@test.com',
+                    'SenderPatch',
+                    'tag_sender_patch',
+                ),
+            });
+
+            friendRequest = await prisma.friendRequest.create({
+                data: {
+                    id: v4(),
+                    senderId: senderUser.id,
+                    receiverId: currentUser.userId,
+                    status: 'PENDING',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+        });
+
+        it('친구 요청을 정상적으로 거절한다', async () => {
+            const requestId = friendRequest.id;
+            const response = await request(app.getHttpServer())
+                .patch(`/friends/requests/${requestId}/reject`)
+                .set('Authorization', currentUser.accessToken);
+
+            expect(response.status).toBe(HttpStatus.NO_CONTENT);
+
+            const updatedRequest = await prisma.friendRequest.findUnique({
+                where: { id: requestId },
+            });
+            expect(updatedRequest).not.toBeNull();
+            expect(updatedRequest?.status).toBe(FriendRequestStatus.REJECTED);
+            expect(updatedRequest?.updatedAt).not.toEqual(
+                friendRequest.updatedAt,
+            );
         });
     });
 });
