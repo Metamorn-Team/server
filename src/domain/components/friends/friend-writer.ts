@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { FriendRepository } from 'src/domain/interface/friend.repository';
 import { FriendReader } from './friend-reader';
+import { FriendStatus } from 'src/domain/types/friend.types';
 
 @Injectable()
 export class FriendWriter {
@@ -15,12 +16,13 @@ export class FriendWriter {
         await this.friendsRepository.save(friend);
     }
 
-    async changeRequestStatusToAccept(
+    async changeRequestStatus(
         userId: string,
         requestId: string,
+        status: FriendStatus,
     ): Promise<void> {
         await this.friendReader.readPendingRequestById(userId, requestId);
 
-        await this.friendsRepository.updateRequestStatusToAccept(requestId);
+        await this.friendsRepository.updateRequestStatus(requestId, status);
     }
 }

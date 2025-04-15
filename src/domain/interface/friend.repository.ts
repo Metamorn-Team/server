@@ -1,5 +1,9 @@
 import { FriendEntity } from '../entities/friend/friend.entity';
-import { FriendData, PaginatedFriendRequests } from '../types/friend.types';
+import {
+    FriendData,
+    FriendStatus,
+    PaginatedFriendRequests,
+} from '../types/friend.types';
 
 export interface FriendRepository {
     save(data: FriendEntity): Promise<void>;
@@ -17,7 +21,10 @@ export interface FriendRepository {
         limit: number,
         cursor?: string,
     ): Promise<PaginatedFriendRequests>;
-    updateRequestStatusToAccept(friendshipId: string): Promise<void>;
+    updateRequestStatus(
+        friendshipId: string,
+        status: FriendStatus,
+    ): Promise<void>;
     findMyPendingOneById(
         userId: string,
         requestId: string,

@@ -5,6 +5,7 @@ import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import {
     FriendData,
     FriendInfo,
+    FriendStatus,
     PaginatedFriendRequests,
 } from 'src/domain/types/friend.types';
 
@@ -128,10 +129,13 @@ export class FriendPrismaRepository implements FriendRepository {
         return { data: mappedRequests, nextCursor };
     }
 
-    async updateRequestStatusToAccept(friendshipId: string): Promise<void> {
+    async updateRequestStatus(
+        friendshipId: string,
+        status: FriendStatus,
+    ): Promise<void> {
         await this.prisma.friendRequest.update({
             where: { id: friendshipId },
-            data: { status: 'ACCEPTED', updatedAt: new Date() },
+            data: { status: status, updatedAt: new Date() },
         });
     }
 

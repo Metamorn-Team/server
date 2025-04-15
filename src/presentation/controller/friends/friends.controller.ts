@@ -15,6 +15,7 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { FriendWriter } from 'src/domain/components/friends/friend-writer';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
+import { FriendStatus } from 'src/domain/types/friend.types';
 import {
     GetFriendRequestListRequest,
     GetFriendRequestsResponseDto,
@@ -99,16 +100,19 @@ export class FriendsController {
         @CurrentUser() userId: string,
         @Param('requestId') requestId: string,
     ): Promise<void> {
-        await this.friendWriter.changeRequestStatusToAccept(userId, requestId);
+        //? 컨트롤러에서 FriendStatus 도메인 타입 사용가능?
+        const status: FriendStatus = 'ACCEPTED';
+        await this.friendWriter.changeRequestStatus(userId, requestId, status);
     }
 
-    // @UseGuards(AuthGuard)
-    // @HttpCode(HttpStatus.NO_CONTENT)
-    // @Patch('requests/:requestId/reject')
-    // async rejectFriendRequest(
-    //     @CurrentUser() userId: string,
-    //     @Param('requestId') requestId: string,
-    // ): Promise<void> {
-    //     await this.friendWriter.changeRequestStatusToReject(userId, requestId);
-    // }
+    @UseGuards(AuthGuard)
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Patch('requests/:requestId/reject')
+    async rejectFriendRequest(
+        @CurrentUser() userId: string,
+        @Param('requestId') requestId: string,
+    ): Promise<void> {
+        const status: FriendStatus = 'REJECTED';
+        await this.friendWriter.changeRequestStatus(userId, requestId, status);
+    }
 }
