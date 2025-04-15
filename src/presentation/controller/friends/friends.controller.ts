@@ -93,6 +93,21 @@ export class FriendsController {
         );
     }
 
+    @ApiOperation({ summary: '친구 요청 수락' })
+    @ApiResponse({
+        status: 204,
+        description: '요청 수락 성공',
+    })
+    @ApiResponse({
+        status: 401,
+        description: '인증 실패 (토큰 누락 또는 만료)',
+    })
+    @ApiResponse({
+        status: 404,
+        description:
+            '친구 요청이 존재하지 않거나, 친구 요청을 보낸 사용자가 아님',
+    })
+    @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('requests/:requestId/accept')
@@ -105,6 +120,21 @@ export class FriendsController {
         await this.friendWriter.changeRequestStatus(userId, requestId, status);
     }
 
+    @ApiOperation({ summary: '친구 요청 거절' })
+    @ApiResponse({
+        status: 204,
+        description: '요청 거절 성공',
+    })
+    @ApiResponse({
+        status: 401,
+        description: '인증 실패 (토큰 누락 또는 만료)',
+    })
+    @ApiResponse({
+        status: 404,
+        description:
+            '친구 요청이 존재하지 않거나, 친구 요청을 보낸 사용자가 아님',
+    })
+    @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('requests/:requestId/reject')
