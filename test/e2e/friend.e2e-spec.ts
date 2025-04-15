@@ -289,7 +289,7 @@ describe('FriendController (e2e)', () => {
         it('친구 요청을 정상적으로 수락한다', async () => {
             const requestId = friendRequest.id;
             const response = await request(app.getHttpServer())
-                .patch(`/friends/requests/${requestId}`)
+                .patch(`/friends/requests/${requestId}/accept`)
                 .set('Authorization', currentUser.accessToken);
 
             expect(response.status).toBe(HttpStatus.NO_CONTENT);
@@ -307,7 +307,7 @@ describe('FriendController (e2e)', () => {
         it('존재하지 않는 친구 요청 ID로 수락 시 404 Not Found 에러를 반환한다', async () => {
             const nonExistentRequestId = v4();
             const response = await request(app.getHttpServer())
-                .patch(`/friends/requests/${nonExistentRequestId}`)
+                .patch(`/friends/requests/${nonExistentRequestId}/accept`)
                 .set('Authorization', currentUser.accessToken);
             expect(response.status).toBe(HttpStatus.NOT_FOUND);
         });
@@ -320,7 +320,7 @@ describe('FriendController (e2e)', () => {
 
             const requestId = friendRequest.id;
             const response = await request(app.getHttpServer())
-                .patch(`/friends/requests/${requestId}`)
+                .patch(`/friends/requests/${requestId}/accept`)
                 .set('Authorization', currentUser.accessToken);
             expect(response.status).toBe(HttpStatus.NOT_FOUND);
         });
@@ -353,7 +353,7 @@ describe('FriendController (e2e)', () => {
 
             const requestId = otherRequest.id;
             const response = await request(app.getHttpServer())
-                .patch(`/friends/requests/${requestId}`)
+                .patch(`/friends/requests/${requestId}/accept`)
                 .set('Authorization', currentUser.accessToken);
             expect(response.status).toBe(HttpStatus.NOT_FOUND);
         });
@@ -361,7 +361,7 @@ describe('FriendController (e2e)', () => {
         it('인증 없이 요청 시 401 Unauthorized 에러를 반환한다', async () => {
             const reqeustId = friendRequest.id;
             const response = await request(app.getHttpServer()).patch(
-                `/friends/requests/${reqeustId}`,
+                `/friends/requests/${reqeustId}/accept`,
             );
             expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
         });

@@ -94,11 +94,21 @@ export class FriendsController {
 
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
-    @Patch('requests/:requestId')
+    @Patch('requests/:requestId/accept')
     async acceptFriendRequest(
         @CurrentUser() userId: string,
         @Param('requestId') requestId: string,
     ): Promise<void> {
         await this.friendWriter.changeRequestStatusToAccept(userId, requestId);
     }
+
+    // @UseGuards(AuthGuard)
+    // @HttpCode(HttpStatus.NO_CONTENT)
+    // @Patch('requests/:requestId/reject')
+    // async rejectFriendRequest(
+    //     @CurrentUser() userId: string,
+    //     @Param('requestId') requestId: string,
+    // ): Promise<void> {
+    //     await this.friendWriter.changeRequestStatusToReject(userId, requestId);
+    // }
 }
