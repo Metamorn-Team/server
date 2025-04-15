@@ -29,6 +29,9 @@ import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.re
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 
 @ApiTags('users')
+@ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
+@ApiResponse({ status: 401, description: '인증 실패' })
+@ApiBearerAuth()
 @Controller('users')
 export class UserController {
     constructor(
@@ -46,8 +49,6 @@ export class UserController {
         description: '검색 성공',
         type: SearchUserResponse,
     })
-    @ApiResponse({ status: 400, description: '잘못된 요청 파라미터' })
-    @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @Get('search')
     async searchUser(
@@ -67,9 +68,7 @@ export class UserController {
         description: '조회 성공',
         type: GetUserResponse,
     })
-    @ApiResponse({ status: 401, description: '인증 실패' })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
-    @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @Get('my')
     async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
@@ -86,13 +85,11 @@ export class UserController {
         description: '조회할 사용자 ID (UUID)',
         type: String,
     })
-    @ApiBearerAuth()
     @ApiResponse({
         status: 200,
         description: '조회 성공',
         type: GetUserResponse,
     })
-    @ApiResponse({ status: 401, description: '인증 실패' })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
     @UseGuards(AuthGuard)
     @Get(':id')
@@ -105,10 +102,7 @@ export class UserController {
         description: '로그인한 사용자의 닉네임을 변경합니다.',
     })
     @ApiBody({ type: ChangeNicknameRequest })
-    @ApiBearerAuth()
     @ApiResponse({ status: 204, description: '닉네임 변경 성공 (No Content)' })
-    @ApiResponse({ status: 400, description: '잘못된 닉네임 형식' })
-    @ApiResponse({ status: 401, description: '인증 실패' })
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('nickname')
@@ -125,10 +119,7 @@ export class UserController {
             '로그인한 사용자의 태그를 변경합니다. 태그는 고유해야 합니다.',
     })
     @ApiBody({ type: ChangeTagRequest })
-    @ApiBearerAuth()
     @ApiResponse({ status: 204, description: '태그 변경 성공 (No Content)' })
-    @ApiResponse({ status: 400, description: '잘못된 태그 형식' })
-    @ApiResponse({ status: 401, description: '인증 실패' })
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('tag')
