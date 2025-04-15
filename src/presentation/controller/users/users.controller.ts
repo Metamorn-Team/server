@@ -32,6 +32,7 @@ import { SearchUserResponse } from 'src/presentation/dto/users/response/search-u
 @ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
 @ApiResponse({ status: 401, description: '인증 실패' })
 @ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('users')
 export class UserController {
     constructor(
@@ -49,7 +50,6 @@ export class UserController {
         description: '검색 성공',
         type: SearchUserResponse,
     })
-    @UseGuards(AuthGuard)
     @Get('search')
     async searchUser(
         @Query() query: SearchUsersRequest,
@@ -69,7 +69,6 @@ export class UserController {
         type: GetUserResponse,
     })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
-    @UseGuards(AuthGuard)
     @Get('my')
     async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
         return await this.userReader.readProfile(userId);
@@ -91,7 +90,6 @@ export class UserController {
         type: GetUserResponse,
     })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
-    @UseGuards(AuthGuard)
     @Get(':id')
     async getUser(@Param('id') userId: string): Promise<GetUserResponse> {
         return await this.userReader.readProfile(userId);
@@ -102,7 +100,6 @@ export class UserController {
         description: '로그인한 사용자의 닉네임을 변경합니다.',
     })
     @ApiResponse({ status: 204, description: '닉네임 변경 성공 (No Content)' })
-    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('nickname')
     async changeNickname(
@@ -118,7 +115,6 @@ export class UserController {
             '로그인한 사용자의 태그를 변경합니다. 태그는 고유해야 합니다.',
     })
     @ApiResponse({ status: 204, description: '태그 변경 성공 (No Content)' })
-    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('tag')
     async changeTag(
