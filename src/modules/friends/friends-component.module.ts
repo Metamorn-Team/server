@@ -4,8 +4,10 @@ import { FriendWriter } from 'src/domain/components/friends/friend-writer';
 import { FriendChecker } from 'src/domain/components/friends/friend-checker';
 import { FriendRepository } from 'src/domain/interface/friend.repository';
 import { FriendPrismaRepository } from 'src/infrastructure/repositories/friend-prisma.repository';
+import { UserComponentModule } from '../users/users-component.module';
 
 @Module({
+    imports: [UserComponentModule],
     providers: [
         FriendReader,
         FriendWriter,
