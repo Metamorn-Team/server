@@ -9,7 +9,7 @@ import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-fri
 import { v4 } from 'uuid';
 import {
     FriendRequestDirection,
-    GetFriendRequestsResponseDto,
+    GetFriendRequestsResponse,
 } from 'src/presentation/dto/friends';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import {
@@ -178,7 +178,7 @@ describe('FriendController (e2e)', () => {
                 .set('Authorization', currentUser.accessToken)
                 .expect(HttpStatus.OK);
 
-            const body = response.body as GetFriendRequestsResponseDto;
+            const body = response.body as GetFriendRequestsResponse;
             expect(body.data).toHaveLength(1);
             const requestItem = body.data[0];
             expect(requestItem.id).toBe(requestBtoA.id);
@@ -198,7 +198,7 @@ describe('FriendController (e2e)', () => {
                 .set('Authorization', currentUser.accessToken)
                 .expect(HttpStatus.OK);
 
-            const body = response.body as GetFriendRequestsResponseDto;
+            const body = response.body as GetFriendRequestsResponse;
             expect(body.data).toHaveLength(1);
             const requestItem = body.data[0];
             expect(requestItem.id).toBe(requestAtoC.id);

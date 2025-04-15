@@ -18,7 +18,7 @@ import { FriendsService } from 'src/domain/services/friends/friends.service';
 import { FriendStatus } from 'src/domain/types/friend.types';
 import {
     GetFriendRequestListRequest,
-    GetFriendRequestsResponseDto,
+    GetFriendRequestsResponse,
 } from 'src/presentation/dto/friends';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 
@@ -65,7 +65,7 @@ export class FriendsController {
         status: 200,
         description:
             '조회 성공. 각 요청 항목에는 관련된 상대방 사용자 정보가 user 필드에 포함됩니다.', // 설명 업데이트
-        type: GetFriendRequestsResponseDto,
+        type: GetFriendRequestsResponse,
     })
     @ApiResponse({
         status: 400,
@@ -81,7 +81,7 @@ export class FriendsController {
     async getFriendRequests(
         @CurrentUser() userId: string,
         @Query() dto: GetFriendRequestListRequest,
-    ): Promise<GetFriendRequestsResponseDto> {
+    ): Promise<GetFriendRequestsResponse> {
         const limit = dto.limit ?? 10;
         const { direction, cursor } = dto;
 
