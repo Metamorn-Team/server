@@ -13,6 +13,7 @@ import { Varient } from 'src/presentation/dto/users/request/search-users.request
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { ResponseResult } from 'test/helper/types';
+import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -152,6 +153,30 @@ describe('UserController (e2e)', () => {
             const { status } = response;
 
             expect(status).toEqual(409);
+        });
+    });
+
+    describe('(PATCH) /users/avatar - 아바타 변경', () => {
+        it('아바타 변경 정상 동작', async () => {
+            const { accessToken } = await login(app);
+
+            const dto: ChangeAvatarRequest = {
+                avatarKey: 'red_pawn',
+            };
+
+            const response = await request(app.getHttpServer())
+                .patch('/users/avatar')
+                .send(dto)
+                .set('Authorization', accessToken);
+            const { status } = response;
+            const updatedUser = await prisma.user.findFirst({
+                where: {
+                    avatarKey: 'red_pawn',
+                },
+            });
+
+            expect(status).toEqual(204);
+            expect(updatedUser).not.toBeNull();
         });
     });
 

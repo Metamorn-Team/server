@@ -12,11 +12,11 @@ export class UserService {
         private readonly userWriter: UserWriter,
     ) {}
 
-    async updateNickname(userId: string, nickname: string) {
-        await this.userWriter.change({ id: userId, nickname });
+    async changeNickname(userId: string, nickname: string) {
+        await this.userWriter.updateNickname(userId, nickname);
     }
 
-    async updateTag(userId: string, tag: string) {
+    async changeTag(userId: string, tag: string) {
         try {
             const user = await this.userReader.readOneByTag(tag);
 
@@ -32,9 +32,13 @@ export class UserService {
                 e instanceof DomainException &&
                 e.errorType === DomainExceptionType.UserNotFound
             ) {
-                return await this.userWriter.change({ id: userId, tag });
+                return await this.userWriter.updateTag(userId, tag);
             }
             throw e;
         }
+    }
+
+    async changeAvatar(userId: string, avatarKey: string) {
+        await this.userWriter.updateAvatarKey(userId, avatarKey);
     }
 }
