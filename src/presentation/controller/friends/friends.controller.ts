@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Delete,
     Get,
     HttpCode,
     HttpStatus,
@@ -25,6 +26,7 @@ import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-fri
 @ApiResponse({ status: 400, description: '잘못된 요청' })
 @ApiResponse({ status: 401, description: '인증 실패 (토큰 누락 또는 만료)' })
 @ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('friends')
 export class FriendsController {
     constructor(
@@ -37,7 +39,6 @@ export class FriendsController {
     @ApiResponse({ status: 404, description: '대상 사용자가 존재하지 않음' })
     @ApiResponse({ status: 409, description: '이미 친구 요청이 존재함' })
     @HttpCode(HttpStatus.NO_CONTENT)
-    @UseGuards(AuthGuard)
     @Post('requests')
     async sendFriendRequest(
         @CurrentUser() userId: string,
@@ -53,7 +54,6 @@ export class FriendsController {
         status: 200,
         description: '조회 성공. 상대방 사용자 정보가 user 필드에 포함됩니다.',
     })
-    @UseGuards(AuthGuard)
     @Get('requests')
     async getFriendRequests(
         @CurrentUser() userId: string,
@@ -73,7 +73,6 @@ export class FriendsController {
     @ApiOperation({ summary: '친구 요청 수락' })
     @ApiResponse({ status: 204, description: '요청 수락 성공' })
     @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
-    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('requests/:requestId/accept')
     async acceptFriendRequest(
@@ -88,7 +87,6 @@ export class FriendsController {
     @ApiOperation({ summary: '친구 요청 거절' })
     @ApiResponse({ status: 204, description: '요청 거절 성공' })
     @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
-    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('requests/:requestId/reject')
     async rejectFriendRequest(
