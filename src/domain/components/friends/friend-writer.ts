@@ -17,20 +17,13 @@ export class FriendWriter {
     }
 
     async updateRequestStatus(
-        userId: string,
         requestId: string,
         status: FriendStatus,
     ): Promise<void> {
-        await this.friendReader.readRequestByIdAndStatus(
-            userId,
-            requestId,
-            status,
-        );
-
         await this.friendsRepository.updateStatus(requestId, status);
     }
 
-    async deleteFriendship(id: string): Promise<void> {
-        await this.friendsRepository.deleteById(id);
+    async deleteFriendship(friendshipId: string): Promise<void> {
+        await this.friendsRepository.deleteById(friendshipId);
     }
 }

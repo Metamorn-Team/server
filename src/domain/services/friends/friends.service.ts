@@ -57,18 +57,28 @@ export class FriendsService {
     }
 
     async acceptFriend(userId: string, requestId: string): Promise<void> {
-        await this.friendWrite.updateRequestStatus(
+        await this.friendReader.readRequestByIdAndStatus(
             userId,
             requestId,
-            'ACCEPTED',
+            'PENDING',
         );
+
+        await this.friendWrite.updateRequestStatus(requestId, 'ACCEPTED');
     }
 
-    async rejectFriend(userId: string, reqeustId: string): Promise<void> {
-        await this.friendWrite.updateRequestStatus(
+    async rejectFriend(userId: string, requestId: string): Promise<void> {
+        await this.friendReader.readRequestByIdAndStatus(
             userId,
-            reqeustId,
-            'REJECTED',
+            requestId,
+            'PENDING',
         );
+
+        await this.friendWrite.updateRequestStatus(requestId, 'REJECTED');
+    }
+
+    async removeFriendship(userId: string, friendshipId) {
+        await this.friendChecker.checkUnfriend(userId, friendshipId);
+
+        await this.friendWrite.deleteFriendship(friendshipId);
     }
 }
