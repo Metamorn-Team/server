@@ -15,7 +15,6 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { FriendWriter } from 'src/domain/components/friends/friend-writer';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
-import { FriendStatus } from 'src/domain/types/friend.types';
 import {
     GetFriendRequestListRequest,
     GetFriendRequestsResponse,
@@ -80,9 +79,7 @@ export class FriendsController {
         @CurrentUser() userId: string,
         @Param('requestId') requestId: string,
     ): Promise<void> {
-        //? 컨트롤러에서 FriendStatus 도메인 타입 사용가능?
-        const status: FriendStatus = 'ACCEPTED';
-        await this.friendWriter.updateRequestStatus(userId, requestId, status);
+        await this.friendsService.acceptFriend(userId, requestId);
     }
 
     @ApiOperation({ summary: '친구 요청 거절' })
@@ -95,7 +92,6 @@ export class FriendsController {
         @CurrentUser() userId: string,
         @Param('requestId') requestId: string,
     ): Promise<void> {
-        const status: FriendStatus = 'REJECTED';
-        await this.friendWriter.updateRequestStatus(userId, requestId, status);
+        await this.friendsService.rejectFriend(userId, requestId);
     }
 }

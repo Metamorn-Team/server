@@ -55,4 +55,20 @@ export class FriendsService {
 
         return { data: requestList, nextCursor };
     }
+
+    async acceptFriend(userId: string, requestId: string): Promise<void> {
+        await this.friendWrite.updateRequestStatus(
+            userId,
+            requestId,
+            'ACCEPTED',
+        );
+    }
+
+    async rejectFriend(userId: string, reqeustId: string): Promise<void> {
+        await this.friendWrite.updateRequestStatus(
+            userId,
+            reqeustId,
+            'REJECTED',
+        );
+    }
 }
