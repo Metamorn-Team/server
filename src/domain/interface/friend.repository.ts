@@ -25,10 +25,12 @@ export interface FriendRepository {
         friendshipId: string,
         status: FriendStatus,
     ): Promise<void>;
-    findMyPendingOneById(
+    findOneByIdAndStatus(
         userId: string,
         requestId: string,
+        stats: FriendStatus,
     ): Promise<FriendData | null>;
+    deleteById(id: string): Promise<void>;
 }
 
 export const FriendRepository = Symbol('FriendRepository');

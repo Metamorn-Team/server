@@ -21,8 +21,16 @@ export class FriendWriter {
         requestId: string,
         status: FriendStatus,
     ): Promise<void> {
-        await this.friendReader.readPendingRequestById(userId, requestId);
+        await this.friendReader.readRequestByIdAndStatus(
+            userId,
+            requestId,
+            status,
+        );
 
         await this.friendsRepository.updateRequestStatus(requestId, status);
+    }
+
+    async deleteFriendship(id: string): Promise<void> {
+        await this.friendsRepository.deleteById(id);
     }
 }
