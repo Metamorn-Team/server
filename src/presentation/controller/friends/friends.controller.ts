@@ -22,6 +22,9 @@ import {
 } from 'src/presentation/dto/friends';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 
+@ApiResponse({ status: 400, description: '잘못된 요청' })
+@ApiResponse({ status: 401, description: '인증 실패 (토큰 누락 또는 만료)' })
+@ApiBearerAuth()
 @Controller('friends')
 export class FriendsController {
     constructor(
@@ -30,24 +33,9 @@ export class FriendsController {
     ) {}
 
     @ApiOperation({ summary: '친구 요청 전송' })
-    @ApiResponse({
-        status: 204,
-        description: '요청 성공',
-    })
-    @ApiResponse({
-        status: 401,
-        description: '인증 실패 (토큰 누락 또는 만료)',
-    })
-    @ApiResponse({
-        status: 404,
-        description:
-            '대상 사용자가 존재하지 않거나, 보낸 id와 받는 id가 동일함',
-    })
-    @ApiResponse({
-        status: 409,
-        description: '이미 친구 요청이 존재함',
-    })
-    @ApiBearerAuth()
+    @ApiResponse({ status: 204, description: '요청 성공' })
+    @ApiResponse({ status: 404, description: '대상 사용자가 존재하지 않음' })
+    @ApiResponse({ status: 409, description: '이미 친구 요청이 존재함' })
     @HttpCode(HttpStatus.NO_CONTENT)
     @UseGuards(AuthGuard)
     @Post('requests')
@@ -63,19 +51,8 @@ export class FriendsController {
     })
     @ApiResponse({
         status: 200,
-        description:
-            '조회 성공. 각 요청 항목에는 관련된 상대방 사용자 정보가 user 필드에 포함됩니다.', // 설명 업데이트
-        type: GetFriendRequestsResponse,
+        description: '조회 성공. 상대방 사용자 정보가 user 필드에 포함됩니다.',
     })
-    @ApiResponse({
-        status: 400,
-        description: '잘못된 요청 파라미터 (direction, limit, cursor)',
-    })
-    @ApiResponse({
-        status: 401,
-        description: '인증 실패 (토큰 누락 또는 만료)',
-    })
-    @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @Get('requests')
     async getFriendRequests(
@@ -94,20 +71,8 @@ export class FriendsController {
     }
 
     @ApiOperation({ summary: '친구 요청 수락' })
-    @ApiResponse({
-        status: 204,
-        description: '요청 수락 성공',
-    })
-    @ApiResponse({
-        status: 401,
-        description: '인증 실패 (토큰 누락 또는 만료)',
-    })
-    @ApiResponse({
-        status: 404,
-        description:
-            '친구 요청이 존재하지 않거나, 친구 요청을 보낸 사용자가 아님',
-    })
-    @ApiBearerAuth()
+    @ApiResponse({ status: 204, description: '요청 수락 성공' })
+    @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('requests/:requestId/accept')
@@ -121,20 +86,8 @@ export class FriendsController {
     }
 
     @ApiOperation({ summary: '친구 요청 거절' })
-    @ApiResponse({
-        status: 204,
-        description: '요청 거절 성공',
-    })
-    @ApiResponse({
-        status: 401,
-        description: '인증 실패 (토큰 누락 또는 만료)',
-    })
-    @ApiResponse({
-        status: 404,
-        description:
-            '친구 요청이 존재하지 않거나, 친구 요청을 보낸 사용자가 아님',
-    })
-    @ApiBearerAuth()
+    @ApiResponse({ status: 204, description: '요청 거절 성공' })
+    @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
     @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('requests/:requestId/reject')
