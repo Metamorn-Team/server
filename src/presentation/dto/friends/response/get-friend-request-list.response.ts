@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-class FriendRequestUserInfoDto {
+class FriendRequestUserInfo {
     @ApiProperty({ description: '유저 ID' })
     readonly id: string;
     @ApiProperty({ description: '유저 닉네임' })
@@ -11,27 +11,27 @@ class FriendRequestUserInfoDto {
     readonly avatarKey: string;
 }
 
-export class FriendRequestItemDto {
+export class FriendRequestItem {
     @ApiProperty({ description: '친구 요청 ID' })
     readonly id: string;
 
     @ApiProperty({
-        type: FriendRequestUserInfoDto,
+        type: FriendRequestUserInfo,
         description:
             '상대방 유저 정보 (direction=received 이면 보낸 사람, direction=sent 이면 받은 사람)',
     })
-    readonly user: FriendRequestUserInfoDto;
+    readonly user: FriendRequestUserInfo;
 
     @ApiProperty({ description: '친구 요청 보낸/받은 시간' })
     readonly createdAt: Date;
 }
 
-export class GetFriendRequestsResponseDto {
+export class GetFriendRequestsResponse {
     @ApiProperty({
-        type: [FriendRequestItemDto],
+        type: [FriendRequestItem],
         description: '친구 요청 목록',
     })
-    readonly data: FriendRequestItemDto[];
+    readonly data: FriendRequestItem[];
 
     @ApiProperty({
         description: '다음 페이지 시작점 ID, 마지막 페이지인 경우 null',
