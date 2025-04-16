@@ -21,6 +21,7 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { UserService } from 'src/domain/services/users/users.service';
+import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { SearchUsersRequest } from 'src/presentation/dto/users/request/search-users.request';
@@ -29,6 +30,10 @@ import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.re
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 
 @ApiTags('users')
+@ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
+@ApiResponse({ status: 401, description: '인증 실패' })
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('users')
 export class UserController {
     constructor(
@@ -46,9 +51,6 @@ export class UserController {
         description: '검색 성공',
         type: SearchUserResponse,
     })
-    @ApiResponse({ status: 400, description: '잘못된 요청 파라미터' })
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
     @Get('search')
     async searchUser(
         @Query() query: SearchUsersRequest,
@@ -67,10 +69,7 @@ export class UserController {
         description: '조회 성공',
         type: GetUserResponse,
     })
-    @ApiResponse({ status: 401, description: '인증 실패' })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
     @Get('my')
     async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
         return await this.userReader.readProfile(userId);
@@ -86,15 +85,12 @@ export class UserController {
         description: '조회할 사용자 ID (UUID)',
         type: String,
     })
-    @ApiBearerAuth()
     @ApiResponse({
         status: 200,
         description: '조회 성공',
         type: GetUserResponse,
     })
-    @ApiResponse({ status: 401, description: '인증 실패' })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
-    @UseGuards(AuthGuard)
     @Get(':id')
     async getUser(@Param('id') userId: string): Promise<GetUserResponse> {
         return await this.userReader.readProfile(userId);
@@ -104,19 +100,14 @@ export class UserController {
         summary: '닉네임 변경',
         description: '로그인한 사용자의 닉네임을 변경합니다.',
     })
-    @ApiBody({ type: ChangeNicknameRequest })
-    @ApiBearerAuth()
     @ApiResponse({ status: 204, description: '닉네임 변경 성공 (No Content)' })
-    @ApiResponse({ status: 400, description: '잘못된 닉네임 형식' })
-    @ApiResponse({ status: 401, description: '인증 실패' })
-    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('nickname')
     async changeNickname(
         @Body() dto: ChangeNicknameRequest,
         @CurrentUser() userId: string,
     ) {
-        await this.userService.updateNickname(userId, dto.nickname);
+        await this.userService.changeNickname(userId, dto.nickname);
     }
 
     @ApiOperation({
@@ -124,18 +115,27 @@ export class UserController {
         description:
             '로그인한 사용자의 태그를 변경합니다. 태그는 고유해야 합니다.',
     })
-    @ApiBody({ type: ChangeTagRequest })
-    @ApiBearerAuth()
     @ApiResponse({ status: 204, description: '태그 변경 성공 (No Content)' })
-    @ApiResponse({ status: 400, description: '잘못된 태그 형식' })
-    @ApiResponse({ status: 401, description: '인증 실패' })
-    @UseGuards(AuthGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('tag')
     async changeTag(
         @Body() dto: ChangeTagRequest,
         @CurrentUser() userId: string,
     ) {
-        await this.userService.updateTag(userId, dto.tag);
+        await this.userService.changeTag(userId, dto.tag);
+    }
+
+    @ApiOperation({
+        summary: '아바타 변경',
+        description: '로그인한 사용자의 아바타를 변경합니다.',
+    })
+    @ApiResponse({ status: 204, description: '아바타 변경 성공 (No Content)' })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Patch('avatar')
+    async changeAvatar(
+        @Body() dto: ChangeAvatarRequest,
+        @CurrentUser() userId: string,
+    ) {
+        await this.userService.changeAvatar(userId, dto.avatarKey);
     }
 }
