@@ -18,6 +18,9 @@ import {
 } from 'src/presentation/dto/friends';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 
+@ApiBearerAuth()
+@ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
+@ApiResponse({ status: 401, description: '인증 실패' })
 @Controller('friends')
 export class FriendsController {
     constructor(private readonly friendsService: FriendsService) {}
@@ -28,21 +31,15 @@ export class FriendsController {
         description: '요청 성공',
     })
     @ApiResponse({
-        status: 401,
-        description: '인증 실패 (토큰 누락 또는 만료)',
-    })
-    @ApiResponse({
         status: 404,
-        description:
-            '대상 사용자가 존재하지 않거나, 보낸 id와 받는 id가 동일함',
+        description: '대상 사용자가 존재하지 않거나',
     })
     @ApiResponse({
         status: 409,
         description: '이미 친구 요청이 존재함',
     })
-    @ApiBearerAuth()
-    @HttpCode(HttpStatus.NO_CONTENT)
     @UseGuards(AuthGuard)
+    @HttpCode(HttpStatus.NO_CONTENT)
     @Post('requests')
     async sendFriendRequest(
         @CurrentUser() userId: string,
@@ -52,23 +49,14 @@ export class FriendsController {
     }
 
     @ApiOperation({
-        summary: '친구 요청 목록 조회 (받은 요청 / 보낸 요청) - 페이지네이션',
+        summary:
+            '친구 요청 목록 조회 (받은 요청 / 보낸 요청) - 커서 페이지네이션',
     })
     @ApiResponse({
         status: 200,
         description:
-            '조회 성공. 각 요청 항목에는 관련된 상대방 사용자 정보가 user 필드에 포함됩니다.', // 설명 업데이트
-        type: GetFriendRequestsResponseDto,
+            '조회 성공. 각 요청 항목에는 관련된 상대방 사용자 정보가 user 필드에 포함됩니다.',
     })
-    @ApiResponse({
-        status: 400,
-        description: '잘못된 요청 파라미터 (direction, limit, cursor)',
-    })
-    @ApiResponse({
-        status: 401,
-        description: '인증 실패 (토큰 누락 또는 만료)',
-    })
-    @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @Get('requests')
     async getFriendRequests(
