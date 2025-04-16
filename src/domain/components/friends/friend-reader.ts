@@ -12,6 +12,21 @@ export class FriendReader {
         private readonly friendRepository: FriendRepository,
     ) {}
 
+    async readPendingRequestById(userId: string, requestId: string) {
+        const request = await this.friendRepository.findPendingOneById(
+            userId,
+            requestId,
+        );
+
+        if (!request) {
+            throw new DomainException(
+                DomainExceptionType.FriendRequestNotFound,
+                HttpStatus.NOT_FOUND,
+                FRIEND_REQUEST_NOT_FOUND_MESSAGE,
+            );
+        }
+    }
+
     async readRequestBetweenUsers(user1Id: string, user2Id: string) {
         const friendRequest =
             await this.friendRepository.findRequestBetweenUsers(

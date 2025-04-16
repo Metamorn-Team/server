@@ -5,6 +5,7 @@ import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import {
     FriendData,
     FriendInfo,
+    FriendStatus,
     PaginatedFriendRequests,
 } from 'src/domain/types/friend.types';
 
@@ -126,5 +127,45 @@ export class FriendPrismaRepository implements FriendRepository {
         });
 
         return { data: mappedRequests, nextCursor };
+    }
+
+    async updateStatus(
+        friendshipId: string,
+        status: FriendStatus,
+    ): Promise<void> {
+        await this.prisma.friendRequest.update({
+            where: { id: friendshipId },
+            data: { status: status, updatedAt: new Date() },
+        });
+    }
+
+    async findPendingOneById(
+        userId: string,
+        requestId: string,
+    ): Promise<FriendData | null> {
+        return this.prisma.friendRequest.findFirst({
+            where: {
+                OR: [
+                    {
+                        id: requestId,
+                        senderId: userId,
+                        status: 'PENDING',
+                        deletedAt: null,
+                    },
+                    {
+                        id: requestId,
+                        receiverId: userId,
+                        status: 'PENDING',
+                        deletedAt: null,
+                    },
+                ],
+            },
+            select: {
+                id: true,
+                senderId: true,
+                receiverId: true,
+                status: true,
+            },
+        });
     }
 }
