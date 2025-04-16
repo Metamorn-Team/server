@@ -28,10 +28,7 @@ import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-fri
 @UseGuards(AuthGuard)
 @Controller('friends')
 export class FriendsController {
-    constructor(
-        private readonly friendsService: FriendsService,
-        private readonly friendWriter: FriendWriter,
-    ) {}
+    constructor(private readonly friendsService: FriendsService) {}
 
     @ApiOperation({ summary: '친구 요청 전송' })
     @ApiResponse({ status: 204, description: '요청 성공' })
@@ -91,5 +88,17 @@ export class FriendsController {
         @Param('requestId') requestId: string,
     ): Promise<void> {
         await this.friendsService.rejectFriend(userId, requestId);
+    }
+
+    @ApiOperation({ summary: '친구 삭제' })
+    @ApiResponse({ status: 204, description: '요청 성공' })
+    @ApiResponse({ status: 404, description: '친구 관계가 존재하지 않음' })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Delete(':friendshipId')
+    async removeFriend(
+        @CurrentUser() userId: string,
+        @Param('friendshipId') friendshipId: string,
+    ): Promise<void> {
+        await this.friendsService.removeFriendship(userId, friendshipId);
     }
 }

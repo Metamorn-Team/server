@@ -61,5 +61,7 @@ export class FriendChecker {
             friendshipId,
             'ACCEPTED',
         );
+
+        return;
     }
 }
