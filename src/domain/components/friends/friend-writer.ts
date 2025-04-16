@@ -16,7 +16,7 @@ export class FriendWriter {
         await this.friendsRepository.save(friend);
     }
 
-    async changeRequestStatus(
+    async updateRequestStatus(
         userId: string,
         requestId: string,
         status: FriendStatus,
@@ -27,7 +27,7 @@ export class FriendWriter {
             status,
         );
 
-        await this.friendsRepository.updateRequestStatus(requestId, status);
+        await this.friendsRepository.updateStatus(requestId, status);
     }
 
     async deleteFriendship(id: string): Promise<void> {

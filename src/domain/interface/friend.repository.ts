@@ -21,10 +21,7 @@ export interface FriendRepository {
         limit: number,
         cursor?: string,
     ): Promise<PaginatedFriendRequests>;
-    updateRequestStatus(
-        friendshipId: string,
-        status: FriendStatus,
-    ): Promise<void>;
+    updateStatus(friendshipId: string, status: FriendStatus): Promise<void>;
     findOneByIdAndStatus(
         userId: string,
         requestId: string,
