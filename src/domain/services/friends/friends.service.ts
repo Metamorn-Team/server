@@ -9,7 +9,7 @@ import {
 import { v4 } from 'uuid';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { UserReader } from 'src/domain/components/users/user-reader';
-import { GetFriendRequestsResponseDto } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
+import { GetFriendRequestsResponse } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
 
 @Injectable()
 export class FriendsService {
@@ -40,7 +40,7 @@ export class FriendsService {
         direction: FriendRequestDirection,
         limit: number,
         cursor?: string,
-    ): Promise<GetFriendRequestsResponseDto> {
+    ): Promise<GetFriendRequestsResponse> {
         const { data: requestList, nextCursor } =
             await this.friendReader.readFriendsRequests(
                 userId,
