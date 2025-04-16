@@ -13,7 +13,7 @@ export class FriendReader {
     ) {}
 
     async readPendingRequestById(userId: string, requestId: string) {
-        const request = await this.friendRepository.findMyPendingOneById(
+        const request = await this.friendRepository.findPendingOneById(
             userId,
             requestId,
         );

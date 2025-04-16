@@ -129,7 +129,7 @@ export class FriendPrismaRepository implements FriendRepository {
         return { data: mappedRequests, nextCursor };
     }
 
-    async updateRequestStatus(
+    async updateStatus(
         friendshipId: string,
         status: FriendStatus,
     ): Promise<void> {
@@ -139,7 +139,7 @@ export class FriendPrismaRepository implements FriendRepository {
         });
     }
 
-    async findMyPendingOneById(
+    async findPendingOneById(
         userId: string,
         requestId: string,
     ): Promise<FriendData | null> {

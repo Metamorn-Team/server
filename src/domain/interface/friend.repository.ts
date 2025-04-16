@@ -21,11 +21,8 @@ export interface FriendRepository {
         limit: number,
         cursor?: string,
     ): Promise<PaginatedFriendRequests>;
-    updateRequestStatus(
-        friendshipId: string,
-        status: FriendStatus,
-    ): Promise<void>;
-    findMyPendingOneById(
+    updateStatus(friendshipId: string, status: FriendStatus): Promise<void>;
+    findPendingOneById(
         userId: string,
         requestId: string,
     ): Promise<FriendData | null>;

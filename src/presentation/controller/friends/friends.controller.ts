@@ -82,7 +82,7 @@ export class FriendsController {
     ): Promise<void> {
         //? 컨트롤러에서 FriendStatus 도메인 타입 사용가능?
         const status: FriendStatus = 'ACCEPTED';
-        await this.friendWriter.changeRequestStatus(userId, requestId, status);
+        await this.friendWriter.updateRequestStatus(userId, requestId, status);
     }
 
     @ApiOperation({ summary: '친구 요청 거절' })
@@ -96,6 +96,6 @@ export class FriendsController {
         @Param('requestId') requestId: string,
     ): Promise<void> {
         const status: FriendStatus = 'REJECTED';
-        await this.friendWriter.changeRequestStatus(userId, requestId, status);
+        await this.friendWriter.updateRequestStatus(userId, requestId, status);
     }
 }
