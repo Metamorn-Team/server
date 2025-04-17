@@ -8,16 +8,14 @@ import {
 } from 'src/domain/types/friend.types';
 import { v4 } from 'uuid';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
-import { UserReader } from 'src/domain/components/users/user-reader';
 import { GetFriendRequestsResponse } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
 
 @Injectable()
 export class FriendsService {
     constructor(
         private readonly friendReader: FriendReader,
-        private readonly friendWrite: FriendWriter,
+        private readonly friendWriter: FriendWriter,
         private readonly friendChecker: FriendChecker,
-        private readonly userReader: UserReader,
     ) {}
 
     async sendFriendRequest(
@@ -32,7 +30,7 @@ export class FriendsService {
         };
         const stdDate = new Date();
         const friend = FriendEntity.create(prototype, v4, stdDate);
-        await this.friendWrite.create(friend);
+        await this.friendWriter.create(friend);
     }
 
     async getFriendRequestList(
@@ -57,18 +55,28 @@ export class FriendsService {
     }
 
     async acceptFriend(userId: string, requestId: string): Promise<void> {
-        await this.friendWrite.updateRequestStatus(
+        await this.friendReader.readRequestByIdAndStatus(
             userId,
             requestId,
-            'ACCEPTED',
+            'PENDING',
         );
+
+        await this.friendWriter.updateRequestStatus(requestId, 'ACCEPTED');
     }
 
-    async rejectFriend(userId: string, reqeustId: string): Promise<void> {
-        await this.friendWrite.updateRequestStatus(
+    async rejectFriend(userId: string, requestId: string): Promise<void> {
+        await this.friendReader.readRequestByIdAndStatus(
             userId,
-            reqeustId,
-            'REJECTED',
+            requestId,
+            'PENDING',
         );
+
+        await this.friendWriter.updateRequestStatus(requestId, 'REJECTED');
+    }
+
+    async removeFriendship(userId: string, friendshipId) {
+        await this.friendChecker.checkUnfriend(userId, friendshipId);
+
+        await this.friendWriter.deleteFriendship(friendshipId);
     }
 }

@@ -417,4 +417,134 @@ describe('FriendController (e2e)', () => {
             );
         });
     });
+
+    describe('DELETE /friends/:friendshipId - 친구 삭제', () => {
+        let currentUser: {
+            userId: string;
+            accessToken: string;
+            nickname: string;
+            tag: string;
+        };
+        let friendUser: UserEntity;
+        let friendship: FriendRequestPrisma;
+
+        beforeEach(async () => {
+            currentUser = await login(app);
+            friendUser = await prisma.user.create({
+                data: generateUserEntity(
+                    'friend.delete@test.com',
+                    'FriendDelete',
+                    'tag_friend_delete',
+                ),
+            });
+
+            friendship = await prisma.friendRequest.create({
+                data: {
+                    id: v4(),
+                    senderId: currentUser.userId,
+                    receiverId: friendUser.id,
+                    status: 'ACCEPTED',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+        });
+
+        it('친구를 정상적으로 삭제한다 (204 NO CONTENT)', async () => {
+            const friendshipIdToDelete = friendship.id;
+
+            const response = await request(app.getHttpServer())
+                .delete(`/friends/${friendshipIdToDelete}`)
+                .set('Authorization', currentUser.accessToken);
+
+            expect(response.status).toBe(HttpStatus.NO_CONTENT);
+
+            const deletedFriendship = await prisma.friendRequest.findUnique({
+                where: { id: friendshipIdToDelete },
+            });
+            expect(deletedFriendship).not.toBeNull();
+            expect(deletedFriendship?.deletedAt).not.toBeNull();
+        });
+
+        it('존재하지 않는 친구 관계 ID로 삭제 시도 시 404 Not Found 에러를 반환한다', async () => {
+            const nonExistentFriendshipId = v4();
+
+            const response = await request(app.getHttpServer())
+                .delete(`/friends/${nonExistentFriendshipId}`)
+                .set('Authorization', currentUser.accessToken);
+
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+        });
+
+        it('이미 삭제된 친구 관계를 다시 삭제 시도 시 404 Not Found 에러를 반환한다', async () => {
+            const friendshipIdToDelete = friendship.id;
+
+            await request(app.getHttpServer())
+                .delete(`/friends/${friendshipIdToDelete}`)
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.NO_CONTENT);
+
+            const response = await request(app.getHttpServer())
+                .delete(`/friends/${friendshipIdToDelete}`)
+                .set('Authorization', currentUser.accessToken);
+
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+        });
+
+        it('자신과 관련 없는 친구 관계를 삭제 시도 시 404 Not Found 에러를 반환한다', async () => {
+            const userC = await prisma.user.create({
+                data: generateUserEntity(
+                    'userC@delete.com',
+                    'UserC',
+                    'tagCdel',
+                ),
+            });
+
+            const otherFriendship = await prisma.friendRequest.create({
+                data: {
+                    id: v4(),
+                    senderId: userC.id,
+                    receiverId: friendUser.id,
+                    status: FriendRequestStatus.ACCEPTED,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+
+            const response = await request(app.getHttpServer())
+                .delete(`/friends/${otherFriendship.id}`)
+                .set('Authorization', currentUser.accessToken);
+
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+        });
+
+        it('친구 요청 상태(PENDING)인 관계를 삭제 시도 시 404 Not Found 에러를 반환한다', async () => {
+            const pendingRequest = await prisma.friendRequest.create({
+                data: {
+                    id: v4(),
+                    senderId: friendUser.id,
+                    receiverId: currentUser.userId,
+                    status: FriendRequestStatus.PENDING,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+
+            const response = await request(app.getHttpServer())
+                .delete(`/friends/${pendingRequest.id}`)
+                .set('Authorization', currentUser.accessToken);
+
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+        });
+
+        it('인증 없이 친구 삭제 요청 시 401 Unauthorized 에러를 반환한다', async () => {
+            const friendshipIdToDelete = friendship.id;
+
+            const response = await request(app.getHttpServer()).delete(
+                `/friends/${friendshipIdToDelete}`,
+            );
+
+            expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+        });
+    });
 });

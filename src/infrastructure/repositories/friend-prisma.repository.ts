@@ -139,9 +139,10 @@ export class FriendPrismaRepository implements FriendRepository {
         });
     }
 
-    async findPendingOneById(
+    async findOneByIdAndStatus(
         userId: string,
         requestId: string,
+        status: FriendStatus,
     ): Promise<FriendData | null> {
         return this.prisma.friendRequest.findFirst({
             where: {
@@ -149,13 +150,13 @@ export class FriendPrismaRepository implements FriendRepository {
                     {
                         id: requestId,
                         senderId: userId,
-                        status: 'PENDING',
+                        status: status,
                         deletedAt: null,
                     },
                     {
                         id: requestId,
                         receiverId: userId,
-                        status: 'PENDING',
+                        status: status,
                         deletedAt: null,
                     },
                 ],
@@ -165,6 +166,16 @@ export class FriendPrismaRepository implements FriendRepository {
                 senderId: true,
                 receiverId: true,
                 status: true,
+            },
+        });
+    }
+
+    async deleteById(id: string): Promise<void> {
+        await this.prisma.friendRequest.update({
+            where: { id: id },
+            data: {
+                deletedAt: new Date(),
+                updatedAt: new Date(),
             },
         });
     }

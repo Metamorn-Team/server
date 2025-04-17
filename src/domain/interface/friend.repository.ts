@@ -22,10 +22,12 @@ export interface FriendRepository {
         cursor?: string,
     ): Promise<PaginatedFriendRequests>;
     updateStatus(friendshipId: string, status: FriendStatus): Promise<void>;
-    findPendingOneById(
+    findOneByIdAndStatus(
         userId: string,
         requestId: string,
+        stats: FriendStatus,
     ): Promise<FriendData | null>;
+    deleteById(id: string): Promise<void>;
 }
 
 export const FriendRepository = Symbol('FriendRepository');

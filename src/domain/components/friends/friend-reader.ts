@@ -3,7 +3,10 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { FRIEND_REQUEST_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { FriendRepository } from 'src/domain/interface/friend.repository';
-import { FriendRequestDirection } from 'src/domain/types/friend.types';
+import {
+    FriendRequestDirection,
+    FriendStatus,
+} from 'src/domain/types/friend.types';
 
 @Injectable()
 export class FriendReader {
@@ -12,10 +15,15 @@ export class FriendReader {
         private readonly friendRepository: FriendRepository,
     ) {}
 
-    async readPendingRequestById(userId: string, requestId: string) {
-        const request = await this.friendRepository.findPendingOneById(
+    async readRequestByIdAndStatus(
+        userId: string,
+        requestId: string,
+        status: FriendStatus,
+    ) {
+        const request = await this.friendRepository.findOneByIdAndStatus(
             userId,
             requestId,
+            status,
         );
 
         if (!request) {
