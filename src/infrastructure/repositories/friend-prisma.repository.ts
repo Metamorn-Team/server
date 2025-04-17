@@ -6,7 +6,9 @@ import {
     FriendData,
     FriendInfo,
     FriendStatus,
+    FriendWithRelationInfo,
     PaginatedFriendRequests,
+    PaginatedFriends,
 } from 'src/domain/types/friend.types';
 
 @Injectable()
@@ -17,6 +19,71 @@ export class FriendPrismaRepository implements FriendRepository {
         await this.prisma.friendRequest.create({
             data,
         });
+    }
+
+    async findFriendsByUserId(
+        userId: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedFriends> {
+        const cursorOption = cursor ? { id: cursor } : undefined;
+
+        const friendships = await this.prisma.friendRequest.findMany({
+            where: {
+                status: 'ACCEPTED',
+                deletedAt: null,
+                OR: [{ senderId: userId }, { receiverId: userId }],
+            },
+            select: {
+                id: true,
+                sender: {
+                    select: {
+                        id: true,
+                        nickname: true,
+                        tag: true,
+                        avatarKey: true,
+                    },
+                },
+                receiver: {
+                    select: {
+                        id: true,
+                        nickname: true,
+                        tag: true,
+                        avatarKey: true,
+                    },
+                },
+                updatedAt: true,
+            },
+            orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
+            take: limit + 1,
+            cursor: cursorOption,
+            skip: cursor ? 1 : 0,
+        });
+
+        let nextCursor: string | null = null;
+        if (friendships.length > limit) {
+            const nextItem = friendships.pop();
+            nextCursor = nextItem?.id ?? null;
+        }
+
+        const maapedFriends: FriendWithRelationInfo[] = friendships.map(
+            (fs) => {
+                const friendUser =
+                    fs.sender.id === userId ? fs.receiver : fs.sender;
+                return {
+                    friendshipId: fs.id,
+                    friend: {
+                        id: friendUser.id,
+                        nickname: friendUser.nickname,
+                        tag: friendUser.tag,
+                        avatarKey: friendUser.avatarKey,
+                    },
+                    becameFriendAt: fs.updatedAt,
+                };
+            },
+        );
+
+        return { data: maapedFriends, nextCursor };
     }
 
     async findRequestBetweenUsers(
@@ -129,16 +196,6 @@ export class FriendPrismaRepository implements FriendRepository {
         return { data: mappedRequests, nextCursor };
     }
 
-    async updateStatus(
-        friendshipId: string,
-        status: FriendStatus,
-    ): Promise<void> {
-        await this.prisma.friendRequest.update({
-            where: { id: friendshipId },
-            data: { status: status, updatedAt: new Date() },
-        });
-    }
-
     async findOneByIdAndStatus(
         userId: string,
         requestId: string,
@@ -167,6 +224,16 @@ export class FriendPrismaRepository implements FriendRepository {
                 receiverId: true,
                 status: true,
             },
+        });
+    }
+
+    async updateStatus(
+        friendshipId: string,
+        status: FriendStatus,
+    ): Promise<void> {
+        await this.prisma.friendRequest.update({
+            where: { id: friendshipId },
+            data: { status: status, updatedAt: new Date() },
         });
     }
 

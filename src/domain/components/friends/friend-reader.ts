@@ -6,6 +6,7 @@ import { FriendRepository } from 'src/domain/interface/friend.repository';
 import {
     FriendRequestDirection,
     FriendStatus,
+    PaginatedFriends,
 } from 'src/domain/types/friend.types';
 
 @Injectable()
@@ -14,6 +15,18 @@ export class FriendReader {
         @Inject(FriendRepository)
         private readonly friendRepository: FriendRepository,
     ) {}
+
+    async readFriendsList(
+        userId: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedFriends> {
+        return await this.friendRepository.findFriendsByUserId(
+            userId,
+            limit,
+            cursor,
+        );
+    }
 
     async readRequestByIdAndStatus(
         userId: string,
