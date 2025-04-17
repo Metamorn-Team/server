@@ -18,6 +18,8 @@ import { FriendsService } from 'src/domain/services/friends/friends.service';
 import {
     GetFriendRequestListRequest,
     GetFriendRequestsResponse,
+    GetFriendsRequest,
+    GetFriendsResponse,
 } from 'src/presentation/dto/friends';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 
@@ -99,5 +101,16 @@ export class FriendsController {
         @Param('friendshipId') friendshipId: string,
     ): Promise<void> {
         await this.friendsService.removeFriendship(userId, friendshipId);
+    }
+
+    @Get()
+    async getFriends(
+        @CurrentUser() userId: string,
+        @Query() query: GetFriendsRequest,
+    ): Promise<GetFriendsResponse> {
+        const limit = query.limit ?? 20;
+        const cursor = query.cursor;
+
+        return await this.friendsService.getFriendsList(userId, limit, cursor);
     }
 }
