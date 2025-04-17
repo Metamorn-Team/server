@@ -14,7 +14,6 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
-import { FriendWriter } from 'src/domain/components/friends/friend-writer';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import {
     GetFriendRequestListRequest,
