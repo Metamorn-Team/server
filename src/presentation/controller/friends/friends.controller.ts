@@ -109,12 +109,14 @@ export class FriendsController {
         await this.friendsService.removeFriendship(userId, friendshipId);
     }
 
+    @ApiOperation({ summary: '친구 목록 조회' })
+    @ApiResponse({ status: 200, description: '친구 목록 정상 조회' })
     @Get()
     async getFriends(
         @CurrentUser() userId: string,
         @Query() query: GetFriendsRequest,
     ): Promise<GetFriendsResponse> {
-        const limit = query.limit ?? 20;
+        const limit = query.limit ?? 10;
         const cursor = query.cursor;
 
         return await this.friendsService.getFriendsList(userId, limit, cursor);
