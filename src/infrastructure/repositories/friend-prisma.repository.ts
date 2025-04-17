@@ -57,7 +57,6 @@ export class FriendPrismaRepository implements FriendRepository {
             orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
             take: limit + 1,
             cursor: cursorOption,
-            skip: cursor ? 1 : 0,
         });
 
         let nextCursor: string | null = null;
@@ -132,7 +131,6 @@ export class FriendPrismaRepository implements FriendRepository {
             orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
             take: limit + 1,
             cursor: cursorOption,
-            skip: cursor ? 1 : 0,
         });
 
         let nextCursor: string | null = null;
@@ -176,7 +174,6 @@ export class FriendPrismaRepository implements FriendRepository {
             orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
             take: limit + 1,
             cursor: cursorOption,
-            skip: cursor ? 1 : 0,
         });
 
         let nextCursor: string | null = null;
