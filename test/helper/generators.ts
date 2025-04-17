@@ -1,3 +1,4 @@
+import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
@@ -26,11 +27,11 @@ export const generateIsland = (
     const stdDate = new Date();
 
     return new IslandEntity(
-        partial?.id ?? v4(),
-        partial?.tag ?? 'dev',
-        partial?.createdAt ?? stdDate,
-        partial?.updatedAt ?? stdDate,
-        partial?.deletedAt ?? null,
+        partial?.id || v4(),
+        partial?.tag || 'dev',
+        partial?.createdAt || stdDate,
+        partial?.updatedAt || stdDate,
+        partial?.deletedAt || null,
     );
 };
 
@@ -40,10 +41,30 @@ export const generateIslandJoin = (
     const stdDate = new Date();
 
     return new IslandJoinEntity(
-        partial?.id ?? v4(),
-        partial?.islandId ?? v4(),
-        partial?.userId ?? v4(),
-        partial?.joinedAt ?? stdDate,
-        partial?.leftAt ?? null,
+        partial?.id || v4(),
+        partial?.islandId || v4(),
+        partial?.userId || v4(),
+        partial?.joinedAt || stdDate,
+        partial?.leftAt || null,
+    );
+};
+
+/**
+ * default status: 'PENDING'
+ */
+export const generateFriendship = (
+    senderId: string,
+    receiverId: string,
+    partial?: Partial<Omit<FriendEntity, 'senderId' | 'receiverId'>>,
+) => {
+    const stdDate = new Date();
+
+    return new FriendEntity(
+        partial?.id || v4(),
+        senderId,
+        receiverId,
+        partial?.status || 'PENDING',
+        partial?.createdAt || stdDate,
+        partial?.updatedAt || stdDate,
     );
 };
