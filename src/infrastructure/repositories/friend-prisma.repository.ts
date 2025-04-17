@@ -103,6 +103,10 @@ export class FriendPrismaRepository implements FriendRepository {
                         deletedAt: null,
                     },
                 ],
+                status: {
+                    not: 'REJECTED',
+                },
+                deletedAt: null,
             },
         });
     }

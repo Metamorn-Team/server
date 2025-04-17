@@ -3,7 +3,7 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
-import { generateUserEntity } from 'test/helper/generators';
+import { generateFriendship, generateUserEntity } from 'test/helper/generators';
 import { login } from 'test/helper/login';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 import { v4 } from 'uuid';
@@ -130,6 +130,43 @@ describe('FriendController (e2e)', () => {
                 .set('Authorization', currentUser.accessToken);
 
             expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+        });
+
+        it('거절 상태의 요청이 존재하는 경우에도 재요청이 가능하다', async () => {
+            const currentUser = await login(app);
+
+            const receivedUser = await prisma.user.create({
+                data: generateUserEntity(
+                    'receiver_conflict@email.com',
+                    'conflictNickname',
+                    'conflictTag',
+                ),
+            });
+
+            await prisma.friendRequest.create({
+                data: generateFriendship(currentUser.userId, receivedUser.id, {
+                    status: 'REJECTED',
+                }),
+            });
+
+            const dto: SendFriendRequest = {
+                targetUserId: receivedUser.id,
+            };
+
+            const response = await request(app.getHttpServer())
+                .post('/friends/requests')
+                .send(dto)
+                .set('Authorization', currentUser.accessToken);
+
+            const requestCount = await prisma.friendRequest.count({
+                where: {
+                    senderId: currentUser.userId,
+                    receiverId: receivedUser.id,
+                },
+            });
+
+            expect(response.status).toBe(HttpStatus.NO_CONTENT);
+            expect(requestCount).toBe(2);
         });
     });
 
