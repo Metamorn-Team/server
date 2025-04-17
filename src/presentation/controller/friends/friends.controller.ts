@@ -11,7 +11,12 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+    ApiBearerAuth,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
@@ -23,6 +28,7 @@ import {
 } from 'src/presentation/dto/friends';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 
+@ApiTags('friends')
 @ApiResponse({ status: 400, description: '잘못된 요청' })
 @ApiResponse({ status: 401, description: '인증 실패 (토큰 누락 또는 만료)' })
 @ApiBearerAuth()
