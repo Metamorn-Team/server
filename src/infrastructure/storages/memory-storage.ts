@@ -1,10 +1,6 @@
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import {
-    Player,
-    Island,
-    IslandTag,
-    SocketClientId,
-} from 'src/domain/types/game.types';
+import { Player } from 'src/domain/models/game/player';
+import { Island, IslandTag, SocketClientId } from 'src/domain/types/game.types';
 
 export class MemoryStorage implements GameStorage {
     private players = new Map<SocketClientId, Player>();
