@@ -13,7 +13,7 @@ import { UserReader } from 'src/domain/components/users/user-reader';
 import { Player } from 'src/domain/models/game/player';
 
 @Injectable()
-export class ZoneService {
+export class GameService {
     constructor(
         @Inject(GameStorage)
         private readonly gameStorage: GameStorage,

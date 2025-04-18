@@ -13,7 +13,7 @@ import {
 import { v4 } from 'uuid';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
-import { ZoneService } from 'src/domain/services/game/zone.service';
+import { GameService } from 'src/domain/services/game/game.service';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import {
@@ -40,7 +40,7 @@ export class GameZoneGateway
     private readonly logger = new Logger(GameZoneGateway.name);
 
     constructor(
-        private readonly zoneService: ZoneService,
+        private readonly zoneService: GameService,
         private readonly chatMessageService: ChatMessageService,
         private readonly userReader: UserReader,
     ) {}

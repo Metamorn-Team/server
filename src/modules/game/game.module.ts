@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import { ZoneService } from 'src/domain/services/game/zone.service';
+import { GameService } from 'src/domain/services/game/game.service';
 import { MemoryStorage } from 'src/infrastructure/storages/memory-storage';
 import { ChatMessageModule } from 'src/modules/chat-messages/chat-message.module';
 import { GameStorageModule } from 'src/modules/game/game-storage.module';
@@ -17,6 +17,6 @@ import { GameZoneGateway } from 'src/presentation/gateway/game-zone.gateway';
         IslandJoinComponentModule,
         ChatMessageModule,
     ],
-    providers: [GameZoneGateway, ZoneService],
+    providers: [GameZoneGateway, GameService],
 })
 export class GameModule {}
