@@ -56,6 +56,7 @@ export class FriendsController {
     @ApiResponse({
         status: 200,
         description: '조회 성공. 상대방 사용자 정보가 user 필드에 포함됩니다.',
+        type: GetFriendRequestsResponse,
     })
     @Get('requests')
     async getFriendRequests(
