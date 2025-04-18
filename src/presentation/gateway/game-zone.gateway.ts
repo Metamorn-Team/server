@@ -40,7 +40,7 @@ export class GameZoneGateway
     private readonly logger = new Logger(GameZoneGateway.name);
 
     constructor(
-        private readonly zoneService: GameService,
+        private readonly gameService: GameService,
         private readonly chatMessageService: ChatMessageService,
         private readonly userReader: UserReader,
     ) {}
@@ -51,12 +51,12 @@ export class GameZoneGateway
         @MessageBody() data: PlayerJoinRequest,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const kickedPlayer = this.zoneService.kickPlayerById(userId);
+        const kickedPlayer = this.gameService.kickPlayerById(userId);
         if (kickedPlayer) {
             const { clientId, roomId, id } = kickedPlayer;
             const kickedClient = this.wss.sockets.get(clientId);
 
-            await this.zoneService.leaveRoom(roomId, id);
+            await this.gameService.leaveRoom(roomId, id);
             kickedClient?.leave(roomId);
 
             client.to(roomId).emit('playerLeft', { id });
@@ -67,7 +67,7 @@ export class GameZoneGateway
 
         this.logger.log(`joined player : ${userId}`);
         const { activePlayers, availableIsland, joinedPlayer } =
-            await this.zoneService.joinRoom(roomType, userId, client.id, x, y);
+            await this.gameService.joinRoom(roomType, userId, client.id, x, y);
 
         client.join(availableIsland.id);
         client.emit('playerJoinSuccess', { x, y });
@@ -82,7 +82,7 @@ export class GameZoneGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const player = await this.zoneService.leftPlayer(userId);
+        const player = await this.gameService.leftPlayer(userId);
         if (player) {
             client.leave(player.roomId);
             client.to(player.roomId).emit('playerLeft', { id: player.id });
@@ -97,7 +97,7 @@ export class GameZoneGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const movedPlayer = this.zoneService.move(userId, data.x, data.y);
+        const movedPlayer = this.gameService.move(userId, data.x, data.y);
         if (movedPlayer) {
             client.to(movedPlayer.roomId).emit('playerMoved', {
                 id: movedPlayer.id,
@@ -113,7 +113,7 @@ export class GameZoneGateway
         // NOTE 현재는 플레이어만
         try {
             const { attacker, attackedPlayers } =
-                this.zoneService.attack(userId);
+                this.gameService.attack(userId);
 
             this.wss.to(attacker.roomId).emit('attacked', {
                 attackerId: attacker.id,
@@ -167,7 +167,7 @@ export class GameZoneGateway
 
     handleDisconnect(client: TypedSocket & { userId: string }) {
         const userId = client.userId;
-        const player = this.zoneService.getPlayer(userId);
+        const player = this.gameService.getPlayer(userId);
         this.logger.debug(
             `call disconnect id from Zone:${client.userId} disconnected`,
         );
@@ -175,7 +175,7 @@ export class GameZoneGateway
 
         const { roomId } = player;
         client.leave(roomId);
-        this.zoneService.leaveRoom(roomId, player.id);
+        this.gameService.leaveRoom(roomId, player.id);
         client.to(roomId).emit('playerLeft', { id: player.id });
         this.logger.debug(`Cliend id from Zone:${player.id} disconnected`);
     }
