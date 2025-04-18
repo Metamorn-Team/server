@@ -195,10 +195,21 @@ export class GameService {
         return player;
     }
 
-    attack(attacker: Player) {
-        const island = this.gameStorage.getIsland(attacker.roomId);
-        if (!island || island.players.size === 0) return;
+    attack(attackerId: string) {
+        const attacker = this.gameStorage.getPlayer(attackerId);
+        if (!attacker) throw new Error('없는 회원');
 
+        const island = this.gameStorage.getIsland(attacker.roomId);
+        if (!island) throw new Error('없는 섬');
+
+        if (island.players.size === 0) {
+            return {
+                attacker,
+                attackedPlayers: [],
+            };
+        }
+
+        // 아바타 추가되면 avatarKey에 따라 분기
         const boxSize = ATTACK_BOX_SIZE.PAWN;
         const attackBox = {
             x: attacker.isFacingRight
@@ -209,13 +220,16 @@ export class GameService {
             height: boxSize.height,
         };
 
-        const attackedPlayer = Array.from(island.players)
+        const attackedPlayers = Array.from(island.players)
             .map((playerId) => this.getPlayer(playerId))
             .filter((player) => player !== null)
             .filter((player) => player.id !== attacker.id)
             .filter((player) => this.isInAttackBox(player, attackBox));
 
-        return attackedPlayer;
+        return {
+            attacker,
+            attackedPlayers,
+        };
     }
 
     isInAttackBox(

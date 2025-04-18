@@ -110,20 +110,22 @@ export class GameZoneGateway
 
     @SubscribeMessage('attack')
     async handleAttack(@CurrentUserFromSocket() userId: string) {
-        this.logger.log('공격');
-
         // NOTE 현재는 플레이어만
-        const attacker = this.zoneService.getPlayer(userId);
-        if (!attacker) return;
+        try {
+            const { attacker, attackedPlayers } =
+                this.zoneService.attack(userId);
 
-        const attackedPlayers = this.zoneService.attack(attacker);
-        if (!attackedPlayers) return;
+            this.wss.to(attacker.roomId).emit('attacked', {
+                attackerId: attacker.id,
+                attackedPlayerIds: attackedPlayers.map((player) => player.id),
+            });
 
-        this.logger.debug(attackedPlayers);
-        this.wss.to(attacker.roomId).emit('attacked', {
-            attackerId: attacker.id,
-            attackedPlayerIds: attackedPlayers.map((player) => player.id),
-        });
+            this.logger.debug(
+                `공격 성공: ${attackedPlayers.map((player) => player.nickname)}`,
+            );
+        } catch (e) {
+            this.logger.error(`공격 실패: ${e}`);
+        }
     }
 
     @SubscribeMessage('sendMessage')
