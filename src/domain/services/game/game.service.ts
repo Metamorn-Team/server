@@ -117,6 +117,23 @@ export class GameService {
         };
     }
 
+    async leftPlayer(playerId: string) {
+        const player = this.gameStorage.getPlayer(playerId);
+        if (!player) return;
+
+        const room = this.gameStorage.getIsland(player.roomId);
+        if (!room) return;
+
+        const { roomId } = player;
+
+        await this.islandJoinWriter.left(roomId, player.id);
+
+        this.gameStorage.deletePlayer(playerId);
+        room.players.delete(playerId);
+
+        return player;
+    }
+
     async leaveRoom(islandId: string, playerId: string) {
         const player = this.gameStorage.getPlayer(playerId);
         if (!player) return;
