@@ -110,7 +110,11 @@ export class FriendsController {
     }
 
     @ApiOperation({ summary: '친구 목록 조회' })
-    @ApiResponse({ status: 200, description: '친구 목록 정상 조회' })
+    @ApiResponse({
+        status: 200,
+        description: '친구 목록 정상 조회',
+        type: GetFriendsResponse,
+    })
     @Get()
     async getFriends(
         @CurrentUser() userId: string,
