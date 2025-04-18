@@ -23,7 +23,6 @@ import {
 } from 'src/presentation/dto/game/socket/type';
 import { SendMessageRequest } from 'src/presentation/dto/game/request/send-message.request';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
-import { MOVING_THRESHOLD } from 'src/constants/threshold';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -67,33 +66,15 @@ export class GameZoneGateway
         const { roomType, x, y } = data;
 
         this.logger.log(`joined player : ${userId}`);
+        const { activePlayers, availableIsland, joinedPlayer } =
+            await this.zoneService.joinRoom(roomType, userId, client.id, x, y);
 
-        const availableRoom = await this.zoneService.getAvailableRoom(roomType);
-
-        const activeUsers =
-            this.zoneService.getActiveUsers(availableRoom.id) || [];
-
-        client.emit('activePlayers', activeUsers);
-
-        const user = await this.userReader.readProfile(userId);
-
-        const { id, nickname, avatarKey, tag } = user;
-        await this.zoneService.joinRoom(availableRoom.id, userId, {
-            id,
-            nickname,
-            tag,
-            avatarKey,
-            x,
-            y,
-            clientId: client.id,
-            roomId: availableRoom.id,
-            isFacingRight: true,
-            lastMoved: Date.now(),
-        });
-
-        client.join(availableRoom.id);
+        client.join(availableIsland.id);
         client.emit('playerJoinSuccess', { x, y });
-        client.to(availableRoom.id).emit('playerJoin', { ...user, x, y });
+        client.emit('activePlayers', activePlayers);
+        client
+            .to(availableIsland.id)
+            .emit('playerJoin', { ...joinedPlayer, x, y });
     }
 
     @SubscribeMessage('playerLeft')
@@ -118,28 +99,13 @@ export class GameZoneGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        this.logger.debug('무빙..');
-        const player = this.zoneService.getPlayer(userId);
-        if (!player) return;
-        if (player.lastMoved + MOVING_THRESHOLD > Date.now()) return;
-        if (player.x === data.x && player.y === data.y) return;
-
-        if (player) {
-            if (player.x < data.x) {
-                player.isFacingRight = true;
-            }
-            if (player.x > data.x) {
-                player.isFacingRight = false;
-            }
-
-            player.x = data.x;
-            player.y = data.y;
-            client.to(player.roomId).emit('playerMoved', {
-                id: player.id,
-                x: data.x,
-                y: data.y,
+        const movedPlayer = this.zoneService.move(userId, data.x, data.y);
+        if (movedPlayer) {
+            client.to(movedPlayer.roomId).emit('playerMoved', {
+                id: movedPlayer.id,
+                x: movedPlayer.x,
+                y: movedPlayer.y,
             });
-            player.lastMoved = Date.now();
             this.logger.debug(`위치 전송 x: ${data.x}, y: ${data.y}`);
         }
     }

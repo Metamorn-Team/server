@@ -1,13 +1,16 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import { Player, IslandTag, SocketClientId } from 'src/domain/types/game.types';
+import { IslandTag, SocketClientId } from 'src/domain/types/game.types';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
+import { MOVING_THRESHOLD } from 'src/constants/threshold';
+import { UserReader } from 'src/domain/components/users/user-reader';
+import { Player } from 'src/domain/models/game/player';
 
 @Injectable()
 export class ZoneService {
@@ -16,6 +19,7 @@ export class ZoneService {
         private readonly gameStorage: GameStorage,
         private readonly islandWriter: IslandWriter,
         private readonly islandJoinWriter: IslandJoinWriter,
+        private readonly userReader: UserReader,
     ) {}
 
     async createRoom(tag: IslandTag) {
@@ -63,7 +67,31 @@ export class ZoneService {
         return this.gameStorage.getIsland(islandId);
     }
 
-    async joinRoom(islandId: string, playerId: string, player: Player) {
+    async joinRoom(
+        islandType: 'dev' | 'design',
+        playerId: string,
+        clientId: string,
+        x: number,
+        y: number,
+    ) {
+        const availableIsland = await this.getAvailableRoom(islandType);
+        const user = await this.userReader.readProfile(playerId);
+
+        const { id, nickname, avatarKey, tag } = user;
+        const { id: islandId } = availableIsland;
+        const player = Player.create({
+            id,
+            clientId,
+            nickname,
+            avatarKey,
+            tag,
+            roomId: islandId,
+            x,
+            y,
+        });
+
+        this.gameStorage.addPlayer(playerId, player);
+
         const stdDate = new Date();
         const islandJoin = IslandJoinEntity.create(
             { islandId, userId: player.id },
@@ -72,12 +100,21 @@ export class ZoneService {
         );
         await this.islandJoinWriter.create(islandJoin);
 
-        this.gameStorage.addPlayer(playerId, player);
-
         const room = this.gameStorage.getIsland(islandId);
         if (!room) throw new Error('없는 방');
 
         room.players.add(playerId);
+
+        const activePlayers =
+            this.getActiveUsers(availableIsland.id).filter(
+                (player) => player.id !== playerId,
+            ) || [];
+
+        return {
+            activePlayers,
+            availableIsland,
+            joinedPlayer: player,
+        };
     }
 
     async leaveRoom(islandId: string, playerId: string) {
@@ -125,6 +162,20 @@ export class ZoneService {
 
     getPlayerByClientId(clientId: string) {
         return this.gameStorage.getPlayerByClientId(clientId);
+    }
+
+    move(playerId: string, x: number, y: number): Player | null {
+        const player = this.gameStorage.getPlayer(playerId);
+
+        if (!player) return null;
+        if (player.lastMoved + MOVING_THRESHOLD > Date.now()) return null;
+        if (player.x === x && player.y === y) return null;
+
+        player.isFacingRight =
+            player.x < x ? true : player.x > x ? false : player.isFacingRight;
+
+        player.setPosition(x, y);
+        return player;
     }
 
     attack(attacker: Player) {
