@@ -134,25 +134,25 @@ export class GameZoneGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() senderId: string,
     ) {
-        this.logger.debug(`전송자: ${senderId}`);
-        this.logger.debug(`메시지: ${data.message}`);
+        try {
+            const player = await this.chatMessageService.sendMessage(
+                senderId,
+                data.message,
+            );
 
-        const player = this.zoneService.getPlayer(senderId);
-        if (!player) throw new Error('없는 플레이어');
+            client.emit('messageSent', {
+                messageId: v4(),
+                message: data.message,
+            });
+            client
+                .to(player.roomId)
+                .emit('receiveMessage', { senderId, message: data.message });
 
-        const { message } = data;
-        const { roomId } = player;
-        await this.chatMessageService.create(
-            senderId,
-            roomId,
-            message,
-            'island',
-        );
-
-        client.emit('messageSent', { messageId: v4(), message: data.message });
-        client
-            .to(roomId)
-            .emit('receiveMessage', { senderId, message: data.message });
+            this.logger.debug(`전송자: ${senderId}`);
+            this.logger.debug(`메시지: ${data.message}`);
+        } catch (e) {
+            this.logger.error(`메세지 전송 실패: ${e}`);
+        }
     }
 
     // -----------------------------------------------------------
