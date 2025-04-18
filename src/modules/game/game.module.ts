@@ -7,7 +7,7 @@ import { GameStorageModule } from 'src/modules/game/game-storage.module';
 import { IslandJoinComponentModule } from 'src/modules/island-joins/island-join-component.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
 import { UserComponentModule } from 'src/modules/users/users-component.module';
-import { GameZoneGateway } from 'src/presentation/gateway/game-zone.gateway';
+import { IslandGateway } from 'src/presentation/gateway/island.gateway';
 
 @Module({
     imports: [
@@ -17,6 +17,6 @@ import { GameZoneGateway } from 'src/presentation/gateway/game-zone.gateway';
         IslandJoinComponentModule,
         ChatMessageModule,
     ],
-    providers: [GameZoneGateway, GameService],
+    providers: [IslandGateway, GameService],
 })
 export class GameModule {}

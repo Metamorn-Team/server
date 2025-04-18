@@ -31,13 +31,13 @@ import { ChatMessageService } from 'src/domain/services/chat-messages/chat-messa
         origin: true,
     },
 })
-export class GameZoneGateway
+export class IslandGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
     @WebSocketServer()
     private readonly wss: Namespace<ClientToServer, ServerToClient>;
 
-    private readonly logger = new Logger(GameZoneGateway.name);
+    private readonly logger = new Logger(IslandGateway.name);
 
     constructor(
         private readonly gameService: GameService,
