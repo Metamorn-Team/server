@@ -38,6 +38,8 @@ export class Player {
     setPosition(x: number, y: number) {
         this.x = x;
         this.y = y;
+
+        this.lastMoved = Date.now();
         this.updateLastActivity();
     }
 
