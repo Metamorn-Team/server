@@ -6,6 +6,7 @@ export interface GameStorage {
     getPlayerByClientId(clientId: string): Player | null;
     addPlayer(playerId: string, player: Player): void;
     deletePlayer(playerId: string): void;
+    getPlayersByIslandId(islandId: string): Player[];
 
     createIsland(islandId: string, island: Island): void;
     getIsland(islandId: string): Island | null;
