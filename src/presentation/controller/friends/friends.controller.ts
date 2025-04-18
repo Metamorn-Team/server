@@ -11,16 +11,24 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+    ApiBearerAuth,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import {
     GetFriendRequestListRequest,
     GetFriendRequestsResponse,
+    GetFriendsRequest,
+    GetFriendsResponse,
 } from 'src/presentation/dto/friends';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 
+@ApiTags('friends')
 @ApiResponse({ status: 400, description: '잘못된 요청' })
 @ApiResponse({ status: 401, description: '인증 실패 (토큰 누락 또는 만료)' })
 @ApiBearerAuth()
@@ -99,5 +107,18 @@ export class FriendsController {
         @Param('friendshipId') friendshipId: string,
     ): Promise<void> {
         await this.friendsService.removeFriendship(userId, friendshipId);
+    }
+
+    @ApiOperation({ summary: '친구 목록 조회' })
+    @ApiResponse({ status: 200, description: '친구 목록 정상 조회' })
+    @Get()
+    async getFriends(
+        @CurrentUser() userId: string,
+        @Query() query: GetFriendsRequest,
+    ): Promise<GetFriendsResponse> {
+        const limit = query.limit ?? 10;
+        const cursor = query.cursor;
+
+        return await this.friendsService.getFriendsList(userId, limit, cursor);
     }
 }

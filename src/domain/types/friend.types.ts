@@ -30,3 +30,14 @@ export interface PaginatedFriendRequests {
     readonly data: FriendRequestsData[];
     readonly nextCursor: string | null;
 }
+
+export interface FriendWithRelationInfo {
+    readonly friendshipId: string;
+    readonly friend: FriendInfo;
+    readonly becameFriendAt: Date;
+}
+
+export interface PaginatedFriends {
+    readonly data: FriendWithRelationInfo[];
+    readonly nextCursor: string | null;
+}

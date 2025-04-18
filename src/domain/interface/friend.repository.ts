@@ -3,10 +3,16 @@ import {
     FriendData,
     FriendStatus,
     PaginatedFriendRequests,
+    PaginatedFriends,
 } from '../types/friend.types';
 
 export interface FriendRepository {
     save(data: FriendEntity): Promise<void>;
+    findFriendsByUserId(
+        userId: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<PaginatedFriends>;
     findRequestBetweenUsers(
         senderId: string,
         receiverId: string,

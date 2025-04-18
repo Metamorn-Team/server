@@ -10,12 +10,14 @@ import { v4 } from 'uuid';
 import {
     FriendRequestDirection,
     GetFriendRequestsResponse,
+    GetFriendsResponse,
 } from 'src/presentation/dto/friends';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import {
     FriendRequest as FriendRequestPrisma,
     FriendRequestStatus,
 } from '@prisma/client';
+import { ResponseResult } from 'test/helper/types';
 
 describe('FriendController (e2e)', () => {
     let app: INestApplication;
@@ -582,6 +584,216 @@ describe('FriendController (e2e)', () => {
             );
 
             expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+        });
+    });
+
+    describe('GET /friends - 친구 목록 조회', () => {
+        let currentUser: {
+            userId: string;
+            accessToken: string;
+            nickname: string;
+            tag: string;
+        };
+
+        beforeEach(async () => {
+            currentUser = await login(app);
+        });
+
+        const seedFriends = async (count: number) => {
+            const userId = currentUser.userId;
+            const friendUsers: UserEntity[] = [];
+            const friendships: FriendRequestPrisma[] = [];
+
+            for (let i = 0; i < count; i++) {
+                const friend = await prisma.user.create({
+                    data: generateUserEntity(
+                        `friend${i}@test.com`,
+                        `Friend${i}`,
+                        `tag_friend_${i}`,
+                        'GOOGLE',
+                        'pawn',
+                        new Date(Date.now() - i * 1000),
+                    ),
+                });
+                friendUsers.push(friend);
+
+                const senderId = i % 2 === 0 ? userId : friend.id;
+                const receiverId = i % 2 === 0 ? friend.id : userId;
+
+                const friendship = await prisma.friendRequest.create({
+                    data: {
+                        id: v4(),
+                        senderId: senderId,
+                        receiverId: receiverId,
+                        status: 'ACCEPTED',
+                        createdAt: new Date(Date.now() - (count - i) * 2000),
+                        updatedAt: new Date(Date.now() - i * 1000),
+                    },
+                });
+                friendships.push(friendship);
+            }
+            friendships.sort(
+                (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+            );
+            return { friendUsers, friendships };
+        };
+
+        it('친구 목록을 정상적으로 조회한다 (페이지네이션 x)', async () => {
+            const friendCount = 3;
+            const { friendUsers, friendships } = await seedFriends(friendCount);
+
+            const expectedFriendsData = friendships.map((friendship, index) => {
+                const friendUser = friendUsers[index];
+                return {
+                    id: friendUser.id,
+                    nickname: friendUser.nickname,
+                    tag: friendUser.tag,
+                    avatarKey: friendUser.avatarKey,
+                    friendshipId: friendship.id,
+                    becameFriendAt: friendship.updatedAt.toISOString(),
+                };
+            });
+
+            const response = (await request(app.getHttpServer())
+                .get('/friends')
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.OK)) as ResponseResult<GetFriendsResponse>;
+
+            const actualFriendsData = response.body.data.map((friend) => ({
+                ...friend,
+                becameFriendAt: new Date(friend.becameFriendAt).toISOString(),
+            }));
+
+            expect(actualFriendsData).toHaveLength(friendCount);
+            expect(actualFriendsData).toEqual(expectedFriendsData);
+            expect(response.body.nextCursor).toBeNull();
+        });
+
+        it('친구가 없을 경우 빈 목록과 null cursor를 반환한다', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/friends')
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.OK);
+
+            const body = response.body as GetFriendsResponse;
+
+            expect(body.data).toEqual([]);
+            expect(body.nextCursor).toBeNull();
+        });
+
+        it('페이지네이션: limit를 사용하여 첫 페이지 조회한다', async () => {
+            const totalFriends = 7;
+            const limit = 5;
+            const { friendUsers, friendships } =
+                await seedFriends(totalFriends);
+
+            const expectedFirstPageData = friendships
+                .slice(0, limit)
+                .map((friendship, index) => {
+                    const friendUser = friendUsers[index];
+                    return {
+                        id: friendUser.id,
+                        nickname: friendUser.nickname,
+                        tag: friendUser.tag,
+                        avatarKey: friendUser.avatarKey,
+                        friendshipId: friendship.id,
+                        becameFriendAt: friendship.updatedAt.toISOString(),
+                    };
+                });
+
+            const response = await request(app.getHttpServer())
+                .get('/friends')
+                .query({ limit })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.OK);
+
+            const body = response.body as GetFriendsResponse;
+
+            const actualFriendsData = body.data.map((friend) => ({
+                ...friend,
+                becameFriendAt: new Date(friend.becameFriendAt).toISOString(),
+            }));
+
+            expect(actualFriendsData).toHaveLength(limit);
+            expect(actualFriendsData).toEqual(expectedFirstPageData);
+            expect(body.nextCursor).not.toBeNull();
+            expect(typeof body.nextCursor).toBe('string');
+            expect(body.nextCursor).toBe(friendships[limit].id);
+        });
+
+        it('페이지네이션: limit와 cursor를 사용하여 다음 페이지 조회하고 해당 페이지 데이터를 검증한다', async () => {
+            const totalFriends = 7;
+            const limit = 5;
+            const { friendUsers, friendships } =
+                await seedFriends(totalFriends);
+
+            const firstResponse = (await request(app.getHttpServer())
+                .get('/friends')
+                .query({ limit })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.OK)) as ResponseResult<GetFriendsResponse>;
+            const cursor = firstResponse.body.nextCursor;
+
+            expect(cursor).not.toBeNull();
+
+            const expectedSecondPageData = friendships
+                .slice(limit, limit + limit)
+                .map((friendship, index) => {
+                    const friendUser = friendUsers[limit + index];
+                    return {
+                        id: friendUser.id,
+                        nickname: friendUser.nickname,
+                        tag: friendUser.tag,
+                        avatarKey: friendUser.avatarKey,
+                        friendshipId: friendship.id,
+                        becameFriendAt: friendship.updatedAt.toISOString(),
+                    };
+                });
+
+            const secondResponse = await request(app.getHttpServer())
+                .get('/friends')
+                .query({ limit, cursor }) // cursor 적용
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.OK);
+
+            const secondBody = secondResponse.body as GetFriendsResponse;
+
+            const actualSecondPageData = secondBody.data.map((friend) => ({
+                ...friend,
+                becameFriendAt: new Date(friend.becameFriendAt).toISOString(),
+            }));
+
+            expect(actualSecondPageData).toHaveLength(totalFriends - limit);
+            expect(actualSecondPageData).toEqual(expectedSecondPageData);
+            expect(secondBody.nextCursor).toBeNull();
+        });
+
+        it('인증 토큰 없이 요청 시 401 Unauthorized 에러를 반환한다', async () => {
+            await request(app.getHttpServer())
+                .get('/friends')
+                .expect(HttpStatus.UNAUTHORIZED);
+        });
+
+        it('limit 파라미터에 숫자가 아닌 값을 넣으면 400 Bad Request 에러를 반환한다', async () => {
+            await request(app.getHttpServer())
+                .get('/friends')
+                .query({ limit: 'abc' })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.BAD_REQUEST);
+        });
+
+        it('limit 파라미터에 0 이하의 값을 넣으면 400 Bad Request 에러를 반환한다', async () => {
+            await request(app.getHttpServer())
+                .get('/friends')
+                .query({ limit: 0 })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.BAD_REQUEST);
+
+            await request(app.getHttpServer())
+                .get('/friends')
+                .query({ limit: -1 })
+                .set('Authorization', currentUser.accessToken)
+                .expect(HttpStatus.BAD_REQUEST);
         });
     });
 });

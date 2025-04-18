@@ -5,10 +5,12 @@ import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import {
     FriendPrototype,
     FriendRequestDirection,
+    FriendWithRelationInfo,
 } from 'src/domain/types/friend.types';
 import { v4 } from 'uuid';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { GetFriendRequestsResponse } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
+import { GetFriendsResponse } from 'src/presentation/dto';
 
 @Injectable()
 export class FriendsService {
@@ -17,6 +19,28 @@ export class FriendsService {
         private readonly friendWriter: FriendWriter,
         private readonly friendChecker: FriendChecker,
     ) {}
+
+    async getFriendsList(
+        userId: string,
+        limit: number,
+        cursor?: string,
+    ): Promise<GetFriendsResponse> {
+        const { data: friendData, nextCursor } =
+            await this.friendReader.readFriendsList(userId, limit, cursor);
+
+        const mappedResponseData = friendData.map(
+            (friendRelation: FriendWithRelationInfo) => ({
+                id: friendRelation.friend.id,
+                nickname: friendRelation.friend.nickname,
+                tag: friendRelation.friend.tag,
+                avatarKey: friendRelation.friend.avatarKey,
+                friendshipId: friendRelation.friendshipId,
+                becameFriendAt: friendRelation.becameFriendAt,
+            }),
+        );
+
+        return { data: mappedResponseData, nextCursor };
+    }
 
     async sendFriendRequest(
         userId: string,
