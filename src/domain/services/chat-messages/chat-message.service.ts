@@ -19,6 +19,8 @@ export class ChatMessageService {
         const { roomId } = player;
         await this.create(senderId, roomId, message, 'island');
 
+        player.updateLastActivity();
+
         return player;
     }
 

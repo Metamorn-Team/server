@@ -225,6 +225,7 @@ export class GameService {
             .filter((player) => player !== null)
             .filter((player) => player.id !== attacker.id)
             .filter((player) => this.isInAttackBox(player, attackBox));
+        attacker.updateLastActivity();
 
         return {
             attacker,
