@@ -10,6 +10,7 @@ import { ReceiveMessage } from '../response/receive-message';
 import { MessageSent } from '../response/message-sent.response';
 import { PlayerJoinSuccessResponse } from '../response/player-join-success.response';
 import { AttackedResponse } from '../response/attacked.response';
+import { IslandHeartbeatResponse } from '../response/island-heartbeat';
 
 export interface ClientToServer {
     playerJoin: (data: PlayerJoinRequest) => void;
@@ -18,6 +19,7 @@ export interface ClientToServer {
     playerMoved: (data: PlayerMovedRequest) => void;
     attack: () => void;
     sendMessage: (data: SendMessageRequest) => void;
+    islandHearbeat: () => void;
 }
 
 export interface ServerToClient {
@@ -30,6 +32,7 @@ export interface ServerToClient {
     attacked: (data: AttackedResponse) => void;
     receiveMessage: (data: ReceiveMessage) => void;
     messageSent: (data: MessageSent) => void;
+    islandHearbeat: (data: IslandHeartbeatResponse) => void;
 }
 
 export type TypedSocket = Socket<ClientToServer, ServerToClient>;

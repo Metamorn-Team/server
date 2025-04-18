@@ -155,6 +155,16 @@ export class GameZoneGateway
         }
     }
 
+    @SubscribeMessage('islandHearbeat')
+    async handleHeartbeat(
+        @ConnectedSocket() client: TypedSocket,
+        @CurrentUserFromSocket() userId: string,
+    ) {
+        const heartbeats = this.gameService.hearbeatFromIsland(userId);
+
+        client.emit('islandHearbeat', heartbeats);
+    }
+
     // -----------------------------------------------------------
 
     afterInit() {

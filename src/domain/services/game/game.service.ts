@@ -264,6 +264,19 @@ export class GameService {
         return distanceSquared < playerRadius * playerRadius;
     }
 
+    hearbeatFromIsland(
+        playerId: string,
+    ): { id: string; lastActivity: number }[] {
+        const player = this.gameStorage.getPlayer(playerId);
+        if (!player) throw new Error();
+
+        const players = this.gameStorage.getPlayersByIslandId(player.roomId);
+        return players.map((player) => ({
+            id: player.id,
+            lastActivity: player.lastActivity,
+        }));
+    }
+
     loggingStore(logger: Logger) {
         logger.debug('전체 회원', this.gameStorage.getPlayerStore());
         logger.debug('전체 방', this.gameStorage.getIslandStore());

@@ -10,5 +10,6 @@ export * from './response/player-moved.response';
 export * from './response/attacked.response';
 export * from './response/receive-message';
 export * from './response/message-sent.response';
+export * from './response/island-heartbeat';
 
 export * from './socket/type';
