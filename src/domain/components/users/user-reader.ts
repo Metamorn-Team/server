@@ -64,25 +64,30 @@ export class UserReader {
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers> {
+        if (!search || search.trim() === '') {
+            return { data: [], nextCursor: null };
+        }
+
         if (varient === Varient.NICKNAME) {
             return await this.userRepository.findStartWithNickname(
                 search,
                 limit,
                 cursor,
             );
-        } else if (varient === Varient.TAG) {
+        }
+        if (varient === Varient.TAG) {
             return await this.userRepository.findStartWithTag(
                 search,
                 limit,
                 cursor,
             );
-        } else {
-            throw new DomainException(
-                DomainExceptionType.InvalidInput,
-                HttpStatus.BAD_REQUEST,
-                INVALID_INPUT_MESSAGE,
-            );
         }
+
+        throw new DomainException(
+            DomainExceptionType.InvalidInput,
+            HttpStatus.BAD_REQUEST,
+            INVALID_INPUT_MESSAGE,
+        );
     }
 
     async searchByNickname(
