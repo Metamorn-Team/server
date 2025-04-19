@@ -52,11 +52,18 @@ export class UserController {
     })
     @Get('search')
     async searchUser(
+        @CurrentUser() userId: string,
         @Query() query: SearchUsersRequest,
     ): Promise<SearchUserResponse> {
         const { search, varient, cursor, limit = 10 } = query;
 
-        return await this.userReader.search(search, varient, limit, cursor);
+        return await this.userReader.search(
+            userId,
+            search,
+            varient,
+            limit,
+            cursor,
+        );
     }
 
     @ApiOperation({

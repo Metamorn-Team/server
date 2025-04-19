@@ -59,6 +59,7 @@ export class UserReader {
     }
 
     async search(
+        currentUserId: string,
         search: string,
         varient: Varient,
         limit: number,
@@ -70,6 +71,7 @@ export class UserReader {
 
         if (varient === Varient.NICKNAME) {
             return await this.userRepository.findStartWithNickname(
+                currentUserId,
                 search,
                 limit,
                 cursor,
@@ -77,6 +79,7 @@ export class UserReader {
         }
         if (varient === Varient.TAG) {
             return await this.userRepository.findStartWithTag(
+                currentUserId,
                 search,
                 limit,
                 cursor,
@@ -88,21 +91,5 @@ export class UserReader {
             HttpStatus.BAD_REQUEST,
             INVALID_INPUT_MESSAGE,
         );
-    }
-
-    async searchByNickname(
-        nickname: string,
-        limit: number,
-        cursor?: string,
-    ): Promise<PaginatedUsers> {
-        return await this.userRepository.findStartWithNickname(
-            nickname,
-            limit,
-            cursor,
-        );
-    }
-
-    async searchByTag(tag: string, limit: number, cursor?: string) {
-        return await this.userRepository.findStartWithTag(tag, limit, cursor);
     }
 }

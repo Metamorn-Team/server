@@ -65,6 +65,7 @@ export class UserPrismaRepository implements UserRepository {
     }
 
     async findStartWithNickname(
+        currentUserId: string,
         nickname: string,
         limit: number,
         cursor?: string,
@@ -81,6 +82,9 @@ export class UserPrismaRepository implements UserRepository {
                 avatarKey: true,
             },
             where: {
+                id: {
+                    not: currentUserId,
+                },
                 nickname: {
                     startsWith: nickname,
                 },
@@ -101,6 +105,7 @@ export class UserPrismaRepository implements UserRepository {
     }
 
     async findStartWithTag(
+        currentUserId: string,
         tag: string,
         limit: number,
         cursor?: string,
@@ -116,6 +121,9 @@ export class UserPrismaRepository implements UserRepository {
                 avatarKey: true,
             },
             where: {
+                id: {
+                    not: currentUserId,
+                },
                 tag: {
                     startsWith: tag,
                 },
