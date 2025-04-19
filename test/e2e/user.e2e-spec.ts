@@ -114,20 +114,15 @@ describe('UserController (e2e)', () => {
             expect(body).toHaveProperty('friendStatus', null);
         });
 
-        it('자신의 프로필 정보 조회 시 friendStatus가 null이어야 한다', async () => {
+        it('자신의 프로필 정보 조회 시 400 에러 코드 응답', async () => {
             const currentUser = await login(app);
-            const response = (await request(app.getHttpServer())
+            const response = await request(app.getHttpServer())
                 .get(`/users/${currentUser.userId}`)
-                .set(
-                    'Authorization',
-                    currentUser.accessToken,
-                )) as ResponseResult<GetUserResponse>;
+                .set('Authorization', currentUser.accessToken);
 
-            const { status, body } = response;
+            const { status } = response;
 
-            expect(status).toEqual(HttpStatus.OK);
-            expect(body).toHaveProperty('id', currentUser.userId);
-            expect(body).toHaveProperty('friendStatus', null);
+            expect(status).toEqual(HttpStatus.BAD_REQUEST);
         });
 
         it('유저 검색 유저ID 에러 동작', async () => {
