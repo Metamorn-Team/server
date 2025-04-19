@@ -7,13 +7,15 @@ import { AppModule } from 'src/app.module';
 import { login } from 'test/helper/login';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
-import { generateUserEntity } from 'test/helper/generators';
+import { generateFriendship, generateUserEntity } from 'test/helper/generators';
 import { v4 } from 'uuid';
 import { Varient } from 'src/presentation/dto/users/request/search-users.request';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { ResponseResult } from 'test/helper/types';
 import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
+import { FriendRequestStatus } from '@prisma/client';
+import { GetUserResponse } from 'src/presentation/dto';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -34,11 +36,12 @@ describe('UserController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await prisma.friendRequest.deleteMany();
         await prisma.user.deleteMany();
     });
 
-    describe('(GET) /users/search?searchUserId=12345', () => {
-        it('유저 검색 정상 동작', async () => {
+    describe('(GET) /users/:id', () => {
+        it('유저 정보 조회 정상 동작', async () => {
             const { accessToken } = await login(app);
 
             const user = await prisma.user.create({
@@ -55,6 +58,76 @@ describe('UserController (e2e)', () => {
             expect(response.body).toHaveProperty('email', user.email);
             expect(response.body).toHaveProperty('nickname', user.nickname);
             expect(response.body).toHaveProperty('tag', user.tag);
+        });
+
+        it('친구 관계인 유저 정보 조회 시 friendStatus가 "ACCEPTED"여야 한다', async () => {
+            const currentUser = await login(app);
+            const targetUser = await prisma.user.create({
+                data: generateUserEntity(
+                    'target@email.com',
+                    'targetUser',
+                    'tagTarget',
+                ),
+            });
+
+            await prisma.friendRequest.create({
+                data: generateFriendship(currentUser.userId, targetUser.id, {
+                    status: FriendRequestStatus.ACCEPTED,
+                }),
+            });
+
+            const response = (await request(app.getHttpServer())
+                .get(`/users/${targetUser.id}`)
+                .set(
+                    'Authorization',
+                    currentUser.accessToken,
+                )) as ResponseResult<GetUserResponse>;
+
+            const { status, body } = response;
+
+            expect(status).toEqual(HttpStatus.OK);
+            expect(body).toHaveProperty('id', targetUser.id);
+            expect(body).toHaveProperty('friendStatus', 'ACCEPTED');
+        });
+
+        it('친구 관계가 아닌 유저 정보 조회 시 friendStatus가 null이어야 한다', async () => {
+            const currentUser = await login(app);
+            const nonFriendUser = await prisma.user.create({
+                data: generateUserEntity(
+                    'nonfriend@email.com',
+                    'nonFriend',
+                    'tagNonFriend',
+                ),
+            });
+
+            const response = (await request(app.getHttpServer())
+                .get(`/users/${nonFriendUser.id}`)
+                .set(
+                    'Authorization',
+                    currentUser.accessToken,
+                )) as ResponseResult<GetUserResponse>;
+
+            const { status, body } = response;
+
+            expect(status).toEqual(HttpStatus.OK);
+            expect(body).toHaveProperty('id', nonFriendUser.id);
+            expect(body).toHaveProperty('friendStatus', null);
+        });
+
+        it('자신의 프로필 정보 조회 시 friendStatus가 null이어야 한다', async () => {
+            const currentUser = await login(app);
+            const response = (await request(app.getHttpServer())
+                .get(`/users/${currentUser.userId}`)
+                .set(
+                    'Authorization',
+                    currentUser.accessToken,
+                )) as ResponseResult<GetUserResponse>;
+
+            const { status, body } = response;
+
+            expect(status).toEqual(HttpStatus.OK);
+            expect(body).toHaveProperty('id', currentUser.userId);
+            expect(body).toHaveProperty('friendStatus', null);
         });
 
         it('유저 검색 유저ID 에러 동작', async () => {
