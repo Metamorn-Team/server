@@ -393,5 +393,52 @@ describe('UserController (e2e)', () => {
 
             expect(response.status).toEqual(HttpStatus.BAD_REQUEST);
         });
+
+        it('로그인된 사용자를 검색 결과에서 제외한다', async () => {
+            const {
+                userId: currentUserId,
+                accessToken,
+                nickname: currentUserNickname,
+            } = await login(app);
+
+            const otherUserNickname = '메타버스';
+            const otherUser = await prisma.user.create({
+                data: generateUserEntity(
+                    'other@test.com',
+                    otherUserNickname,
+                    'othertag',
+                ),
+            });
+
+            const searchTerm = '메타';
+            const response = (await request(app.getHttpServer())
+                .get('/users/search')
+                .query({
+                    search: searchTerm,
+                    varient: Varient.NICKNAME,
+                })
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<SearchUserResponse>;
+
+            const { status, body } = response;
+
+            expect(status).toEqual(HttpStatus.OK);
+            expect(Array.isArray(body.data)).toBe(true);
+
+            const foundOtherUser = body.data.find(
+                (user) => user.id === otherUser.id,
+            );
+            expect(foundOtherUser).toBeDefined();
+            expect(foundOtherUser?.nickname).toEqual(otherUserNickname);
+
+            const foundCurrentUser = body.data.find(
+                (user) => user.id === currentUserId,
+            );
+            expect(foundCurrentUser).toBeUndefined();
+
+            expect(currentUserNickname.startsWith(searchTerm)).toBe(true);
+        });
     });
 });
