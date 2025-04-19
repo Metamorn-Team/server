@@ -94,7 +94,10 @@ export class UserController {
     @ApiResponse({
         status: 200,
         description: '조회 성공',
-        type: GetUserResponse,
+    })
+    @ApiResponse({
+        status: 400,
+        description: '자신의 정보 조회시 BAD REQUEST 응답',
     })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
     @Get(':id')
