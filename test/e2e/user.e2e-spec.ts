@@ -1,6 +1,6 @@
 import * as request from 'supertest';
 
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
@@ -379,6 +379,19 @@ describe('UserController (e2e)', () => {
                 .query({ search: 'test', varient: Varient.NICKNAME, limit: 0 })
                 .set('Authorization', accessToken);
             expect(response.status).toEqual(400);
+        });
+        it('검색어가 최소 길이(2) 미만일 경우 400 에러를 반환한다 (빈 문자열)', async () => {
+            const { accessToken } = await login(app);
+
+            const response = await request(app.getHttpServer())
+                .get('/users/search')
+                .query({
+                    search: '',
+                    varient: Varient.NICKNAME,
+                })
+                .set('Authorization', accessToken);
+
+            expect(response.status).toEqual(HttpStatus.BAD_REQUEST);
         });
     });
 });
