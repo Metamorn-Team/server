@@ -4,7 +4,10 @@ import { UserReader } from 'src/domain/components/users/user-reader';
 import { UserWriter } from 'src/domain/components/users/user-writer';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
-import { TAG_CONFLICT_MESSAGE } from 'src/domain/exceptions/message';
+import {
+    GET_USER_BAD_REQUEST_MESSAGE,
+    TAG_CONFLICT_MESSAGE,
+} from 'src/domain/exceptions/message';
 import { GetUserResponse } from 'src/presentation/dto';
 
 @Injectable()
@@ -52,10 +55,11 @@ export class UserService {
         const user = await this.userReader.readProfile(targetUserId);
 
         if (currentUserId === targetUserId) {
-            return {
-                ...user,
-                friendStatus: null,
-            };
+            throw new DomainException(
+                DomainExceptionType.GetUserBadRequest,
+                HttpStatus.BAD_REQUEST,
+                GET_USER_BAD_REQUEST_MESSAGE,
+            );
         }
 
         try {
@@ -64,14 +68,9 @@ export class UserService {
                 targetUserId,
             );
 
-            if (request.status === 'ACCEPTED') {
-                return {
-                    ...user,
-                    friendStatus: 'ACCEPTED',
-                };
-            }
-
-            return { ...user, friendStatus: 'ACCEPTED' };
+            return request.status === 'ACCEPTED'
+                ? { ...user, friendStatus: 'ACCEPTED' }
+                : { ...user, friendStatus: 'PENDING' };
         } catch (_) {
             return {
                 ...user,

@@ -3,6 +3,7 @@ export enum DomainExceptionType {
     ProviderConflict = 'ProviderConflict',
     UserEmailConflict = 'UserEmailConflict',
     UserNotFound = 'UserNotFound',
+    GetUserBadRequest = 'GetUserBadRequest',
     FriendRequestBadRequest = 'FriendRequestBadRequest',
     FriendRequestNotFound = 'FriendRequestNotFound',
     FriendRequestConflict = 'FriendRequestConflict',
