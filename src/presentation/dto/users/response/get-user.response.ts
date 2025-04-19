@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Provider } from '../../shared';
 
 export class GetUserResponse {
@@ -25,4 +25,11 @@ export class GetUserResponse {
 
     @ApiProperty({ description: '사용자 아바타 키' })
     readonly avatarKey: string;
+
+    @ApiPropertyOptional({
+        description: '요청자와 친구 상태일 경우 ACCEPTED 아닐 경우 null',
+        nullable: true,
+        example: 'ACCEPTED',
+    })
+    readonly friendStatus?: string | null;
 }

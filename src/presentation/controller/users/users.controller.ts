@@ -98,8 +98,14 @@ export class UserController {
     })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
     @Get(':id')
-    async getUser(@Param('id') userId: string): Promise<GetUserResponse> {
-        return await this.userReader.readProfile(userId);
+    async getUser(
+        @CurrentUser() currentUserId: string,
+        @Param('id') targetUserId: string,
+    ): Promise<GetUserResponse> {
+        return await this.userService.getUserProfile(
+            currentUserId,
+            targetUserId,
+        );
     }
 
     @ApiOperation({
