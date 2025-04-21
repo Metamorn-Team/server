@@ -651,6 +651,7 @@ describe('FriendController (e2e)', () => {
                     avatarKey: friendUser.avatarKey,
                     friendshipId: friendship.id,
                     becameFriendAt: friendship.updatedAt.toISOString(),
+                    isOnline: false,
                 };
             });
 
@@ -698,6 +699,7 @@ describe('FriendController (e2e)', () => {
                         avatarKey: friendUser.avatarKey,
                         friendshipId: friendship.id,
                         becameFriendAt: friendship.updatedAt.toISOString(),
+                        isOnline: false,
                     };
                 });
 
@@ -747,6 +749,7 @@ describe('FriendController (e2e)', () => {
                         avatarKey: friendUser.avatarKey,
                         friendshipId: friendship.id,
                         becameFriendAt: friendship.updatedAt.toISOString(),
+                        isOnline: false,
                     };
                 });
 
