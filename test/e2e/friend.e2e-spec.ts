@@ -3,7 +3,11 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
-import { generateFriendship, generateUserEntity } from 'test/helper/generators';
+import {
+    generateFriendship,
+    generateUserEntity,
+    generateUserEntityV2,
+} from 'test/helper/generators';
 import { login } from 'test/helper/login';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 import { v4 } from 'uuid';
@@ -18,6 +22,7 @@ import {
     FriendRequestStatus,
 } from '@prisma/client';
 import { ResponseResult } from 'test/helper/types';
+import { CheckFriendshipResponse } from 'src/presentation/dto/friends/response/check-friendship.response';
 
 describe('FriendController (e2e)', () => {
     let app: INestApplication;
@@ -797,6 +802,101 @@ describe('FriendController (e2e)', () => {
                 .query({ limit: -1 })
                 .set('Authorization', currentUser.accessToken)
                 .expect(HttpStatus.BAD_REQUEST);
+        });
+    });
+
+    describe('GET /friends/check - 친구 여부 확인', () => {
+        const targetUser = generateUserEntityV2();
+
+        beforeEach(async () => {
+            await prisma.user.create({
+                data: targetUser,
+            });
+        });
+
+        it('친구 요청을 보낸 경우', async () => {
+            const { userId, accessToken } = await login(app);
+
+            const friendship = generateFriendship(userId, targetUser.id, {
+                status: 'PENDING',
+            });
+            await prisma.friendRequest.create({
+                data: friendship,
+            });
+
+            const response = (await request(app.getHttpServer())
+                .get('/friends/check')
+                .query({ targetId: targetUser.id })
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<CheckFriendshipResponse>;
+            const { body, status } = response;
+
+            expect(status).toBe(HttpStatus.OK);
+            expect(body.status).toEqual('SENT');
+        });
+
+        it('친구 요청을 받은 경우', async () => {
+            const { userId, accessToken } = await login(app);
+
+            const friendship = generateFriendship(targetUser.id, userId, {
+                status: 'PENDING',
+            });
+            await prisma.friendRequest.create({
+                data: friendship,
+            });
+
+            const response = (await request(app.getHttpServer())
+                .get('/friends/check')
+                .query({ targetId: targetUser.id })
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<CheckFriendshipResponse>;
+            const { body, status } = response;
+
+            expect(status).toBe(HttpStatus.OK);
+            expect(body.status).toEqual('RECEIVED');
+        });
+
+        it('친구인 경우', async () => {
+            const { userId, accessToken } = await login(app);
+
+            const friendship = generateFriendship(userId, targetUser.id, {
+                status: 'ACCEPTED',
+            });
+            await prisma.friendRequest.create({
+                data: friendship,
+            });
+
+            const response = (await request(app.getHttpServer())
+                .get('/friends/check')
+                .query({ targetId: targetUser.id })
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<CheckFriendshipResponse>;
+            const { body, status } = response;
+
+            expect(status).toBe(HttpStatus.OK);
+            expect(body.status).toEqual('ACCEPTED');
+        });
+
+        it('둘 사이의 요청이 없는 경우', async () => {
+            const { accessToken } = await login(app);
+
+            const response = (await request(app.getHttpServer())
+                .get('/friends/check')
+                .query({ targetId: targetUser.id })
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<CheckFriendshipResponse>;
+            const { body, status } = response;
+
+            expect(status).toBe(HttpStatus.OK);
+            expect(body.status).toEqual('NONE');
         });
     });
 });
