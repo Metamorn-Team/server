@@ -52,11 +52,18 @@ export class UserController {
     })
     @Get('search')
     async searchUser(
+        @CurrentUser() userId: string,
         @Query() query: SearchUsersRequest,
     ): Promise<SearchUserResponse> {
         const { search, varient, cursor, limit = 10 } = query;
 
-        return await this.userReader.search(search, varient, limit, cursor);
+        return await this.userReader.search(
+            userId,
+            search,
+            varient,
+            limit,
+            cursor,
+        );
     }
 
     @ApiOperation({
@@ -87,12 +94,21 @@ export class UserController {
     @ApiResponse({
         status: 200,
         description: '조회 성공',
-        type: GetUserResponse,
+    })
+    @ApiResponse({
+        status: 400,
+        description: '자신의 정보 조회시 BAD REQUEST 응답',
     })
     @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
     @Get(':id')
-    async getUser(@Param('id') userId: string): Promise<GetUserResponse> {
-        return await this.userReader.readProfile(userId);
+    async getUser(
+        @CurrentUser() currentUserId: string,
+        @Param('id') targetUserId: string,
+    ): Promise<GetUserResponse> {
+        return await this.userService.getUserProfile(
+            currentUserId,
+            targetUserId,
+        );
     }
 
     @ApiOperation({

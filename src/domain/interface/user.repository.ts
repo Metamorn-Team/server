@@ -7,11 +7,13 @@ export interface UserRepository {
     findOneByEmail(emial: string): Promise<UserInfo | null>;
     findOneByTag(tag: string): Promise<UserInfo | null>;
     findStartWithNickname(
+        currentUserId: string,
         nickname: string,
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers>;
     findStartWithTag(
+        currentUserId: string,
         tag: string,
         limit: number,
         cursor?: string,

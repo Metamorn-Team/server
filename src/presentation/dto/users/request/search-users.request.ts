@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import {
+    IsEnum,
+    IsInt,
+    IsOptional,
+    IsString,
+    Min,
+    MinLength,
+} from 'class-validator';
 
 export enum Varient {
     TAG = 'TAG',
@@ -13,6 +20,7 @@ export class SearchUsersRequest {
         description: '검색할 닉네임 또는 태그',
         type: String,
     })
+    @MinLength(2, { message: '검색어는 최소 2자 이상 입력해주세요' })
     @IsString()
     readonly search: string;
 
