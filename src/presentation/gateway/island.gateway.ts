@@ -42,7 +42,6 @@ export class IslandGateway
     constructor(
         private readonly gameService: GameService,
         private readonly chatMessageService: ChatMessageService,
-        private readonly userReader: UserReader,
     ) {}
 
     @SubscribeMessage('playerJoin')
