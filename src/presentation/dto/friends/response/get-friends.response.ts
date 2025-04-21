@@ -18,6 +18,9 @@ export class FriendUserInfo {
 
     @ApiProperty({ description: '친구가 된 시각 (요청 수락 시간)' })
     readonly becameFriendAt: Date;
+
+    @ApiProperty({ description: '접속 여부' })
+    readonly isOnline: boolean;
 }
 
 export class GetFriendsResponse {

@@ -67,10 +67,12 @@ export class UserService {
                 currentUserId,
                 targetUserId,
             );
+            const { status: friendStatus } = request;
 
-            return request.status === 'ACCEPTED'
-                ? { ...user, friendStatus: 'ACCEPTED' }
-                : { ...user, friendStatus: 'PENDING' };
+            return {
+                ...user,
+                friendStatus,
+            };
         } catch (_) {
             return {
                 ...user,

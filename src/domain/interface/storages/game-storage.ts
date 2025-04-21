@@ -1,10 +1,12 @@
-import { Player, Island, IslandTag } from 'src/domain/types/game.types';
+import { Player } from 'src/domain/models/game/player';
+import { Island, IslandTag } from 'src/domain/types/game.types';
 
 export interface GameStorage {
     getPlayer(playerId: string): Player | null;
     getPlayerByClientId(clientId: string): Player | null;
     addPlayer(playerId: string, player: Player): void;
     deletePlayer(playerId: string): void;
+    getPlayersByIslandId(islandId: string): Player[];
 
     createIsland(islandId: string, island: Island): void;
     getIsland(islandId: string): Island | null;

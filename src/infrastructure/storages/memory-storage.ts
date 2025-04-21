@@ -1,10 +1,6 @@
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import {
-    Player,
-    Island,
-    IslandTag,
-    SocketClientId,
-} from 'src/domain/types/game.types';
+import { Player } from 'src/domain/models/game/player';
+import { Island, IslandTag, SocketClientId } from 'src/domain/types/game.types';
 
 export class MemoryStorage implements GameStorage {
     private players = new Map<SocketClientId, Player>();
@@ -31,6 +27,15 @@ export class MemoryStorage implements GameStorage {
 
     deletePlayer(playerId: string): void {
         this.players.delete(playerId);
+    }
+
+    getPlayersByIslandId(islandId: string): Player[] {
+        const island = this.islands.get(islandId);
+        if (!island) throw new Error('존재하지 않는 섬');
+
+        return Array.from(island.players)
+            .map((playerId) => this.players.get(playerId))
+            .filter((player) => !!player);
     }
 
     createIsland(islandId: string, island: Island): void {

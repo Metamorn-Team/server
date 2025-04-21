@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { FriendWriter } from 'src/domain/components/friends/friend-writer';
 import { FriendChecker } from 'src/domain/components/friends/friend-checker';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
@@ -11,15 +11,19 @@ import { v4 } from 'uuid';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { GetFriendRequestsResponse } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
 import { GetFriendsResponse } from 'src/presentation/dto';
+import { GameStorage } from 'src/domain/interface/storages/game-storage';
 
 @Injectable()
 export class FriendsService {
     constructor(
+        @Inject(GameStorage)
+        private readonly gameStorage: GameStorage,
         private readonly friendReader: FriendReader,
         private readonly friendWriter: FriendWriter,
         private readonly friendChecker: FriendChecker,
     ) {}
 
+    // TODO userId, friendId 식별 안 됨 수정 필요.
     async getFriendsList(
         userId: string,
         limit: number,
@@ -28,16 +32,21 @@ export class FriendsService {
         const { data: friendData, nextCursor } =
             await this.friendReader.readFriendsList(userId, limit, cursor);
 
-        const mappedResponseData = friendData.map(
-            (friendRelation: FriendWithRelationInfo) => ({
+        const mappedResponseData = friendData.map((friendRelation) => {
+            const isOnline = !!this.gameStorage.getPlayer(
+                friendRelation.friend.id,
+            );
+
+            return {
                 id: friendRelation.friend.id,
                 nickname: friendRelation.friend.nickname,
                 tag: friendRelation.friend.tag,
                 avatarKey: friendRelation.friend.avatarKey,
                 friendshipId: friendRelation.friendshipId,
                 becameFriendAt: friendRelation.becameFriendAt,
-            }),
-        );
+                isOnline,
+            };
+        });
 
         return { data: mappedResponseData, nextCursor };
     }
