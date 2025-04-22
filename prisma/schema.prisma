@@ -30,8 +30,8 @@ model User {
   updatedAt DateTime      @map("updated_at")
   deletedAt DateTime?     @map("deleted_at")
 
-  IslandJoins  IslandJoin[]
-  ChatMessages ChatMessage[]
+  IslandJoins            IslandJoin[]
+  ChatMessages           ChatMessage[]
   FriendRequestsSent     FriendRequest[] @relation("Sender")
   FriendRequestsReceived FriendRequest[] @relation("Receiver")
 
@@ -57,7 +57,7 @@ model FriendRequest {
   updatedAt  DateTime            @map("updated_at")
   deletedAt  DateTime?           @map("deleted_at")
 
-  sender  User @relation("Sender", fields: [senderId], references: [id])
+  sender   User @relation("Sender", fields: [senderId], references: [id])
   receiver User @relation("Receiver", fields: [receiverId], references: [id])
 
   @@index([senderId])
@@ -73,7 +73,7 @@ model Island {
   updatedAt DateTime  @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  IslandJoins IslandJoin[]
+  islandJoins IslandJoin[]
 
   @@map("island")
 }
@@ -102,4 +102,31 @@ model ChatMessage {
   sender User @relation(fields: [senderId], references: [id])
 
   @@map("chat_message")
+}
+
+model Product {
+  id         String    @id @db.Uuid
+  name       String    @db.VarChar(50)
+  price      Int
+  coverImage String    @map("cover_image")
+  categoryId String    @map("category_id") @db.Uuid
+  createdAt  DateTime  @map("created_at")
+  updatedAt  DateTime  @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  category ProductCategory @relation(fields: [categoryId], references: [id])
+
+  @@map("product")
+}
+
+model ProductCategory {
+  id        String    @id @db.Uuid
+  name      String    @db.VarChar(50)
+  createdAt DateTime  @map("created_at")
+  updatedAt DateTime  @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  products Product[]
+
+  @@map("product_category")
 }
