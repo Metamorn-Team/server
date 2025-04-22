@@ -7,7 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { ProductCategoryReader } from 'src/domain/components/product-categories/product-category-reader';
-import { GetAllProductCategoriesResponse } from 'src/presentation/dto/product-categories/response/get-all-product-categories.response';
+import { ProductCategoryItem } from 'src/presentation/dto/product-categories/response/get-all-product-categories.response';
 
 @ApiTags('product-categories')
 @ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
@@ -24,10 +24,10 @@ export class ProductCategoryController {
     @ApiResponse({
         status: 200,
         description: '조회 성공',
-        type: GetAllProductCategoriesResponse,
+        type: [ProductCategoryItem],
     })
     @Get()
-    async getAll() {
+    async getAll(): Promise<ProductCategoryItem[]> {
         return await this.productCategoryReader.readAll();
     }
 }
