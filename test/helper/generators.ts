@@ -21,6 +21,22 @@ export const generateUserEntity = (
         updatedAt ? updatedAt : undefined,
     );
 
+export const generateUserEntityV2 = (partial?: Partial<UserEntity>) => {
+    const stdDate = new Date();
+
+    return new UserEntity(
+        partial?.id || v4(),
+        partial?.email || 'test@test.com',
+        partial?.nickname || 'test',
+        partial?.tag || 'test',
+        partial?.provider || 'GOOGLE',
+        partial?.avatarKey || 'pawn',
+        partial?.createdAt || stdDate,
+        partial?.updatedAt || stdDate,
+        partial?.deletedAt || null,
+    );
+};
+
 export const generateIsland = (
     partial?: Partial<IslandEntity>,
 ): IslandEntity => {

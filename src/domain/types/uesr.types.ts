@@ -1,6 +1,6 @@
 import { Provider } from 'src/shared/types';
 
-export class UserInfo {
+export interface UserInfo {
     readonly id: string;
     readonly email: string;
     readonly nickname: string;

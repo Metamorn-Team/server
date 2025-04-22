@@ -4,3 +4,4 @@ export * from './request/get-friends.request';
 
 export * from './response/get-friend-request-list.response';
 export * from './response/get-friends.response';
+export * from './response/check-friendship.response';

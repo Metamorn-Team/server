@@ -5,6 +5,7 @@ import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import {
     FriendPrototype,
     FriendRequestDirection,
+    FriendRequestStatus,
     FriendWithRelationInfo,
 } from 'src/domain/types/friend.types';
 import { v4 } from 'uuid';
@@ -12,6 +13,8 @@ import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { GetFriendRequestsResponse } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
 import { GetFriendsResponse } from 'src/presentation/dto';
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 
 @Injectable()
 export class FriendsService {
@@ -107,9 +110,36 @@ export class FriendsService {
         await this.friendWriter.updateRequestStatus(requestId, 'REJECTED');
     }
 
-    async removeFriendship(userId: string, friendshipId) {
+    async removeFriendship(userId: string, friendshipId: string) {
         await this.friendChecker.checkUnfriend(userId, friendshipId);
 
         await this.friendWriter.deleteFriendship(friendshipId);
+    }
+
+    async checkFriendship(
+        userId: string,
+        targeytUserId: string,
+    ): Promise<FriendRequestStatus> {
+        try {
+            const friendship = await this.friendReader.readRequestBetweenUsers(
+                userId,
+                targeytUserId,
+            );
+
+            return friendship.status === 'ACCEPTED'
+                ? 'ACCEPTED'
+                : friendship.senderId === userId
+                  ? 'SENT'
+                  : 'RECEIVED';
+        } catch (e) {
+            if (
+                e instanceof DomainException &&
+                e.errorType === DomainExceptionType.FriendRequestNotFound
+            ) {
+                return 'NONE';
+            }
+
+            throw e;
+        }
     }
 }

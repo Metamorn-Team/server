@@ -6,6 +6,7 @@ import {
     HttpCode,
     HttpStatus,
     Param,
+    ParseUUIDPipe,
     Patch,
     Post,
     Query,
@@ -27,6 +28,7 @@ import {
     GetFriendsResponse,
 } from 'src/presentation/dto/friends';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
+import { CheckFriendshipResponse } from 'src/presentation/dto/friends/response/check-friendship.response';
 
 @ApiTags('friends')
 @ApiResponse({ status: 400, description: '잘못된 요청' })
@@ -108,6 +110,26 @@ export class FriendsController {
         @Param('friendshipId') friendshipId: string,
     ): Promise<void> {
         await this.friendsService.removeFriendship(userId, friendshipId);
+    }
+
+    @ApiOperation({ summary: '친구 여부 확인' })
+    @ApiResponse({
+        status: 200,
+        description: '친구 여부 확인 성공',
+        type: CheckFriendshipResponse,
+    })
+    @ApiResponse({ status: 404, description: '친구 관계가 존재하지 않음' })
+    @HttpCode(HttpStatus.OK)
+    @Get('check')
+    async checkFriendship(
+        @Query('targetId', ParseUUIDPipe) targetUserId: string,
+        @CurrentUser() userId: string,
+    ): Promise<CheckFriendshipResponse> {
+        const status = await this.friendsService.checkFriendship(
+            userId,
+            targetUserId,
+        );
+        return { status };
     }
 
     @ApiOperation({ summary: '친구 목록 조회' })

@@ -1,4 +1,5 @@
 export type FriendStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+export type FriendRequestStatus = 'ACCEPTED' | 'SENT' | 'RECEIVED' | 'NONE';
 export type FriendRequestDirection = 'sent' | 'received';
 
 export interface FriendPrototype {
