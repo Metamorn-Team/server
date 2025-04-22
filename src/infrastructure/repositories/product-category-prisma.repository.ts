@@ -20,4 +20,16 @@ export class ProductCategoryPrismaRepository
             },
         });
     }
+
+    async findOneByName(name: string): Promise<ProductCategory | null> {
+        return await this.prisma.productCategory.findFirst({
+            select: {
+                id: true,
+                name: true,
+            },
+            where: {
+                name,
+            },
+        });
+    }
 }
