@@ -11,6 +11,7 @@ import { GameModule } from 'src/modules/game/game.module';
 import { UserComponentModule } from './modules/users/users-component.module';
 import { PipeModule } from './common/pipe/pipe.module';
 import { FriendsModule } from './modules/friends/friends.module';
+import { ProductCategoryModule } from 'src/modules/produc-category/product-category.module';
 
 @Module({
     imports: [
@@ -24,6 +25,7 @@ import { FriendsModule } from './modules/friends/friends.module';
         AuthModule,
         GameModule,
         FriendsModule,
+        ProductCategoryModule,
     ],
     controllers: [AppController],
     providers: [AppService],
