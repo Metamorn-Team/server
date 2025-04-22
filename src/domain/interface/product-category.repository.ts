@@ -1,4 +1,4 @@
-import { ProductCategory } from 'src/domain/types/product-category';
+import { ProductCategory } from 'src/domain/types/product-category.types';
 
 export interface ProductCategoryRepository {
     findAll(): Promise<ProductCategory[]>;

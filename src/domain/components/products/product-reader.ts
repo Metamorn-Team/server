@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ProductRepository } from 'src/domain/interface/product.repository';
-import { ProductOrder, ProductOrderBy, Sort } from 'src/domain/types/product';
+import {
+    ProductOrder,
+    ProductOrderBy,
+    Sort,
+} from 'src/domain/types/product.types';
 
 @Injectable()
 export class ProductReader {

@@ -1,4 +1,4 @@
-import { ProductOrderBy, Product, Sort } from 'src/domain/types/product';
+import { ProductOrderBy, Product, Sort } from 'src/domain/types/product.types';
 
 export interface ProductRepository {
     findByCategory(
