@@ -12,6 +12,7 @@ import { UserComponentModule } from './modules/users/users-component.module';
 import { PipeModule } from './common/pipe/pipe.module';
 import { FriendsModule } from './modules/friends/friends.module';
 import { ProductCategoryModule } from 'src/modules/product-categories/product-category.module';
+import { ProductModule } from 'src/modules/products/product.module';
 
 @Module({
     imports: [
@@ -26,6 +27,7 @@ import { ProductCategoryModule } from 'src/modules/product-categories/product-ca
         GameModule,
         FriendsModule,
         ProductCategoryModule,
+        ProductModule,
     ],
     controllers: [AppController],
     providers: [AppService],
