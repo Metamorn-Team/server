@@ -1,6 +1,7 @@
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
+import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { Provider } from 'src/shared/types';
 import { v4 } from 'uuid';
@@ -82,5 +83,21 @@ export const generateFriendship = (
         partial?.status || 'PENDING',
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
+    );
+};
+
+export const generateProduct = (
+    categoryId: string,
+    partial?: Partial<Omit<ProducEntity, 'categoryId'>>,
+) => {
+    return new ProducEntity(
+        partial?.id || v4(),
+        partial?.name || '멋진 오라',
+        partial?.description || '멋진 오라 설명',
+        partial?.price || 1000,
+        partial?.coverImage || 'https://image.com',
+        categoryId,
+        partial?.createdAt || new Date(),
+        partial?.updatedAt || new Date(),
     );
 };
