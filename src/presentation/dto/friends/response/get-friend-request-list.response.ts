@@ -1,18 +1,24 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 class FriendRequestUserInfo {
-    @ApiProperty({ description: '유저 ID' })
+    @ApiProperty({
+        description: '유저 ID (UUID)',
+        example: 'f8dc4ae4-69a6-46ad-8b2d-239ec535ef8f',
+    })
     readonly id: string;
-    @ApiProperty({ description: '유저 닉네임' })
+    @ApiProperty({ description: '유저 닉네임', example: '두리' })
     readonly nickname: string;
-    @ApiProperty({ description: '유저 태그' })
+    @ApiProperty({ description: '유저 태그', example: '태그태그태그' })
     readonly tag: string;
     @ApiProperty({ description: '유저 아바타 키' })
     readonly avatarKey: string;
 }
 
 export class FriendRequestItem {
-    @ApiProperty({ description: '친구 요청 ID' })
+    @ApiProperty({
+        description: '친구 요청 ID (UUID)',
+        example: '1af038aa-ad40-4b49-b484-2491681a813b',
+    })
     readonly id: string;
 
     @ApiProperty({

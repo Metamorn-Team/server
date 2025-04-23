@@ -15,6 +15,7 @@ import {
 import {
     ApiBearerAuth,
     ApiOperation,
+    ApiParam,
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
@@ -77,7 +78,12 @@ export class FriendsController {
     }
 
     @ApiOperation({ summary: '친구 요청 수락' })
-    @ApiResponse({ status: 204, description: '요청 수락 성공' })
+    @ApiParam({
+        name: 'requestId',
+        description: '친구요청 ID(UUID)',
+        example: '1af038aa-ad40-4b49-b484-2491681a813b',
+    })
+    @ApiResponse({ status: 204, description: '요청 수락 성공(no content)' })
     @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('requests/:requestId/accept')
@@ -89,7 +95,12 @@ export class FriendsController {
     }
 
     @ApiOperation({ summary: '친구 요청 거절' })
-    @ApiResponse({ status: 204, description: '요청 거절 성공' })
+    @ApiParam({
+        name: 'requestId',
+        description: '친구요청 ID(UUID)',
+        example: '1af038aa-ad40-4b49-b484-2491681a813b',
+    })
+    @ApiResponse({ status: 204, description: '요청 거절 성공(no content)' })
     @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
     @HttpCode(HttpStatus.NO_CONTENT)
     @Patch('requests/:requestId/reject')
@@ -101,7 +112,12 @@ export class FriendsController {
     }
 
     @ApiOperation({ summary: '친구 삭제' })
-    @ApiResponse({ status: 204, description: '요청 성공' })
+    @ApiParam({
+        name: 'friendshipId',
+        description: '친구관계 ID(UUID)',
+        example: '1af038aa-ad40-4b49-b484-2491681a813b',
+    })
+    @ApiResponse({ status: 204, description: '요청 성공(no content)' })
     @ApiResponse({ status: 404, description: '친구 관계가 존재하지 않음' })
     @HttpCode(HttpStatus.NO_CONTENT)
     @Delete(':friendshipId')
