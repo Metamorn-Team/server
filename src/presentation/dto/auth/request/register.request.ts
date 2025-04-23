@@ -3,15 +3,18 @@ import { IsEmail, IsIn, IsString, Length } from 'class-validator';
 import { Provider } from '../../shared';
 
 export class RegisterRequest {
-    @ApiProperty()
+    @ApiProperty({ example: 'example@email.com' })
     @IsEmail({}, { message: '이메일 형식이 아닙니다.' })
     readonly email: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: '두리' })
     @Length(2, 20)
     readonly nickname: string;
 
-    @ApiProperty()
+    @ApiProperty({
+        description: '사용자의 태그 5~50자 제한',
+        example: '태그태그태그',
+    })
     @Length(5, 50)
     readonly tag: string;
 

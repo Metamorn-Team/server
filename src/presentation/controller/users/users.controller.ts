@@ -73,9 +73,12 @@ export class UserController {
     @ApiResponse({
         status: 200,
         description: '조회 성공',
-        type: GetUserResponse,
+        type: GetMyResponse,
     })
-    @ApiResponse({ status: 404, description: '존재하지 않는 사용자' })
+    @ApiResponse({
+        status: 404,
+        description: '존재하지 않는 사용자 (access token 정보 오류)',
+    })
     @Get('my')
     async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
         return await this.userReader.readProfile(userId);
@@ -94,6 +97,7 @@ export class UserController {
     @ApiResponse({
         status: 200,
         description: '조회 성공',
+        type: GetUserResponse,
     })
     @ApiResponse({
         status: 400,
