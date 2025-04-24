@@ -33,11 +33,10 @@ export class ProductController {
     async getProducts(
         @Query() dto: GetProductListRequest,
     ): Promise<GetProductListResponse> {
-        const { category: categoryName, order, page, limit } = dto;
+        const { type, order, page, limit } = dto;
 
-        const category = await this.productCategory.readOneByName(categoryName);
         const products = await this.productReader.read(
-            category.id,
+            type,
             order,
             page,
             limit,

@@ -8,7 +8,7 @@ export class ProductPrismaRepository implements ProductRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     async findByCategory(
-        categoryId: string,
+        type: string,
         page: number,
         limit: number,
         orderBy: ProductOrderBy,
@@ -28,7 +28,7 @@ export class ProductPrismaRepository implements ProductRepository {
                 [orderBy]: sort,
             },
             where: {
-                categoryId,
+                type,
             },
         });
     }

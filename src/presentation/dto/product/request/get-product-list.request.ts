@@ -6,7 +6,7 @@ import { Type } from 'class-transformer';
 export class GetProductListRequest {
     @ApiProperty({ example: ProductCategory.AURA, enum: ProductCategory })
     @IsEnum(ProductCategory)
-    readonly category: ProductCategory;
+    readonly type: ProductCategory;
 
     @ApiProperty({ enum: ProductOrder })
     @IsEnum(ProductOrder)

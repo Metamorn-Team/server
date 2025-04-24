@@ -2,7 +2,7 @@ import { ProductOrderBy, Product, Sort } from 'src/domain/types/product.types';
 
 export interface ProductRepository {
     findByCategory(
-        categoryId: string,
+        type: string,
         page: number,
         limit: number,
         orderBy: ProductOrderBy,
