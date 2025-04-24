@@ -64,6 +64,8 @@ describe('ProductController (e2e)', () => {
                 description: `오라 설명${i}`,
                 price: 1000 + i,
                 createdAt: new Date(Date.now() + i),
+                type: ProductCategory.AURA,
+                key: `aura${i}`,
             }),
         );
         const maps = Array.from({ length: 20 }, (_, i) =>
@@ -72,6 +74,8 @@ describe('ProductController (e2e)', () => {
                 description: `맵 설명${i}`,
                 price: 1000 + i,
                 createdAt: new Date(Date.now() + i),
+                type: 'map',
+                key: `aura${i}`,
             }),
         );
         const bubbles = Array.from({ length: 20 }, (_, i) =>
@@ -80,6 +84,8 @@ describe('ProductController (e2e)', () => {
                 description: `말풍선 설명${i}`,
                 price: 1000 + i,
                 createdAt: new Date(Date.now() + i),
+                type: ProductCategory.SPEACH_BUBBLE,
+                key: `bubble${i}`,
             }),
         );
 
@@ -94,7 +100,7 @@ describe('ProductController (e2e)', () => {
             const { accessToken } = await login(app);
 
             const query = {
-                category: ProductCategory.AURA,
+                type: ProductCategory.AURA,
                 order: ProductOrder.CHEAPEST,
                 limit: 7,
             };
@@ -145,7 +151,7 @@ describe('ProductController (e2e)', () => {
                 .sort((a, b) => (a.price > b.price ? 1 : -1));
 
             const query: GetProductListRequest = {
-                category: ProductCategory.AURA,
+                type: ProductCategory.AURA,
                 order: ProductOrder.CHEAPEST,
                 limit: 20,
                 page: 1,
@@ -177,7 +183,7 @@ describe('ProductController (e2e)', () => {
                 .sort((a, b) => (a.price < b.price ? 1 : -1));
 
             const query: GetProductListRequest = {
-                category: ProductCategory.AURA,
+                type: ProductCategory.AURA,
                 order: ProductOrder.PRICIEST,
                 limit: 20,
                 page: 1,
@@ -209,7 +215,7 @@ describe('ProductController (e2e)', () => {
                 }));
 
             const query: GetProductListRequest = {
-                category: ProductCategory.AURA,
+                type: ProductCategory.AURA,
                 order: ProductOrder.LATEST,
                 limit: 20,
                 page: 1,
