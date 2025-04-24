@@ -111,6 +111,8 @@ model Product {
   price       Int
   coverImage  String    @map("cover_image")
   categoryId  String    @map("category_id") @db.Uuid
+  type        String    @db.VarChar(50)
+  key         String    @db.VarChar(50)
   createdAt   DateTime  @map("created_at")
   updatedAt   DateTime  @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")

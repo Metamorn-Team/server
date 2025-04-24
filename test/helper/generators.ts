@@ -99,5 +99,7 @@ export const generateProduct = (
         categoryId,
         partial?.createdAt || new Date(),
         partial?.updatedAt || new Date(),
+        partial?.type || 'aura',
+        partial?.key || 'key',
     );
 };
