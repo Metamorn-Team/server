@@ -21,6 +21,8 @@ export class ProductPrismaRepository implements ProductRepository {
                 description: true,
                 price: true,
                 coverImage: true,
+                type: true,
+                key: true,
             },
             skip: (page - 1) * limit,
             take: limit,

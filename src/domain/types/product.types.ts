@@ -4,6 +4,8 @@ export interface Product {
     readonly description: string;
     readonly price: number;
     readonly coverImage: string;
+    readonly type: string;
+    readonly key: string;
 }
 
 export enum ProductCategory {

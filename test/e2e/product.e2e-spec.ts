@@ -147,6 +147,8 @@ describe('ProductController (e2e)', () => {
                     description: aura.description,
                     price: aura.price,
                     coverImage: aura.coverImage,
+                    type: aura.type,
+                    key: aura.key,
                 }))
                 .sort((a, b) => (a.price > b.price ? 1 : -1));
 
@@ -179,6 +181,8 @@ describe('ProductController (e2e)', () => {
                     description: aura.description,
                     price: aura.price,
                     coverImage: aura.coverImage,
+                    type: aura.type,
+                    key: aura.key,
                 }))
                 .sort((a, b) => (a.price < b.price ? 1 : -1));
 
@@ -212,6 +216,8 @@ describe('ProductController (e2e)', () => {
                     description: aura.description,
                     price: aura.price,
                     coverImage: aura.coverImage,
+                    type: aura.type,
+                    key: aura.key,
                 }));
 
             const query: GetProductListRequest = {

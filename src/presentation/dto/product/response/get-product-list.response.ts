@@ -15,6 +15,15 @@ class ProductItem {
 
     @ApiProperty({ example: 'https://image.com' })
     readonly coverImage: string;
+
+    @ApiProperty({ example: 'aura', description: '상품 타입' })
+    readonly type: string;
+
+    @ApiProperty({
+        example: 'red_aura',
+        description: '해당 상품을 식별하는 키',
+    })
+    readonly key: string;
 }
 
 export class GetProductListResponse {
