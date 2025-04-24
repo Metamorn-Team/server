@@ -4,8 +4,8 @@ export type FrinedStatus = 'ACCEPTED' | 'PENDING' | 'REJECTED';
 export type FriendRequestStatus = 'ACCEPTED' | 'SENT' | 'RECEIVED' | 'NONE';
 
 export enum ProductCategory {
-    AURA = '오라',
-    SPEACH_BUBBLE = '말풍선',
+    AURA = 'aura',
+    SPEACH_BUBBLE = 'speach-bubble',
 }
 
 export enum ProductOrder {
