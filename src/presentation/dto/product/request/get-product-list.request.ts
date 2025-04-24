@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, Max, Min } from 'class-validator';
-import { ProductCategory, ProductOrder } from '../../shared';
+import { ProductType, ProductOrder } from '../../shared';
 import { Type } from 'class-transformer';
 
 export class GetProductListRequest {
-    @ApiProperty({ example: ProductCategory.AURA, enum: ProductCategory })
-    @IsEnum(ProductCategory)
-    readonly type: ProductCategory;
+    @ApiProperty({ example: ProductType.AURA, enum: ProductType })
+    @IsEnum(ProductType)
+    readonly type: ProductType;
 
     @ApiProperty({ enum: ProductOrder })
     @IsEnum(ProductOrder)

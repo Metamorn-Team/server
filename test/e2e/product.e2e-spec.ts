@@ -8,7 +8,7 @@ import { login } from 'test/helper/login';
 import { ResponseResult } from 'test/helper/types';
 import { generateProduct } from 'test/helper/generators';
 import { GetProductListRequest } from 'src/presentation/dto/product/request/get-product-list.request';
-import { ProductCategory, ProductOrder } from 'src/presentation/dto/shared';
+import { ProductType, ProductOrder } from 'src/presentation/dto/shared';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
 
 describe('ProductController (e2e)', () => {
@@ -64,7 +64,7 @@ describe('ProductController (e2e)', () => {
                 description: `오라 설명${i}`,
                 price: 1000 + i,
                 createdAt: new Date(Date.now() + i),
-                type: ProductCategory.AURA,
+                type: ProductType.AURA,
                 key: `aura${i}`,
             }),
         );
@@ -84,7 +84,7 @@ describe('ProductController (e2e)', () => {
                 description: `말풍선 설명${i}`,
                 price: 1000 + i,
                 createdAt: new Date(Date.now() + i),
-                type: ProductCategory.SPEACH_BUBBLE,
+                type: ProductType.SPEACH_BUBBLE,
                 key: `bubble${i}`,
             }),
         );
@@ -100,7 +100,7 @@ describe('ProductController (e2e)', () => {
             const { accessToken } = await login(app);
 
             const query = {
-                type: ProductCategory.AURA,
+                type: ProductType.AURA,
                 order: ProductOrder.CHEAPEST,
                 limit: 7,
             };
@@ -153,7 +153,7 @@ describe('ProductController (e2e)', () => {
                 .sort((a, b) => (a.price > b.price ? 1 : -1));
 
             const query: GetProductListRequest = {
-                type: ProductCategory.AURA,
+                type: ProductType.AURA,
                 order: ProductOrder.CHEAPEST,
                 limit: 20,
                 page: 1,
@@ -187,7 +187,7 @@ describe('ProductController (e2e)', () => {
                 .sort((a, b) => (a.price < b.price ? 1 : -1));
 
             const query: GetProductListRequest = {
-                type: ProductCategory.AURA,
+                type: ProductType.AURA,
                 order: ProductOrder.PRICIEST,
                 limit: 20,
                 page: 1,
@@ -221,7 +221,7 @@ describe('ProductController (e2e)', () => {
                 }));
 
             const query: GetProductListRequest = {
-                type: ProductCategory.AURA,
+                type: ProductType.AURA,
                 order: ProductOrder.LATEST,
                 limit: 20,
                 page: 1,

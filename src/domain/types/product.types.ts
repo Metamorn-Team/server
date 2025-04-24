@@ -8,7 +8,7 @@ export interface Product {
     readonly key: string;
 }
 
-export enum ProductCategory {
+export enum ProductType {
     AURA = 'aura',
 }
 

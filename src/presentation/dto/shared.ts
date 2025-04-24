@@ -3,7 +3,7 @@ export type Provider = 'GOOGLE' | 'KAKAO' | 'NAVER';
 export type FrinedStatus = 'ACCEPTED' | 'PENDING' | 'REJECTED';
 export type FriendRequestStatus = 'ACCEPTED' | 'SENT' | 'RECEIVED' | 'NONE';
 
-export enum ProductCategory {
+export enum ProductType {
     AURA = 'aura',
     SPEACH_BUBBLE = 'speach-bubble',
 }
