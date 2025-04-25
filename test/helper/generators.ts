@@ -1,6 +1,7 @@
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
+import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { Provider } from 'src/shared/types';
@@ -88,20 +89,32 @@ export const generateFriendship = (
 };
 
 export const generateProduct = (
-    categoryId: string,
+    itemId: string,
     partial?: Partial<Omit<ProducEntity, 'categoryId'>>,
 ) => {
     return new ProducEntity(
         partial?.id || v4(),
+        itemId,
         partial?.name || '멋진 오라',
         partial?.description || '멋진 오라 설명',
         partial?.price || 1000,
         partial?.coverImage || 'https://image.com',
-        categoryId,
         partial?.createdAt || new Date(),
         partial?.updatedAt || new Date(),
         partial?.type || 'aura',
         partial?.key || 'key',
         partial?.grade,
+    );
+};
+
+export const generateItem = (partial?: Partial<ItemEntity>) => {
+    return new ItemEntity(
+        partial?.id || v4(),
+        partial?.name || '오라',
+        partial?.description || '멋진 오라',
+        partial?.type || 'aura',
+        partial?.key || 'aura-1',
+        partial?.grade || 'common',
+        partial?.createdAt || new Date(),
     );
 };

@@ -1,44 +1,33 @@
-export class ProducEntity {
+export class ItemEntity {
     constructor(
         readonly id: string,
-        readonly itemId: string,
         readonly name: string,
         readonly description: string,
-        readonly price: number,
-        readonly coverImage: string,
-        readonly createdAt: Date,
-        readonly updatedAt: Date,
         readonly type: string,
         readonly key: string,
-        readonly grade?: string,
+        readonly grade: string,
+        readonly createdAt: Date,
     ) {}
 
     static create(
         proto: {
-            ItemId: string;
             name: string;
             description: string;
-            price: number;
-            coverImage: string;
             type: string;
             key: string;
-            grade?: string;
+            grade: string;
         },
         idGen: () => string,
         stdDate: Date,
     ) {
-        return new ProducEntity(
+        return new ItemEntity(
             idGen(),
-            proto.ItemId,
             proto.name,
             proto.description,
-            proto.price,
-            proto.coverImage,
-            stdDate,
-            stdDate,
             proto.type,
             proto.key,
             proto.grade,
+            stdDate,
         );
     }
 }
