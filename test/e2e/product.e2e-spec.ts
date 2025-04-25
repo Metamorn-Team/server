@@ -6,7 +6,7 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { v4 } from 'uuid';
 import { login } from 'test/helper/login';
 import { ResponseResult } from 'test/helper/types';
-import { generateProduct } from 'test/helper/generators';
+import { generateItem, generateProduct } from 'test/helper/generators';
 import { GetProductListRequest } from 'src/presentation/dto/product/request/get-product-list.request';
 import { ProductType, ProductOrder } from 'src/presentation/dto/shared';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
@@ -28,7 +28,7 @@ describe('ProductController (e2e)', () => {
 
     afterEach(async () => {
         await db.product.deleteMany();
-        await db.productCategory.deleteMany();
+        await db.item.deleteMany();
         await db.user.deleteMany();
     });
 
@@ -37,65 +37,26 @@ describe('ProductController (e2e)', () => {
     });
 
     describe('GET /products - 상품 목록 조회', () => {
-        const stdDate = new Date();
-        const categories = [
-            {
-                id: v4(),
-                name: '오라',
-                createdAt: stdDate,
-                updatedAt: stdDate,
-            },
-            {
-                id: v4(),
-                name: '맵',
-                createdAt: stdDate,
-                updatedAt: stdDate,
-            },
-            {
-                id: v4(),
-                name: '말풍선',
-                createdAt: stdDate,
-                updatedAt: stdDate,
-            },
-        ];
-
         const auras = Array.from({ length: 20 }, (_, i) =>
-            generateProduct(categories[0].id, {
+            generateItem({
                 name: `오라${i}`,
                 description: `오라 설명${i}`,
-                price: 1000 + i,
-                createdAt: new Date(Date.now() + i),
                 type: ProductType.AURA,
                 key: `aura${i}`,
+                grade: 'common',
+                createdAt: new Date(Date.now() + i),
             }),
         );
-        const maps = Array.from({ length: 20 }, (_, i) =>
-            generateProduct(categories[1].id, {
-                name: `맵${i}`,
-                description: `맵 설명${i}`,
+        const products = Array.from({ length: 20 }, (_, i) =>
+            generateProduct(auras[i].id, {
                 price: 1000 + i,
                 createdAt: new Date(Date.now() + i),
-                type: 'map',
-                key: `aura${i}`,
             }),
         );
-        const bubbles = Array.from({ length: 20 }, (_, i) =>
-            generateProduct(categories[2].id, {
-                name: `말풍선${i}`,
-                description: `말풍선 설명${i}`,
-                price: 1000 + i,
-                createdAt: new Date(Date.now() + i),
-                type: ProductType.SPEACH_BUBBLE,
-                key: `bubble${i}`,
-            }),
-        );
-        const productsLength = auras.length + map.length + bubbles.length;
 
         beforeEach(async () => {
-            await db.productCategory.createMany({ data: categories });
-            await db.product.createMany({
-                data: [...auras, ...maps, ...bubbles],
-            });
+            await db.item.createMany({ data: auras });
+            await db.product.createMany({ data: products });
         });
 
         it('페이지네이션 정상 동작', async () => {
@@ -145,15 +106,15 @@ describe('ProductController (e2e)', () => {
         it('저렴한 순 조회 정상 동작', async () => {
             const { accessToken } = await login(app);
 
-            const expectedProducts = auras
-                .map((aura) => ({
-                    id: aura.id,
-                    name: aura.name,
-                    description: aura.description,
-                    price: aura.price,
-                    coverImage: aura.coverImage,
-                    type: aura.type,
-                    key: aura.key,
+            const expectedProducts = products
+                .map((product, i) => ({
+                    id: product.id,
+                    price: product.price,
+                    coverImage: product.coverImage,
+                    name: auras[i].name,
+                    description: auras[i].description,
+                    type: auras[i].type,
+                    key: auras[i].key,
                 }))
                 .sort((a, b) => (a.price > b.price ? 1 : -1));
 
@@ -180,15 +141,15 @@ describe('ProductController (e2e)', () => {
         it('비싼 순 조회 정상 동작', async () => {
             const { accessToken } = await login(app);
 
-            const expectedProducts = auras
-                .map((aura) => ({
-                    id: aura.id,
-                    name: aura.name,
-                    description: aura.description,
-                    price: aura.price,
-                    coverImage: aura.coverImage,
-                    type: aura.type,
-                    key: aura.key,
+            const expectedProducts = products
+                .map((product, i) => ({
+                    id: product.id,
+                    price: product.price,
+                    coverImage: product.coverImage,
+                    name: auras[i].name,
+                    description: auras[i].description,
+                    type: auras[i].type,
+                    key: auras[i].key,
                 }))
                 .sort((a, b) => (a.price < b.price ? 1 : -1));
 
@@ -214,17 +175,22 @@ describe('ProductController (e2e)', () => {
         it('최신 순 조회 정상 동작', async () => {
             const { accessToken } = await login(app);
 
-            const expectedProducts = auras
+            const expectedProducts = products
+                .map((product, i) => ({
+                    id: product.id,
+                    price: product.price,
+                    coverImage: product.coverImage,
+                    name: auras[i].name,
+                    description: auras[i].description,
+                    type: auras[i].type,
+                    key: auras[i].key,
+                    createdAt: product.createdAt,
+                }))
                 .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-                .map((aura) => ({
-                    id: aura.id,
-                    name: aura.name,
-                    description: aura.description,
-                    price: aura.price,
-                    coverImage: aura.coverImage,
-                    type: aura.type,
-                    key: aura.key,
-                }));
+                .map((product) => {
+                    const { createdAt, ...rest } = product;
+                    return rest;
+                });
 
             const query: GetProductListRequest = {
                 type: ProductType.AURA,
