@@ -27,7 +27,11 @@ class ProductItem {
 }
 
 export class GetProductListResponse {
-    @ApiProperty({ nullable: true, example: 10 })
+    @ApiProperty({
+        nullable: true,
+        example: 10,
+        description: 'page가 1일 때 외에는 null',
+    })
     readonly count: number | null;
 
     @ApiProperty({ type: [ProductItem] })
