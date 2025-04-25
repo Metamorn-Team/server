@@ -14,15 +14,19 @@ export class ProductPrismaRepository implements ProductRepository {
         orderBy: ProductOrderBy,
         sort: Sort,
     ): Promise<Product[]> {
-        return await this.prisma.product.findMany({
+        const products = await this.prisma.product.findMany({
             select: {
                 id: true,
-                name: true,
-                description: true,
                 price: true,
                 coverImage: true,
-                type: true,
-                key: true,
+                item: {
+                    select: {
+                        name: true,
+                        description: true,
+                        type: true,
+                        key: true,
+                    },
+                },
             },
             skip: (page - 1) * limit,
             take: limit,
@@ -30,8 +34,18 @@ export class ProductPrismaRepository implements ProductRepository {
                 [orderBy]: sort,
             },
             where: {
-                type,
+                item: {
+                    type,
+                },
             },
+        });
+
+        return products.map((product) => {
+            const { item, ...rest } = product;
+            return {
+                ...rest,
+                ...item,
+            };
         });
     }
 
