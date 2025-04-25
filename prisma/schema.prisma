@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 enum OAuthProvider {
@@ -31,10 +32,12 @@ model User {
   updatedAt DateTime      @map("updated_at")
   deletedAt DateTime?     @map("deleted_at")
 
-  IslandJoins            IslandJoin[]
-  ChatMessages           ChatMessage[]
-  FriendRequestsSent     FriendRequest[] @relation("Sender")
-  FriendRequestsReceived FriendRequest[] @relation("Receiver")
+  islandJoins            IslandJoin[]
+  chatMessages           ChatMessage[]
+  friendRequestsSent     FriendRequest[]   @relation("Sender")
+  friendRequestsReceived FriendRequest[]   @relation("Receiver")
+  purchases              Purchase[]
+  goldTransactions       GoldTransaction[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -89,6 +92,8 @@ model IslandJoin {
   island Island @relation(fields: [islandId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
 
+  @@index([islandId])
+  @@index([userId])
   @@map("island_join")
 }
 
@@ -102,6 +107,7 @@ model ChatMessage {
 
   sender User @relation(fields: [senderId], references: [id])
 
+  @@index([senderId])
   @@map("chat_message")
 }
 
@@ -120,7 +126,9 @@ model Product {
   deletedAt   DateTime? @map("deleted_at")
 
   category ProductCategory @relation(fields: [categoryId], references: [id])
+  Purchase Purchase[]
 
+  @@index([categoryId])
   @@map("product")
 }
 
@@ -134,4 +142,39 @@ model ProductCategory {
   products Product[]
 
   @@map("product_category")
+}
+
+model Purchase {
+  id          String    @id @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  goldAmount  Int
+  status      String    @db.VarChar(20)
+  purchasedAt DateTime  @map("purchased_at")
+  refundedAt  DateTime? @map("refunded_at")
+
+  user             User              @relation(fields: [userId], references: [id])
+  product          Product           @relation(fields: [productId], references: [id])
+  goldTransactions GoldTransaction[]
+
+  @@index([userId])
+  @@index([productId])
+  @@map("purchase")
+}
+
+model GoldTransaction {
+  id          String   @id @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  type        String   @db.VarChar(20)
+  amount      Int
+  balance     Int
+  referenceId String   @map("reference_id") @db.Uuid
+  processedAt DateTime @map("processed_at")
+
+  user     User      @relation(fields: [userId], references: [id])
+  purchase Purchase? @relation(fields: [referenceId], references: [id])
+
+  @@index([referenceId])
+  @@index([userId])
+  @@map("gold_transaction")
 }
