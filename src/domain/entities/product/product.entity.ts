@@ -10,6 +10,7 @@ export class ProducEntity {
         public readonly updatedAt: Date,
         public readonly type: string,
         public readonly key: string,
+        public readonly grade?: string,
     ) {}
 
     static create(
@@ -21,6 +22,7 @@ export class ProducEntity {
             categoryId: string;
             type: string;
             key: string;
+            grade?: string;
         },
         idGen: () => string,
         stdDate: Date,
@@ -36,6 +38,7 @@ export class ProducEntity {
             stdDate,
             proto.type,
             proto.key,
+            proto.grade,
         );
     }
 }

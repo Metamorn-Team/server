@@ -101,5 +101,6 @@ export const generateProduct = (
         partial?.updatedAt || new Date(),
         partial?.type || 'aura',
         partial?.key || 'key',
+        partial?.grade,
     );
 };
