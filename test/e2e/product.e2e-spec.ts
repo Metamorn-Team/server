@@ -10,6 +10,7 @@ import { generateProduct } from 'test/helper/generators';
 import { GetProductListRequest } from 'src/presentation/dto/product/request/get-product-list.request';
 import { ProductType, ProductOrder } from 'src/presentation/dto/shared';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
+import { map } from 'rxjs';
 
 describe('ProductController (e2e)', () => {
     let app: INestApplication;
@@ -88,6 +89,7 @@ describe('ProductController (e2e)', () => {
                 key: `bubble${i}`,
             }),
         );
+        const productsLength = auras.length + map.length + bubbles.length;
 
         beforeEach(async () => {
             await db.productCategory.createMany({ data: categories });
@@ -133,8 +135,11 @@ describe('ProductController (e2e)', () => {
             expect(status2).toEqual(HttpStatus.OK);
             expect(status2).toEqual(HttpStatus.OK);
             expect(body1.products.length).toEqual(7);
+            expect(body1.count).not.toBeNull();
             expect(body2.products.length).toEqual(7);
+            expect(body2.count).toBeNull();
             expect(body3.products.length).toEqual(6);
+            expect(body3.count).toBeNull();
         });
 
         it('저렴한 순 조회 정상 동작', async () => {
@@ -168,6 +173,7 @@ describe('ProductController (e2e)', () => {
             const { body, status } = response;
 
             expect(status).toEqual(HttpStatus.OK);
+            expect(body.count).toEqual(auras.length);
             expect(body.products).toEqual(expectedProducts);
         });
 
