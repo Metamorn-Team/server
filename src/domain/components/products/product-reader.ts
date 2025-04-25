@@ -40,4 +40,8 @@ export class ProductReader {
             sort,
         );
     }
+
+    async count(type: string) {
+        return await this.productRepository.countByType(type);
+    }
 }

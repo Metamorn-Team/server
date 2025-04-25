@@ -34,4 +34,12 @@ export class ProductPrismaRepository implements ProductRepository {
             },
         });
     }
+
+    async countByType(type: string): Promise<number> {
+        return await this.prisma.product.count({
+            where: {
+                type,
+            },
+        });
+    }
 }

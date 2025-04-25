@@ -27,6 +27,9 @@ class ProductItem {
 }
 
 export class GetProductListResponse {
+    @ApiProperty({ nullable: true, example: 10 })
+    readonly count: number | null;
+
     @ApiProperty({ type: [ProductItem] })
     readonly products: ProductItem[];
 }

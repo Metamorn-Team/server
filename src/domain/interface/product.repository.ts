@@ -8,6 +8,8 @@ export interface ProductRepository {
         orderBy: ProductOrderBy,
         sort: Sort,
     ): Promise<Product[]>;
+
+    countByType(type: string): Promise<number>;
 }
 
 export const ProductRepository = Symbol('ProductRepository');

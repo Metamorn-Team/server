@@ -41,7 +41,8 @@ export class ProductController {
             page,
             limit,
         );
+        const count = page === 1 ? await this.productReader.count(type) : null;
 
-        return { products };
+        return { count, products };
     }
 }
