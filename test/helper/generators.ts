@@ -35,6 +35,7 @@ export const generateUserEntityV2 = (partial?: Partial<UserEntity>) => {
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
         partial?.deletedAt || null,
+        partial?.gold,
     );
 };
 
