@@ -8,9 +8,6 @@ export class ProducEntity {
         readonly coverImage: string,
         readonly createdAt: Date,
         readonly updatedAt: Date,
-        readonly type: string,
-        readonly key: string,
-        readonly grade?: string,
     ) {}
 
     static create(
@@ -20,9 +17,6 @@ export class ProducEntity {
             description: string;
             price: number;
             coverImage: string;
-            type: string;
-            key: string;
-            grade?: string;
         },
         idGen: () => string,
         stdDate: Date,
@@ -36,9 +30,6 @@ export class ProducEntity {
             proto.coverImage,
             stdDate,
             stdDate,
-            proto.type,
-            proto.key,
-            proto.grade,
         );
     }
 }

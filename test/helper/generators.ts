@@ -101,9 +101,6 @@ export const generateProduct = (
         partial?.coverImage || 'https://image.com',
         partial?.createdAt || new Date(),
         partial?.updatedAt || new Date(),
-        partial?.type || 'aura',
-        partial?.key || 'key',
-        partial?.grade,
     );
 };
 

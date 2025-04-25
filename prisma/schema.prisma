@@ -131,9 +131,6 @@ model Product {
   description String    @db.VarChar(200)
   price       Int
   coverImage  String    @map("cover_image")
-  type        String    @db.VarChar(50)
-  key         String    @db.VarChar(50)
-  grade       String?   @db.VarChar(50)
   itemId      String    @map("item_id") @db.Uuid
   createdAt   DateTime  @map("created_at")
   updatedAt   DateTime  @map("updated_at")
