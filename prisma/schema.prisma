@@ -111,6 +111,34 @@ model ChatMessage {
   @@map("chat_message")
 }
 
+model Item {
+  id          String   @id @db.Uuid
+  name        String   @db.VarChar(50)
+  description String   @db.VarChar(200)
+  type        String   @db.VarChar(50)
+  key         String   @db.VarChar(50)
+  grade       String?  @db.VarChar(50)
+  createdAt   DateTime @map("created_at")
+
+  productItems ProductItem[]
+
+  @@map("item")
+}
+
+model ProductItem {
+  id        String   @id @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  createdAt DateTime @map("created_at")
+
+  item    Item    @relation(fields: [itemId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([itemId])
+  @@index([productId])
+  @@map("product_item")
+}
+
 model Product {
   id          String    @id @db.Uuid
   name        String    @db.VarChar(50)
@@ -125,8 +153,9 @@ model Product {
   updatedAt   DateTime  @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
-  category ProductCategory @relation(fields: [categoryId], references: [id])
-  Purchase Purchase[]
+  category     ProductCategory @relation(fields: [categoryId], references: [id])
+  Purchase     Purchase[]
+  productItems ProductItem[]
 
   @@index([categoryId])
   @@map("product")
