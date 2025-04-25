@@ -120,23 +120,9 @@ model Item {
   grade       String?  @db.VarChar(50)
   createdAt   DateTime @map("created_at")
 
-  productItems ProductItem[]
+  products Product[]
 
   @@map("item")
-}
-
-model ProductItem {
-  id        String   @id @db.Uuid
-  itemId    String   @map("item_id") @db.Uuid
-  productId String   @map("product_id") @db.Uuid
-  createdAt DateTime @map("created_at")
-
-  item    Item    @relation(fields: [itemId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
-
-  @@index([itemId])
-  @@index([productId])
-  @@map("product_item")
 }
 
 model Product {
@@ -145,19 +131,20 @@ model Product {
   description String    @db.VarChar(200)
   price       Int
   coverImage  String    @map("cover_image")
-  categoryId  String    @map("category_id") @db.Uuid
   type        String    @db.VarChar(50)
   key         String    @db.VarChar(50)
   grade       String?   @db.VarChar(50)
+  itemId      String    @map("item_id") @db.Uuid
   createdAt   DateTime  @map("created_at")
   updatedAt   DateTime  @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
-  category     ProductCategory @relation(fields: [categoryId], references: [id])
-  Purchase     Purchase[]
-  productItems ProductItem[]
+  Purchase Purchase[]
 
-  @@index([categoryId])
+  item              Item    @relation(fields: [itemId], references: [id])
+  productCategoryId String? @db.Uuid
+
+  @@index([itemId])
   @@map("product")
 }
 
@@ -167,8 +154,6 @@ model ProductCategory {
   createdAt DateTime  @map("created_at")
   updatedAt DateTime  @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
-
-  products Product[]
 
   @@map("product_category")
 }
