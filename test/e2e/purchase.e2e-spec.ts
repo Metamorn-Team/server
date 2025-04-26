@@ -121,25 +121,11 @@ describe('PurchaseController (e2e)', () => {
         });
 
         it('구매하려는 상품 중 존재하지 않는 상품이 존재하면 예외가 발생한다', async () => {
-            const { userId, accessToken } = await login(app);
-
+            const { accessToken } = await login(app);
             const noneExistProductId = '06a863a9-b087-45a1-97c1-e1c7af0b6dba';
-            const productsToBuy = products.slice(0, 10);
-            const totalPrice = productsToBuy.reduce(
-                (total, p) => total + p.price,
-                0,
-            );
-
-            await db.user.update({
-                data: { gold: totalPrice - 1 },
-                where: { id: userId },
-            });
 
             const dto: PurchaseRequest = {
-                productIds: [
-                    ...productsToBuy.map((p) => p.id),
-                    noneExistProductId,
-                ],
+                productIds: [...products.map((p) => p.id), noneExistProductId],
             };
 
             const response = await request(app.getHttpServer())
