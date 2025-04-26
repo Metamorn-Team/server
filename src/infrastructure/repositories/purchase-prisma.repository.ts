@@ -13,4 +13,8 @@ export class PurchasePrismaRepository implements PurchaseRepository {
     async save(data: PurchaseEntity): Promise<void> {
         await this.txHost.tx.purchase.create({ data });
     }
+
+    async saveMany(data: PurchaseEntity[]): Promise<void> {
+        await this.txHost.tx.purchase.createMany({ data });
+    }
 }
