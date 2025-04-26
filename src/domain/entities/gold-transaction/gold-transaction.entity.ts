@@ -1,26 +1,26 @@
-import { GoldTransactionType } from 'src/domain/types/gold-transaction';
+import { GoldTransactionTypeEnum } from 'src/domain/types/gold-transaction.types';
 
 export class GoldTransactionEntity {
     constructor(
         readonly id: string,
         readonly userId: string,
-        readonly type: GoldTransactionType,
+        readonly type: GoldTransactionTypeEnum,
         readonly amount: number,
         readonly balance: number,
-        readonly referenceId: string,
         readonly processedAt: Date,
+        readonly referenceIds: string[] = [],
     ) {}
 
     static create(
         proto: {
             userId: string;
-            type: GoldTransactionType;
+            type: GoldTransactionTypeEnum;
             amount: number;
             balance: number;
-            referenceId: string;
+            referenceIds?: string[];
         },
         idGen: () => string,
-        stdDate: Date,
+        stdDate = new Date(),
     ) {
         return new GoldTransactionEntity(
             idGen(),
@@ -28,8 +28,8 @@ export class GoldTransactionEntity {
             proto.type,
             proto.amount,
             proto.balance,
-            proto.referenceId,
             stdDate,
+            proto.referenceIds,
         );
     }
 }
