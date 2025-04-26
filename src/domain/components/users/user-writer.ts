@@ -24,4 +24,8 @@ export class UserWriter {
     async updateAvatarKey(id: string, avatarKey: string) {
         await this.userRepository.update(id, { avatarKey });
     }
+
+    async updateGoldBalance(id: string, gold: number) {
+        await this.userRepository.update(id, { gold });
+    }
 }
