@@ -11,4 +11,6 @@ export enum DomainExceptionType {
     InvalidToken = 'InvalidToken',
     InvalidInput = 'InvalidInput',
     ProductCategoryNotFound = 'ProductCategoryNotFound',
+    ProductNotFound = 'ProductNotFound',
+    NotEnoughGold = 'NotEnoughGold',
 }

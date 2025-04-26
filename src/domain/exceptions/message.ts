@@ -12,3 +12,6 @@ export const FRIEND_REQUEST_CONFLICT_MESSAGE = '이미 친구 요청을 보냈�
 export const TAG_CONFLICT_MESSAGE = '이미 존재하는 태그입니다.';
 export const INVALID_TOKEN_MESSAGE = '유효하지 않은 토큰입니다.';
 export const INVALID_INPUT_MESSAGE = '잘못된 입력입니다.';
+export const PRODUCT_NOT_FOUND_MESSAGE = (data: string) =>
+    `${data}, 존재하지 않는 상품입니다.`;
+export const NOT_ENOUGH_GOLD_MESSAGE = '골드가 부족합니다.';
