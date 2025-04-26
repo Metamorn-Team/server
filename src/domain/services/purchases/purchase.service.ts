@@ -64,7 +64,7 @@ export class PurchaseService {
     ) {
         await Promise.all([
             this.purchaseWriter.createMany(purchases),
-            this.goldTransactionWriter.save(goldTransaction),
+            this.goldTransactionWriter.create(goldTransaction),
             this.userWriter.updateGoldBalance(userId, goldBalance),
             this.userOwnedItemWriter.createMany(userOwnedItems),
         ]);

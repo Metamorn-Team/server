@@ -12,7 +12,7 @@ export class GoldTransactionWrtier {
         private readonly goldTransactionRepositor: GoldTransactionRepository,
     ) {}
 
-    async save(data: GoldTransactionEntity) {
+    async create(data: GoldTransactionEntity) {
         await this.goldTransactionRepositor.save(data);
     }
 }
