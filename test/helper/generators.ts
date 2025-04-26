@@ -4,6 +4,7 @@ import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { ItemGradeEnum } from 'src/domain/types/item.types';
 import { Provider } from 'src/shared/types';
 import { v4 } from 'uuid';
 
@@ -111,7 +112,7 @@ export const generateItem = (partial?: Partial<ItemEntity>) => {
         partial?.description || '멋진 오라',
         partial?.type || 'aura',
         partial?.key || 'aura-1',
-        partial?.grade || 'common',
+        partial?.grade || ItemGradeEnum.NORMAL,
         partial?.createdAt || new Date(),
     );
 };

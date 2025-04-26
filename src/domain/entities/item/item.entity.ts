@@ -5,7 +5,7 @@ export class ItemEntity {
         readonly description: string,
         readonly type: string,
         readonly key: string,
-        readonly grade: string,
+        readonly grade: number,
         readonly createdAt: Date,
     ) {}
 
@@ -15,7 +15,7 @@ export class ItemEntity {
             description: string;
             type: string;
             key: string;
-            grade: string;
+            grade: number;
         },
         idGen: () => string,
         stdDate: Date,

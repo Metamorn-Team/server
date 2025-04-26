@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ProductRepository } from 'src/domain/interface/product.repository';
+import { convertNumberToGrade } from 'src/domain/types/item.types';
 import { Product, ProductOrderBy, Sort } from 'src/domain/types/product.types';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 
@@ -25,6 +26,7 @@ export class ProductPrismaRepository implements ProductRepository {
                         description: true,
                         type: true,
                         key: true,
+                        grade: true,
                     },
                 },
             },
@@ -45,6 +47,7 @@ export class ProductPrismaRepository implements ProductRepository {
             return {
                 ...rest,
                 ...item,
+                grade: convertNumberToGrade(item.grade),
             };
         });
     }

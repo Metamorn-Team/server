@@ -1,3 +1,5 @@
+import { ItemGrade } from 'src/domain/types/item.types';
+
 export interface Product {
     readonly id: string;
     readonly name: string;
@@ -6,6 +8,7 @@ export interface Product {
     readonly coverImage: string;
     readonly type: string;
     readonly key: string;
+    readonly grade: ItemGrade;
 }
 
 export enum ProductType {

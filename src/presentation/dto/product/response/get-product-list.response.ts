@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ItemGrade, itemGrades } from '../../../../domain/types/item.types';
 
 class ProductItem {
     @ApiProperty({ example: 'uuid' })
@@ -24,6 +25,13 @@ class ProductItem {
         description: '해당 상품을 식별하는 키',
     })
     readonly key: string;
+
+    @ApiProperty({
+        example: 'NORMAL',
+        description: '판매하는 아이템의 등급',
+        enum: itemGrades,
+    })
+    readonly grade: ItemGrade;
 }
 
 export class GetProductListResponse {
