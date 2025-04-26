@@ -123,7 +123,7 @@ model Item {
   description String   @db.VarChar(200)
   type        String   @db.VarChar(50)
   key         String   @db.VarChar(50)
-  grade       String?  @db.VarChar(50)
+  grade       Int      @default(0) @db.SmallInt
   createdAt   DateTime @map("created_at")
 
   products Product[]
