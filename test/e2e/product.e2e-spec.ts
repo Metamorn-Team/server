@@ -3,14 +3,16 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
-import { v4 } from 'uuid';
 import { login } from 'test/helper/login';
 import { ResponseResult } from 'test/helper/types';
 import { generateItem, generateProduct } from 'test/helper/generators';
 import { GetProductListRequest } from 'src/presentation/dto/product/request/get-product-list.request';
 import { ProductType, ProductOrder } from 'src/presentation/dto/shared';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
-import { map } from 'rxjs';
+import {
+    convertNumberToGrade,
+    ItemGradeEnum,
+} from 'src/domain/types/item.types';
 
 describe('ProductController (e2e)', () => {
     let app: INestApplication;
@@ -43,7 +45,7 @@ describe('ProductController (e2e)', () => {
                 description: `오라 설명${i}`,
                 type: ProductType.AURA,
                 key: `aura${i}`,
-                grade: 'common',
+                grade: ItemGradeEnum.NORMAL,
                 createdAt: new Date(Date.now() + i),
             }),
         );
@@ -94,7 +96,7 @@ describe('ProductController (e2e)', () => {
 
             expect(status1).toEqual(HttpStatus.OK);
             expect(status2).toEqual(HttpStatus.OK);
-            expect(status2).toEqual(HttpStatus.OK);
+            expect(status3).toEqual(HttpStatus.OK);
             expect(body1.products.length).toEqual(7);
             expect(body1.count).not.toBeNull();
             expect(body2.products.length).toEqual(7);
@@ -115,6 +117,7 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
+                    grade: convertNumberToGrade(auras[i].grade),
                 }))
                 .sort((a, b) => (a.price > b.price ? 1 : -1));
 
@@ -150,6 +153,7 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
+                    grade: convertNumberToGrade(auras[i].grade),
                 }))
                 .sort((a, b) => (a.price < b.price ? 1 : -1));
 
@@ -184,10 +188,12 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
+                    grade: convertNumberToGrade(auras[i].grade),
                     createdAt: product.createdAt,
                 }))
                 .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
                 .map((product) => {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const { createdAt, ...rest } = product;
                     return rest;
                 });
