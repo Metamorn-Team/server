@@ -25,6 +25,8 @@
         "docker:down": "docker compose down"
     },
     "dependencies": {
+        "@nestjs-cls/transactional": "^2.7.0",
+        "@nestjs-cls/transactional-adapter-prisma": "^1.2.20",
         "@nestjs/common": "^11.0.11",
         "@nestjs/config": "^4.0.1",
         "@nestjs/core": "^11.0.11",
@@ -38,6 +40,7 @@
         "class-validator": "^0.14.1",
         "cookie-parser": "^1.4.7",
         "dotenv": "^16.4.7",
+        "nestjs-cls": "^5.4.3",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
         "socket.io": "^4.8.1",

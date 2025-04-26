@@ -11,10 +11,15 @@ import { GameModule } from 'src/modules/game/game.module';
 import { UserComponentModule } from './modules/users/users-component.module';
 import { PipeModule } from './common/pipe/pipe.module';
 import { FriendsModule } from './modules/friends/friends.module';
+import { ProductCategoryModule } from 'src/modules/product-categories/product-category.module';
+import { ProductModule } from 'src/modules/products/product.module';
+import { ClsModule } from 'nestjs-cls';
+import { clsOptions } from 'src/configs/cls/cls-config';
 
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
+        ClsModule.forRoot(clsOptions),
         InterceptorsModule,
         FilterModule,
         PipeModule,
@@ -24,6 +29,8 @@ import { FriendsModule } from './modules/friends/friends.module';
         AuthModule,
         GameModule,
         FriendsModule,
+        ProductCategoryModule,
+        ProductModule,
     ],
     controllers: [AppController],
     providers: [AppService],

@@ -1,6 +1,8 @@
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
+import { ItemEntity } from 'src/domain/entities/item/item.entity';
+import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { Provider } from 'src/shared/types';
 import { v4 } from 'uuid';
@@ -34,6 +36,7 @@ export const generateUserEntityV2 = (partial?: Partial<UserEntity>) => {
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
         partial?.deletedAt || null,
+        partial?.gold,
     );
 };
 
@@ -82,5 +85,33 @@ export const generateFriendship = (
         partial?.status || 'PENDING',
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
+    );
+};
+
+export const generateProduct = (
+    itemId: string,
+    partial?: Partial<Omit<ProducEntity, 'categoryId'>>,
+) => {
+    return new ProducEntity(
+        partial?.id || v4(),
+        itemId,
+        partial?.name || '멋진 오라',
+        partial?.description || '멋진 오라 설명',
+        partial?.price || 1000,
+        partial?.coverImage || 'https://image.com',
+        partial?.createdAt || new Date(),
+        partial?.updatedAt || new Date(),
+    );
+};
+
+export const generateItem = (partial?: Partial<ItemEntity>) => {
+    return new ItemEntity(
+        partial?.id || v4(),
+        partial?.name || '오라',
+        partial?.description || '멋진 오라',
+        partial?.type || 'aura',
+        partial?.key || 'aura-1',
+        partial?.grade || 'common',
+        partial?.createdAt || new Date(),
     );
 };

@@ -10,4 +10,5 @@ export enum DomainExceptionType {
     TagConflict = 'TagConflict',
     InvalidToken = 'InvalidToken',
     InvalidInput = 'InvalidInput',
+    ProductCategoryNotFound = 'ProductCategoryNotFound',
 }

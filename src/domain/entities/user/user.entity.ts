@@ -12,6 +12,7 @@ export class UserEntity {
         readonly createdAt: Date,
         readonly updatedAt: Date,
         readonly deletedAt: Date | null = null,
+        readonly gold = 0,
     ) {}
 
     static create(
