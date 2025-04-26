@@ -1,4 +1,9 @@
-import { ProductOrderBy, Product, Sort } from 'src/domain/types/product.types';
+import {
+    ProductOrderBy,
+    Product,
+    Sort,
+    ProductForPurchase,
+} from 'src/domain/types/product.types';
 
 export interface ProductRepository {
     findByCategory(
@@ -8,6 +13,8 @@ export interface ProductRepository {
         orderBy: ProductOrderBy,
         sort: Sort,
     ): Promise<Product[]>;
+
+    findByIds(ids: string[]): Promise<ProductForPurchase[]>;
 
     countByType(type: string): Promise<number>;
 }

@@ -41,6 +41,10 @@ export class ProductReader {
         );
     }
 
+    async readByIds(ids: string[]) {
+        return await this.productRepository.findByIds(ids);
+    }
+
     async count(type: string) {
         return await this.productRepository.countByType(type);
     }

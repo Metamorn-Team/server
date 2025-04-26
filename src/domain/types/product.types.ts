@@ -1,5 +1,11 @@
 import { ItemGrade } from 'src/domain/types/item.types';
 
+export interface ProductForPurchase {
+    readonly id: string;
+    readonly price: number;
+    readonly itemId: string;
+}
+
 export interface Product {
     readonly id: string;
     readonly name: string;
