@@ -15,6 +15,7 @@ import { ProductCategoryModule } from 'src/modules/product-categories/product-ca
 import { ProductModule } from 'src/modules/products/product.module';
 import { ClsModule } from 'nestjs-cls';
 import { clsOptions } from 'src/configs/cls/cls-config';
+import { PurchaseModule } from 'src/modules/purchases/purchase.module';
 
 @Module({
     imports: [
@@ -31,6 +32,7 @@ import { clsOptions } from 'src/configs/cls/cls-config';
         FriendsModule,
         ProductCategoryModule,
         ProductModule,
+        PurchaseModule,
     ],
     controllers: [AppController],
     providers: [AppService],
