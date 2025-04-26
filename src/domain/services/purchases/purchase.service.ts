@@ -106,14 +106,15 @@ export class PurchaseService {
         products: ProductForPurchase[],
         productIds: string[],
     ) {
-        const missingIds = products.filter(
-            (product) => !productIds.some((id) => id === product.id),
+        const missingIds = productIds.filter(
+            (productId) =>
+                !products.some((product) => product.id === productId),
         );
 
         if (missingIds.length > 0) {
             throw new DomainException(
                 DomainExceptionType.ProductNotFound,
-                HttpStatus.UNPROCESSABLE_ENTITY,
+                HttpStatus.NOT_FOUND,
                 PRODUCT_NOT_FOUND_MESSAGE(JSON.stringify(missingIds)),
             );
         }
