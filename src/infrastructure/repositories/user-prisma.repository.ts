@@ -142,6 +142,17 @@ export class UserPrismaRepository implements UserRepository {
         return { data, nextCursor };
     }
 
+    async findUserGoldById(id: string): Promise<{ gold: number } | null> {
+        return await this.prisma.user.findUnique({
+            select: {
+                gold: true,
+            },
+            where: {
+                id,
+            },
+        });
+    }
+
     async update(id: string, data: Partial<UserEntity>): Promise<void> {
         const { nickname, tag, avatarKey } = data;
 

@@ -58,6 +58,20 @@ export class UserReader {
         return user;
     }
 
+    async getGoldBalanceById(id: string) {
+        const user = await this.userRepository.findUserGoldById(id);
+
+        if (!user) {
+            throw new DomainException(
+                DomainExceptionType.UserNotFound,
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        return user.gold;
+    }
+
     async search(
         currentUserId: string,
         search: string,

@@ -18,6 +18,7 @@ export interface UserRepository {
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers>;
+    findUserGoldById(id: string): Promise<{ gold: number } | null>;
     update(id: string, data: Partial<UserEntity>): Promise<void>;
 }
 
