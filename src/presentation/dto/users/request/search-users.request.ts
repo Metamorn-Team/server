@@ -8,7 +8,10 @@ import {
     Min,
     MinLength,
 } from 'class-validator';
-import { SearchVarient, searchVarients } from 'src/domain/types/uesr.types';
+import {
+    SearchVarient,
+    searchVarients,
+} from '../../../../../src/domain/types/uesr.types';
 
 export class SearchUsersRequest {
     @ApiProperty({
