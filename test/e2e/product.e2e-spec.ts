@@ -118,6 +118,7 @@ describe('ProductController (e2e)', () => {
                     type: auras[i].type,
                     key: auras[i].key,
                     grade: convertNumberToGrade(auras[i].grade),
+                    purchasedStatus: 'NONE',
                 }))
                 .sort((a, b) => (a.price > b.price ? 1 : -1));
 
@@ -154,6 +155,7 @@ describe('ProductController (e2e)', () => {
                     type: auras[i].type,
                     key: auras[i].key,
                     grade: convertNumberToGrade(auras[i].grade),
+                    purchasedStatus: 'NONE',
                 }))
                 .sort((a, b) => (a.price < b.price ? 1 : -1));
 
@@ -190,6 +192,7 @@ describe('ProductController (e2e)', () => {
                     key: auras[i].key,
                     grade: convertNumberToGrade(auras[i].grade),
                     createdAt: product.createdAt,
+                    purchasedStatus: 'NONE',
                 }))
                 .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
                 .map((product) => {
