@@ -7,6 +7,7 @@ import {
 
 export interface ProductRepository {
     findByCategory(
+        userId: string,
         type: string,
         page: number,
         limit: number,

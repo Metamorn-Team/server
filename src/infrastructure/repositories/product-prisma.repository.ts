@@ -14,6 +14,7 @@ export class ProductPrismaRepository implements ProductRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     async findByCategory(
+        userId: string,
         type: string,
         page: number,
         limit: number,
@@ -34,6 +35,14 @@ export class ProductPrismaRepository implements ProductRepository {
                         grade: true,
                     },
                 },
+                purchases: {
+                    select: {
+                        id: true,
+                    },
+                    where: {
+                        userId,
+                    },
+                },
             },
             skip: (page - 1) * limit,
             take: limit,
@@ -48,11 +57,12 @@ export class ProductPrismaRepository implements ProductRepository {
         });
 
         return products.map((product) => {
-            const { item, ...rest } = product;
+            const { item, purchases, ...rest } = product;
             return {
                 ...rest,
                 ...item,
                 grade: convertNumberToGrade(item.grade),
+                purchasedStatus: purchases.length > 0 ? 'PURCHASED' : 'NONE',
             };
         });
     }

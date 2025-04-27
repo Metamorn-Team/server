@@ -13,7 +13,13 @@ export class ProductReader {
         private readonly productRepository: ProductRepository,
     ) {}
 
-    async read(type: string, order: ProductOrder, page: number, limit: number) {
+    async read(
+        userId: string,
+        type: string,
+        order: ProductOrder,
+        page: number,
+        limit: number,
+    ) {
         let orderBy = ProductOrderBy.CREATEDAT;
         let sort = Sort.DESC;
 
@@ -33,6 +39,7 @@ export class ProductReader {
         }
 
         return await this.productRepository.findByCategory(
+            userId,
             type,
             page,
             limit,
