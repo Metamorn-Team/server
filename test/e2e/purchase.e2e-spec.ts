@@ -3,7 +3,11 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
-import { generateItem, generateProduct } from 'test/helper/generators';
+import {
+    generateItem,
+    generateProduct,
+    generatePurchase,
+} from 'test/helper/generators';
 import { ProductType } from 'src/presentation/dto/shared';
 import { ItemGradeEnum } from 'src/domain/types/item.types';
 import { login } from 'test/helper/login';
@@ -135,6 +139,35 @@ describe('PurchaseController (e2e)', () => {
             const { status } = response;
 
             expect(status).toEqual(404);
+        });
+
+        it('구매하려는 상품 중 구매 한도를 초과한 상품이 있는 경우 예외가 발생한다', async () => {
+            const { accessToken, userId } = await login(app);
+
+            const totalPrice = products.reduce(
+                (total, p) => total + p.price,
+                0,
+            );
+
+            await db.user.update({
+                data: { gold: totalPrice },
+                where: { id: userId },
+            });
+
+            const purchased = generatePurchase(userId, products[2].id);
+            await db.purchase.create({ data: purchased });
+
+            const dto: PurchaseRequest = {
+                productIds: products.map((p) => p.id),
+            };
+
+            const response = await request(app.getHttpServer())
+                .post('/purchases')
+                .send(dto)
+                .set('Authorization', accessToken);
+            const { status } = response;
+
+            expect(status).toEqual(409);
         });
     });
 });

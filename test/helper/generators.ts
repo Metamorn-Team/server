@@ -3,8 +3,10 @@ import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.en
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
+import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { ItemGradeEnum } from 'src/domain/types/item.types';
+import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
 import { Provider } from 'src/shared/types';
 import { v4 } from 'uuid';
 
@@ -114,5 +116,21 @@ export const generateItem = (partial?: Partial<ItemEntity>) => {
         partial?.key || 'aura-1',
         partial?.grade || ItemGradeEnum.NORMAL,
         partial?.createdAt || new Date(),
+    );
+};
+
+export const generatePurchase = (
+    userId: string,
+    productId: string,
+    partial?: Partial<Omit<PurchaseEntity, 'userId' | 'productId'>>,
+) => {
+    return new PurchaseEntity(
+        partial?.id || v4(),
+        userId,
+        productId,
+        partial?.goldAmount || 100,
+        partial?.purchasedAt || new Date(),
+        partial?.status || PurchaseStatusEnum.COMPLETE,
+        partial?.refundedAt || null,
     );
 };
