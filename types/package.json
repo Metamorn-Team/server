@@ -1,6 +1,6 @@
 {
     "name": "mmorntype",
-    "version": "1.0.21",
+    "version": "1.0.23",
     "description": "mmorn dto type",
     "typings": "./dist/types/index.d.ts",
     "files": [
