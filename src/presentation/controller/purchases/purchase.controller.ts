@@ -35,6 +35,10 @@ export class PurchaseController {
         status: 404,
         description: '구매하려는 상품 중 존재하지 않는 상품이 있는 경우',
     })
+    @ApiResponse({
+        status: 409,
+        description: '구매하려는 상품의 구매 횟수를 초과한 경우',
+    })
     @Post()
     async purchase(
         @Body() dto: PurchaseRequest,

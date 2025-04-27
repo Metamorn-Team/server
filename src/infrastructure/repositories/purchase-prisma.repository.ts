@@ -3,6 +3,7 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { Injectable } from '@nestjs/common';
 import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
 import { PurchaseRepository } from 'src/domain/interface/purchase.repository';
+import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
 
 @Injectable()
 export class PurchasePrismaRepository implements PurchaseRepository {
@@ -16,5 +17,21 @@ export class PurchasePrismaRepository implements PurchaseRepository {
 
     async saveMany(data: PurchaseEntity[]): Promise<void> {
         await this.txHost.tx.purchase.createMany({ data });
+    }
+
+    async hasAnyPurchased(
+        userId: string,
+        productIds: string[],
+    ): Promise<boolean> {
+        const count = await this.txHost.tx.purchase.count({
+            where: {
+                userId,
+                status: PurchaseStatusEnum.COMPLETE,
+                productId: {
+                    in: productIds,
+                },
+            },
+        });
+        return count > 0;
     }
 }

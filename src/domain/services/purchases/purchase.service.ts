@@ -13,11 +13,13 @@ import { DomainException } from 'src/domain/exceptions/exceptions';
 import {
     NOT_ENOUGH_GOLD_MESSAGE,
     PRODUCT_NOT_FOUND_MESSAGE,
+    PRODUCT_PURCHASE_LIMIT_EXCEEDED_MESSAGE,
 } from 'src/domain/exceptions/message';
 import { GoldTransactionTypeEnum } from 'src/domain/types/gold-transaction.types';
 import { ProductForPurchase } from 'src/domain/types/product.types';
 import { UserOwnedItemWriter } from 'src/domain/components/user-owned-items/user-owned-item-writer';
 import { UserOwnedItemEntity } from 'src/domain/entities/user-owned-items/user-owned-item.entity';
+import { PurchaseReader } from 'src/domain/components/purchases/purchase-reader';
 
 @Injectable()
 export class PurchaseService {
@@ -25,6 +27,7 @@ export class PurchaseService {
         private readonly userReader: UserReader,
         private readonly userWriter: UserWriter,
         private readonly productReader: ProductReader,
+        private readonly purchaseReader: PurchaseReader,
         private readonly purchaseWriter: PurchaseWriter,
         private readonly goldTransactionWriter: GoldTransactionWrtier,
         private readonly userOwnedItemWriter: UserOwnedItemWriter,
@@ -33,6 +36,7 @@ export class PurchaseService {
     async purchase(buyerId: string, productIds: string[]) {
         const products = await this.productReader.readByIds(productIds);
         this.checkProductsExist(products, productIds);
+        await this.checkIsPurchased(buyerId, productIds);
 
         const totalPrice = products.reduce((total, p) => total + p.price, 0);
         const goldBalance = await this.userReader.getGoldBalanceById(buyerId);
@@ -130,5 +134,19 @@ export class PurchaseService {
         }
 
         return goldBalance - totalPrice;
+    }
+
+    private async checkIsPurchased(userId: string, productIds: string[]) {
+        const has = await this.purchaseReader.hasAnyPurchased(
+            userId,
+            productIds,
+        );
+        if (has) {
+            throw new DomainException(
+                DomainExceptionType.ProductPurchaseLimitExceeded,
+                HttpStatus.CONFLICT,
+                PRODUCT_PURCHASE_LIMIT_EXCEEDED_MESSAGE,
+            );
+        }
     }
 }
