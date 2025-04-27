@@ -6,8 +6,11 @@ import {
     USER_NOT_FOUND_MESSAGE,
 } from 'src/domain/exceptions/message';
 import { UserRepository } from 'src/domain/interface/user.repository';
-import { PaginatedUsers, UserInfo } from 'src/domain/types/uesr.types';
-import { Varient } from 'src/presentation/dto/users/request/search-users.request';
+import {
+    PaginatedUsers,
+    SearchVarient,
+    UserInfo,
+} from 'src/domain/types/uesr.types';
 
 @Injectable()
 export class UserReader {
@@ -75,7 +78,7 @@ export class UserReader {
     async search(
         currentUserId: string,
         search: string,
-        varient: Varient,
+        varient: SearchVarient,
         limit: number,
         cursor?: string,
     ): Promise<PaginatedUsers> {
@@ -83,7 +86,7 @@ export class UserReader {
             return { data: [], nextCursor: null };
         }
 
-        if (varient === Varient.NICKNAME) {
+        if (varient === 'NICKNAME') {
             return await this.userRepository.findStartWithNickname(
                 currentUserId,
                 search,
@@ -91,7 +94,7 @@ export class UserReader {
                 cursor,
             );
         }
-        if (varient === Varient.TAG) {
+        if (varient === 'TAG') {
             return await this.userRepository.findStartWithTag(
                 currentUserId,
                 search,

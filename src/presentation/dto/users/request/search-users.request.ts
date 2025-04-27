@@ -8,11 +8,7 @@ import {
     Min,
     MinLength,
 } from 'class-validator';
-
-export enum Varient {
-    TAG = 'TAG',
-    NICKNAME = 'NICKNAME',
-}
+import { SearchVarient, searchVarients } from 'src/domain/types/uesr.types';
 
 export class SearchUsersRequest {
     @ApiProperty({
@@ -26,11 +22,11 @@ export class SearchUsersRequest {
 
     @ApiProperty({
         name: 'varient',
-        enum: Varient,
+        enum: searchVarients,
         description: '검색 기준 (닉네임 또는 태그)',
     })
-    @IsEnum(Varient)
-    readonly varient: Varient;
+    @IsEnum(searchVarients)
+    readonly varient: SearchVarient;
 
     @ApiProperty({
         name: 'limit',

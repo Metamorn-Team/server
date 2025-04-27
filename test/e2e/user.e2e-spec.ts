@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import * as request from 'supertest';
 
 import { HttpStatus, INestApplication } from '@nestjs/common';
@@ -9,13 +10,12 @@ import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { generateFriendship, generateUserEntity } from 'test/helper/generators';
 import { v4 } from 'uuid';
-import { Varient } from 'src/presentation/dto/users/request/search-users.request';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { ResponseResult } from 'test/helper/types';
 import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
 import { FriendRequestStatus } from '@prisma/client';
-import { GetUserResponse } from 'src/presentation/dto';
+import { GetUserResponse, SearchUsersRequest } from 'src/presentation/dto';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -281,13 +281,14 @@ describe('UserController (e2e)', () => {
 
             const limit = 5;
 
+            const query: SearchUsersRequest = {
+                search: 'searchTarget',
+                varient: 'NICKNAME',
+                limit: limit,
+            };
             const response = (await request(app.getHttpServer())
                 .get('/users/search')
-                .query({
-                    search: 'searchTarget',
-                    varient: Varient.NICKNAME,
-                    limit: limit,
-                })
+                .query(query)
                 .set(
                     'Authorization',
                     accessToken,
@@ -305,14 +306,15 @@ describe('UserController (e2e)', () => {
             const { accessToken } = await login(app);
 
             const limit = 3;
+            const query: SearchUsersRequest = {
+                search: 'evenTag',
+                varient: 'TAG',
+                limit,
+            };
             const response = (await request(app.getHttpServer())
                 .get('/users/search')
                 .set('Authorization', accessToken)
-                .query({
-                    search: 'evenTag',
-                    varient: Varient.TAG,
-                    limit,
-                })
+                .query(query)
                 .set(
                     'Authorization',
                     accessToken,
@@ -328,12 +330,13 @@ describe('UserController (e2e)', () => {
         it('검색 결과가 없는 경우', async () => {
             const { accessToken } = await login(app);
 
+            const query: SearchUsersRequest = {
+                search: 'nonExistent',
+                varient: 'NICKNAME',
+            };
             const response = (await request(app.getHttpServer())
                 .get('/users/search')
-                .query({
-                    search: 'nonExistent',
-                    varient: Varient.NICKNAME,
-                })
+                .query(query)
                 .set(
                     'Authorization',
                     accessToken,
@@ -355,9 +358,9 @@ describe('UserController (e2e)', () => {
             let nextCursor: string | null = null;
 
             for (let page = 0; ; page++) {
-                const queryParams: any = {
+                const queryParams: SearchUsersRequest & { cursor?: string } = {
                     search: searchTerm,
-                    varient: Varient.NICKNAME,
+                    varient: 'NICKNAME',
                     limit,
                 };
                 if (nextCursor) {
@@ -404,7 +407,7 @@ describe('UserController (e2e)', () => {
 
             const response = await request(app.getHttpServer())
                 .get('/users/search')
-                .query({ varient: Varient.NICKNAME })
+                .query({ varient: 'NICKNAME' })
                 .set('Authorization', accessToken);
             expect(response.status).toEqual(400);
         });
@@ -433,7 +436,7 @@ describe('UserController (e2e)', () => {
                 .get('/users/search')
                 .query({
                     search: 'test',
-                    varient: Varient.NICKNAME,
+                    varient: 'NICKNAME',
                     limit: 'abc',
                 })
                 .set('Authorization', accessToken);
@@ -444,7 +447,7 @@ describe('UserController (e2e)', () => {
 
             const response = await request(app.getHttpServer())
                 .get('/users/search')
-                .query({ search: 'test', varient: Varient.NICKNAME, limit: 0 })
+                .query({ search: 'test', varient: 'NICKNAME', limit: 0 })
                 .set('Authorization', accessToken);
             expect(response.status).toEqual(400);
         });
@@ -455,7 +458,7 @@ describe('UserController (e2e)', () => {
                 .get('/users/search')
                 .query({
                     search: '',
-                    varient: Varient.NICKNAME,
+                    varient: 'NICKNAME',
                 })
                 .set('Authorization', accessToken);
 
@@ -483,7 +486,7 @@ describe('UserController (e2e)', () => {
                 .get('/users/search')
                 .query({
                     search: searchTerm,
-                    varient: Varient.NICKNAME,
+                    varient: 'NICKNAME',
                 })
                 .set(
                     'Authorization',

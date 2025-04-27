@@ -1,5 +1,8 @@
 import { Provider } from 'src/shared/types';
 
+export const searchVarients = ['TAG', 'NICKNAME'] as const;
+export type SearchVarient = (typeof searchVarients)[number];
+
 export interface UserInfo {
     readonly id: string;
     readonly email: string;
