@@ -169,10 +169,10 @@ export class GameService {
         return activeUsers;
     }
 
-    kickPlayerById(playerId: string) {
+    async kickPlayerById(playerId: string) {
         const player = this.gameStorage.getPlayer(playerId);
         if (player) {
-            this.leaveRoom(player.roomId, playerId);
+            await this.leaveRoom(player.roomId, playerId);
             return player;
         }
     }

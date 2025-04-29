@@ -49,7 +49,7 @@ export class IslandGateway
         @MessageBody() data: PlayerJoinRequest,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const kickedPlayer = this.gameService.kickPlayerById(userId);
+        const kickedPlayer = await this.gameService.kickPlayerById(userId);
         if (kickedPlayer) {
             const { clientId, roomId, id } = kickedPlayer;
             const kickedClient = this.wss.sockets.get(clientId);
