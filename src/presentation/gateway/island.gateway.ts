@@ -10,7 +10,6 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
-import { v4 } from 'uuid';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { GameService } from 'src/domain/services/game/game.service';
@@ -20,12 +19,12 @@ import {
     ServerToClient,
     TypedSocket,
 } from 'src/presentation/dto/game/socket/type';
-import { SendMessageRequest } from 'src/presentation/dto/game/request/send-message.request';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
-    namespace: 'game/zone',
+    path: '/game',
+    namespace: 'island',
     cors: {
         origin: true,
     },
@@ -124,33 +123,6 @@ export class IslandGateway
             );
         } catch (e) {
             this.logger.error(`공격 실패: ${e as string}`);
-        }
-    }
-
-    @SubscribeMessage('sendMessage')
-    async handleSendMessage(
-        @MessageBody() data: SendMessageRequest,
-        @ConnectedSocket() client: TypedSocket,
-        @CurrentUserFromSocket() senderId: string,
-    ) {
-        try {
-            const player = await this.chatMessageService.sendMessage(
-                senderId,
-                data.message,
-            );
-
-            client.emit('messageSent', {
-                messageId: v4(),
-                message: data.message,
-            });
-            client
-                .to(player.roomId)
-                .emit('receiveMessage', { senderId, message: data.message });
-
-            this.logger.debug(`전송자: ${senderId}`);
-            this.logger.debug(`메시지: ${data.message}`);
-        } catch (e) {
-            this.logger.error(`메세지 전송 실패: ${e as string}`);
         }
     }
 
