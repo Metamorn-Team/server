@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import { IslandTag, SocketClientId } from 'src/domain/types/game.types';
+import { SocketClientId } from 'src/domain/types/game.types';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
@@ -11,6 +11,8 @@ import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { Player } from 'src/domain/models/game/player';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { UNINHABITED_MAX_MEMBERS } from 'src/common/constants';
 
 @Injectable()
 export class GameService {
@@ -22,37 +24,45 @@ export class GameService {
         private readonly userReader: UserReader,
     ) {}
 
-    async createRoom(tag: IslandTag) {
-        const stdDate = new Date();
-        const island = IslandEntity.create({ tag }, v4, stdDate);
-        await this.islandWriter.create(island);
+    async createRoom() {
+        const islandEntity = IslandEntity.create(
+            {
+                type: IslandTypeEnum.UNINHABITED,
+                maxMembers: UNINHABITED_MAX_MEMBERS,
+            },
+            v4,
+        );
+        await this.islandWriter.create(islandEntity);
 
-        const { id } = island;
-
-        const room = {
+        const { id } = islandEntity;
+        const island = {
             id,
-            max: 5,
+            max: UNINHABITED_MAX_MEMBERS,
             players: new Set<SocketClientId>(),
-            type: tag,
+            type: IslandTypeEnum.UNINHABITED,
         };
-        this.gameStorage.createIsland(id, room);
-        const roomOfTags = this.gameStorage.getIslandOfTag(tag);
+        this.gameStorage.createIsland(id, island);
+        const roomOfTags = this.gameStorage.getIslandOfTag(
+            IslandTypeEnum.UNINHABITED,
+        );
 
         if (roomOfTags) {
             roomOfTags.add(id);
         } else {
-            this.gameStorage.addIslandOfTag(tag, id);
+            this.gameStorage.addIslandOfTag(IslandTypeEnum.UNINHABITED, id);
         }
 
-        return room;
+        return island;
     }
 
-    async getAvailableRoom(tag: IslandTag) {
-        const roomIds = this.gameStorage.getIslandIdsByTag(tag);
+    async getAvailableRoom() {
+        const islandIds = this.gameStorage.getIslandIdsByTag(
+            IslandTypeEnum.UNINHABITED,
+        );
 
-        if (roomIds) {
-            for (const roomId of roomIds) {
-                const room = this.gameStorage.getIsland(roomId);
+        if (islandIds) {
+            for (const islandId of islandIds) {
+                const room = this.gameStorage.getIsland(islandId);
 
                 if (room && room.players.size < room.max) {
                     return room;
@@ -60,21 +70,15 @@ export class GameService {
             }
         }
 
-        return await this.createRoom(tag);
+        return await this.createRoom();
     }
 
     getIsland(islandId: string) {
         return this.gameStorage.getIsland(islandId);
     }
 
-    async joinRoom(
-        islandType: 'dev' | 'design',
-        playerId: string,
-        clientId: string,
-        x: number,
-        y: number,
-    ) {
-        const availableIsland = await this.getAvailableRoom(islandType);
+    async joinRoom(playerId: string, clientId: string, x: number, y: number) {
+        const availableIsland = await this.getAvailableRoom();
         const user = await this.userReader.readProfile(playerId);
 
         const { id, nickname, avatarKey, tag } = user;

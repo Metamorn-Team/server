@@ -14,7 +14,6 @@ import { v4 } from 'uuid';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { GameService } from 'src/domain/services/game/game.service';
-import { UserReader } from 'src/domain/components/users/user-reader';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import {
     ClientToServer,
@@ -56,19 +55,19 @@ export class IslandGateway
             const kickedClient = this.wss.sockets.get(clientId);
 
             await this.gameService.leaveRoom(roomId, id);
-            kickedClient?.leave(roomId);
+            await kickedClient?.leave(roomId);
 
             client.to(roomId).emit('playerLeft', { id });
             kickedClient?.emit('playerKicked');
         }
 
-        const { roomType, x, y } = data;
+        const { x, y } = data;
 
         this.logger.log(`joined player : ${userId}`);
         const { activePlayers, availableIsland, joinedPlayer } =
-            await this.gameService.joinRoom(roomType, userId, client.id, x, y);
+            await this.gameService.joinRoom(userId, client.id, x, y);
 
-        client.join(availableIsland.id);
+        await client.join(availableIsland.id);
         client.emit('playerJoinSuccess', { x, y });
         client.emit('activePlayers', activePlayers);
         client
@@ -83,7 +82,7 @@ export class IslandGateway
     ) {
         const player = await this.gameService.leftPlayer(userId);
         if (player) {
-            client.leave(player.roomId);
+            await client.leave(player.roomId);
             client.to(player.roomId).emit('playerLeft', { id: player.id });
 
             this.logger.log(`Leave cilent: ${client.id}`);
@@ -108,7 +107,7 @@ export class IslandGateway
     }
 
     @SubscribeMessage('attack')
-    async handleAttack(@CurrentUserFromSocket() userId: string) {
+    handleAttack(@CurrentUserFromSocket() userId: string) {
         // NOTE 현재는 플레이어만
         try {
             const { attacker, attackedPlayers } =
@@ -120,10 +119,11 @@ export class IslandGateway
             });
 
             this.logger.debug(
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `공격 성공: ${attackedPlayers.map((player) => player.nickname)}`,
             );
         } catch (e) {
-            this.logger.error(`공격 실패: ${e}`);
+            this.logger.error(`공격 실패: ${e as string}`);
         }
     }
 
@@ -150,12 +150,12 @@ export class IslandGateway
             this.logger.debug(`전송자: ${senderId}`);
             this.logger.debug(`메시지: ${data.message}`);
         } catch (e) {
-            this.logger.error(`메세지 전송 실패: ${e}`);
+            this.logger.error(`메세지 전송 실패: ${e as string}`);
         }
     }
 
     @SubscribeMessage('islandHearbeat')
-    async handleHeartbeat(
+    handleHeartbeat(
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
@@ -174,7 +174,7 @@ export class IslandGateway
         this.logger.log(`Connected new client to Zone: ${client.id}`);
     }
 
-    handleDisconnect(client: TypedSocket & { userId: string }) {
+    async handleDisconnect(client: TypedSocket & { userId: string }) {
         const userId = client.userId;
         const player = this.gameService.getPlayer(userId);
         this.logger.debug(
@@ -183,8 +183,8 @@ export class IslandGateway
         if (!player || player.clientId !== client.id) return;
 
         const { roomId } = player;
-        client.leave(roomId);
-        this.gameService.leaveRoom(roomId, player.id);
+        await client.leave(roomId);
+        await this.gameService.leaveRoom(roomId, player.id);
         client.to(roomId).emit('playerLeft', { id: player.id });
         this.logger.debug(`Cliend id from Zone:${player.id} disconnected`);
     }

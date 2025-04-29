@@ -1,5 +1,6 @@
 import { Player } from 'src/domain/models/game/player';
-import { Island, IslandTag } from 'src/domain/types/game.types';
+import { Island } from 'src/domain/types/game.types';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 export interface GameStorage {
     getPlayer(playerId: string): Player | null;
@@ -10,13 +11,13 @@ export interface GameStorage {
 
     createIsland(islandId: string, island: Island): void;
     getIsland(islandId: string): Island | null;
-    getIslandOfTag(tag: IslandTag): Set<string> | null;
-    getIslandIdsByTag(tag: IslandTag): string[];
-    addIslandOfTag(tag: IslandTag, islandId: string): void;
+    getIslandOfTag(tag: IslandTypeEnum): Set<string> | null;
+    getIslandIdsByTag(tag: IslandTypeEnum): string[];
+    addIslandOfTag(tag: IslandTypeEnum, islandId: string): void;
 
     getPlayerStore(): Record<string, Player>;
     getIslandStore(): Record<string, Island>;
-    getIslandOfTagStore(): Record<IslandTag, Set<string>>;
+    getIslandOfTagStore(): Record<IslandTypeEnum, Set<string>>;
 }
 
 export const GameStorage = Symbol('GameStorage');

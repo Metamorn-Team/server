@@ -1,11 +1,12 @@
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
 import { Player } from 'src/domain/models/game/player';
-import { Island, IslandTag, SocketClientId } from 'src/domain/types/game.types';
+import { Island, SocketClientId } from 'src/domain/types/game.types';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 export class MemoryStorage implements GameStorage {
     private players = new Map<SocketClientId, Player>();
     private islands = new Map<string, Island>();
-    private islandsOfTags = new Map<IslandTag, Set<string>>();
+    private islandsOfTags = new Map<IslandTypeEnum, Set<string>>();
 
     addPlayer(playerId: string, player: Player): void {
         this.players.set(playerId, player);
@@ -46,15 +47,15 @@ export class MemoryStorage implements GameStorage {
         return this.islands.get(islandId) ?? null;
     }
 
-    getIslandOfTag(tag: IslandTag): Set<string> | null {
+    getIslandOfTag(tag: IslandTypeEnum): Set<string> | null {
         return this.islandsOfTags.get(tag) ?? null;
     }
 
-    getIslandIdsByTag(tag: IslandTag): string[] {
+    getIslandIdsByTag(tag: IslandTypeEnum): string[] {
         return Array.from(this.islandsOfTags.get(tag) ?? []);
     }
 
-    addIslandOfTag(tag: IslandTag, islandId: string): void {
+    addIslandOfTag(tag: IslandTypeEnum, islandId: string): void {
         const roomOfTypes = this.islandsOfTags.get(tag);
 
         if (roomOfTypes) {
@@ -72,9 +73,9 @@ export class MemoryStorage implements GameStorage {
         return Object.fromEntries(this.islands.entries());
     }
 
-    getIslandOfTagStore(): Record<IslandTag, Set<string>> {
-        const result: Record<IslandTag, Set<string>> = {} as Record<
-            IslandTag,
+    getIslandOfTagStore(): Record<IslandTypeEnum, Set<string>> {
+        const result: Record<IslandTypeEnum, Set<string>> = {} as Record<
+            IslandTypeEnum,
             Set<string>
         >;
         this.islandsOfTags.forEach((value, key) => {

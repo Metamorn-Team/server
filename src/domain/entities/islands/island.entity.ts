@@ -1,24 +1,46 @@
+import { IslandTypeEnum } from 'src/domain/types/island.types';
+
+export class IslandPrototype {
+    readonly maxMembers: number;
+    readonly tag?: string;
+    readonly type: IslandTypeEnum;
+    readonly name?: string;
+    readonly description?: string;
+    readonly coverImage?: string;
+    readonly deletedAt?: Date;
+}
+
 export class IslandEntity {
     constructor(
         readonly id: string,
-        readonly tag: string,
+        readonly maxMembers: number,
+        readonly type: IslandTypeEnum,
         readonly createdAt: Date,
         readonly updatedAt: Date,
-        readonly deletedAt: Date | null,
+        readonly tag?: string,
+        readonly name?: string,
+        readonly description?: string,
+        readonly coverImage?: string,
+        readonly deletedAt?: Date,
     ) {}
 
     static create(
-        input: { tag: string; deletedAt?: Date | null },
+        proto: IslandPrototype,
         idGen: () => string,
-        stdDate: Date,
+        stdDate = new Date(),
         updatedAt?: Date,
     ): IslandEntity {
         return new IslandEntity(
             idGen(),
-            input.tag,
+            proto.maxMembers,
+            proto.type,
             stdDate,
             updatedAt ?? stdDate,
-            input.deletedAt ?? null,
+            proto.tag,
+            proto.name,
+            proto.description,
+            proto.coverImage,
+            proto.deletedAt,
         );
     }
 }
