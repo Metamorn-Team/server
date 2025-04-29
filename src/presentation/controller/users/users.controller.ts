@@ -24,6 +24,7 @@ import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-a
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { SearchUsersRequest } from 'src/presentation/dto/users/request/search-users.request';
+import { GetGoldBalance } from 'src/presentation/dto/users/response/get-gold-balance';
 import { GetMyResponse } from 'src/presentation/dto/users/response/get-me.response';
 import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.response';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
@@ -82,6 +83,27 @@ export class UserController {
     @Get('my')
     async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
         return await this.userReader.readProfile(userId);
+    }
+
+    @ApiOperation({
+        summary: '내 골드 잔액 조회',
+        description: '로그인한 사용자의 골드 잔액을 조회합니다.',
+    })
+    @ApiResponse({
+        status: 200,
+        description: '조회 성공',
+        type: GetGoldBalance,
+    })
+    @ApiResponse({
+        status: 404,
+        description: '존재하지 않는 사용자 (access token 정보 오류)',
+    })
+    @Get('gold')
+    async getGoldBalance(
+        @CurrentUser() userId: string,
+    ): Promise<GetGoldBalance> {
+        const goldBalance = await this.userReader.getGoldBalanceById(userId);
+        return { goldBalance };
     }
 
     @ApiOperation({

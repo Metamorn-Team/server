@@ -5,6 +5,7 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
+import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { ProductCategoryReader } from 'src/domain/components/product-categories/product-category-reader';
 import { ProductReader } from 'src/domain/components/products/product-reader';
@@ -32,10 +33,12 @@ export class ProductController {
     @Get()
     async getProducts(
         @Query() dto: GetProductListRequest,
+        @CurrentUser() userId: string,
     ): Promise<GetProductListResponse> {
         const { type, order, page, limit } = dto;
 
         const products = await this.productReader.read(
+            userId,
             type,
             order,
             page,

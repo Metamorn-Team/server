@@ -1,3 +1,14 @@
+import { ItemGrade } from 'src/domain/types/item.types';
+
+export const purchasedStatus = ['PURCHASED', 'NONE'] as const;
+export type PurchasedStatus = (typeof purchasedStatus)[number];
+
+export interface ProductForPurchase {
+    readonly id: string;
+    readonly price: number;
+    readonly itemId: string;
+}
+
 export interface Product {
     readonly id: string;
     readonly name: string;
@@ -6,6 +17,8 @@ export interface Product {
     readonly coverImage: string;
     readonly type: string;
     readonly key: string;
+    readonly grade: ItemGrade;
+    readonly purchasedStatus: PurchasedStatus;
 }
 
 export enum ProductType {

@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ProductRepository } from 'src/domain/interface/product.repository';
-import { Product, ProductOrderBy, Sort } from 'src/domain/types/product.types';
+import { convertNumberToGrade } from 'src/domain/types/item.types';
+import {
+    Product,
+    ProductForPurchase,
+    ProductOrderBy,
+    Sort,
+} from 'src/domain/types/product.types';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 
 @Injectable()
@@ -8,6 +14,7 @@ export class ProductPrismaRepository implements ProductRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     async findByCategory(
+        userId: string,
         type: string,
         page: number,
         limit: number,
@@ -25,6 +32,15 @@ export class ProductPrismaRepository implements ProductRepository {
                         description: true,
                         type: true,
                         key: true,
+                        grade: true,
+                    },
+                },
+                purchases: {
+                    select: {
+                        id: true,
+                    },
+                    where: {
+                        userId,
                     },
                 },
             },
@@ -41,11 +57,28 @@ export class ProductPrismaRepository implements ProductRepository {
         });
 
         return products.map((product) => {
-            const { item, ...rest } = product;
+            const { item, purchases, ...rest } = product;
             return {
                 ...rest,
                 ...item,
+                grade: convertNumberToGrade(item.grade),
+                purchasedStatus: purchases.length > 0 ? 'PURCHASED' : 'NONE',
             };
+        });
+    }
+
+    async findByIds(ids: string[]): Promise<ProductForPurchase[]> {
+        return await this.prisma.product.findMany({
+            select: {
+                id: true,
+                price: true,
+                itemId: true,
+            },
+            where: {
+                id: {
+                    in: ids,
+                },
+            },
         });
     }
 

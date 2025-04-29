@@ -44,6 +44,7 @@ model User {
   friendRequestsReceived FriendRequest[]   @relation("Receiver")
   purchases              Purchase[]
   goldTransactions       GoldTransaction[]
+  userOwnedItems         UserOwnedItem[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -123,10 +124,11 @@ model Item {
   description String   @db.VarChar(200)
   type        String   @db.VarChar(50)
   key         String   @db.VarChar(50)
-  grade       String?  @db.VarChar(50)
+  grade       Int      @default(0) @db.SmallInt
   createdAt   DateTime @map("created_at")
 
-  products Product[]
+  products       Product[]
+  userOwnedItems UserOwnedItem[]
 
   @@map("item")
 }
@@ -142,7 +144,7 @@ model Product {
   updatedAt   DateTime  @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
-  Purchase Purchase[]
+  purchases Purchase[]
 
   item              Item    @relation(fields: [itemId], references: [id])
   productCategoryId String? @db.Uuid
@@ -166,13 +168,12 @@ model Purchase {
   userId      String    @map("user_id") @db.Uuid
   productId   String    @map("product_id") @db.Uuid
   goldAmount  Int
-  status      String    @db.VarChar(20)
+  status      Int       @db.SmallInt
   purchasedAt DateTime  @map("purchased_at")
   refundedAt  DateTime? @map("refunded_at")
 
-  user             User              @relation(fields: [userId], references: [id])
-  product          Product           @relation(fields: [productId], references: [id])
-  goldTransactions GoldTransaction[]
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([userId])
   @@index([productId])
@@ -180,18 +181,30 @@ model Purchase {
 }
 
 model GoldTransaction {
-  id          String   @id @db.Uuid
-  userId      String   @map("user_id") @db.Uuid
-  type        String   @db.VarChar(20)
-  amount      Int
-  balance     Int
-  referenceId String   @map("reference_id") @db.Uuid
-  processedAt DateTime @map("processed_at")
+  id           String   @id @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  type         Int      @db.SmallInt
+  amount       Int
+  balance      Int
+  referenceIds String[] @default([]) @map("reference_id") @db.Uuid
+  processedAt  DateTime @map("processed_at")
 
-  user     User      @relation(fields: [userId], references: [id])
-  purchase Purchase? @relation(fields: [referenceId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
-  @@index([referenceId])
   @@index([userId])
   @@map("gold_transaction")
+}
+
+model UserOwnedItem {
+  id         String   @id @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  itemId     String   @map("item_id") @db.Uuid
+  acquiredAt DateTime @map("acquired_at")
+
+  user User @relation(fields: [userId], references: [id])
+  item Item @relation(fields: [itemId], references: [id])
+
+  @@index([userId])
+  @@index([itemId])
+  @@map("user_owned_item")
 }
