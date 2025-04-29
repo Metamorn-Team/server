@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "island" ADD COLUMN     "type" SMALLINT NOT NULL DEFAULT 0;
