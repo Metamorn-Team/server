@@ -1,4 +1,4 @@
 export enum IslandTypeEnum {
     NORMAL,
-    UNINHABITED,
+    DESERTED,
 }

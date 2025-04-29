@@ -24,7 +24,7 @@ describe('IslandService', () => {
 
     describe('섬 생성', () => {
         it('섬 생성 정상 동작', async () => {
-            const type = IslandTypeEnum.UNINHABITED;
+            const type = IslandTypeEnum.DESERTED;
 
             await islandService.create(type);
             const island = await db.island.findFirst({ where: { type } });

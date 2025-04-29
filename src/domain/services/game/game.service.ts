@@ -27,7 +27,7 @@ export class GameService {
     async createRoom() {
         const islandEntity = IslandEntity.create(
             {
-                type: IslandTypeEnum.UNINHABITED,
+                type: IslandTypeEnum.DESERTED,
                 maxMembers: UNINHABITED_MAX_MEMBERS,
             },
             v4,
@@ -39,17 +39,17 @@ export class GameService {
             id,
             max: UNINHABITED_MAX_MEMBERS,
             players: new Set<SocketClientId>(),
-            type: IslandTypeEnum.UNINHABITED,
+            type: IslandTypeEnum.DESERTED,
         };
         this.gameStorage.createIsland(id, island);
         const roomOfTags = this.gameStorage.getIslandOfTag(
-            IslandTypeEnum.UNINHABITED,
+            IslandTypeEnum.DESERTED,
         );
 
         if (roomOfTags) {
             roomOfTags.add(id);
         } else {
-            this.gameStorage.addIslandOfTag(IslandTypeEnum.UNINHABITED, id);
+            this.gameStorage.addIslandOfTag(IslandTypeEnum.DESERTED, id);
         }
 
         return island;
@@ -57,7 +57,7 @@ export class GameService {
 
     async getAvailableRoom() {
         const islandIds = this.gameStorage.getIslandIdsByTag(
-            IslandTypeEnum.UNINHABITED,
+            IslandTypeEnum.DESERTED,
         );
 
         if (islandIds) {
