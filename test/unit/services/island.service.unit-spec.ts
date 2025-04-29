@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IslandService } from 'src/domain/services/islands/island.service';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { IslandModule } from 'src/modules/islands/island.module';
@@ -23,13 +24,13 @@ describe('IslandService', () => {
 
     describe('섬 생성', () => {
         it('섬 생성 정상 동작', async () => {
-            const tag = 'dev';
+            const type = IslandTypeEnum.UNINHABITED;
 
-            await islandService.create(tag);
-            const island = await db.island.findFirst({ where: { tag } });
+            await islandService.create(type);
+            const island = await db.island.findFirst({ where: { type } });
 
             expect(island?.id).toBeTruthy();
-            expect(island?.tag).toEqual(tag);
+            expect(island?.type).toEqual(type);
             expect(island?.createdAt).toBeTruthy();
             expect(island?.updatedAt).toBeTruthy();
             expect(island?.deletedAt).toBeNull();

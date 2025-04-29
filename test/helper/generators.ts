@@ -5,6 +5,7 @@ import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ItemGradeEnum } from 'src/domain/types/item.types';
 import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
 import { Provider } from 'src/shared/types';
@@ -50,10 +51,15 @@ export const generateIsland = (
 
     return new IslandEntity(
         partial?.id || v4(),
-        partial?.tag || 'dev',
+        partial?.maxMembers || 5,
+        partial?.type || IslandTypeEnum.UNINHABITED,
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
-        partial?.deletedAt || null,
+        partial?.tag || 'dev',
+        partial?.name,
+        partial?.description,
+        partial?.coverImage,
+        partial?.deletedAt,
     );
 };
 
