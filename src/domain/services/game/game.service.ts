@@ -77,7 +77,7 @@ export class GameService {
         return this.gameStorage.getIsland(islandId);
     }
 
-    async joinRoom(playerId: string, clientId: string, x: number, y: number) {
+    async joinIsland(playerId: string, clientId: string, x: number, y: number) {
         const availableIsland = await this.getAvailableRoom();
         const user = await this.userReader.readProfile(playerId);
 

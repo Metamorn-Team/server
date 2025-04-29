@@ -63,8 +63,10 @@ export class IslandGateway
         const { x, y } = data;
 
         this.logger.log(`joined player : ${userId}`);
+
+        // type이 NORMAL이면 islandId로 참여
         const { activePlayers, availableIsland, joinedPlayer } =
-            await this.gameService.joinRoom(userId, client.id, x, y);
+            await this.gameService.joinIsland(userId, client.id, x, y);
 
         await client.join(availableIsland.id);
         client.emit('playerJoinSuccess', { x, y });
