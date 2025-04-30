@@ -14,4 +14,6 @@ export enum DomainExceptionType {
     ProductNotFound = 'ProductNotFound',
     NotEnoughGold = 'NotEnoughGold',
     ProductPurchaseLimitExceeded = 'ProductPurchaseLimitExceeded',
+    IslandNotFound = 'IslandNotFound',
+    IslandFull = 'IslandFull',
 }

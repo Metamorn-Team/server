@@ -14,7 +14,7 @@ export class IslandJoinEntity {
             leftAt?: Date | null;
         },
         idGen: () => string,
-        stdDate: Date,
+        stdDate = new Date(),
     ): IslandJoinEntity {
         return new IslandJoinEntity(
             idGen(),

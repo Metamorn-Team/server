@@ -1,5 +1,5 @@
 import { Player } from 'src/domain/models/game/player';
-import { Island } from 'src/domain/types/game.types';
+import { LiveIsland } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 export interface GameStorage {
@@ -9,14 +9,16 @@ export interface GameStorage {
     deletePlayer(playerId: string): void;
     getPlayersByIslandId(islandId: string): Player[];
 
-    createIsland(islandId: string, island: Island): void;
-    getIsland(islandId: string): Island | null;
+    createIsland(islandId: string, island: LiveIsland): void;
+    getIsland(islandId: string): LiveIsland | null;
     getIslandOfTag(tag: IslandTypeEnum): Set<string> | null;
     getIslandIdsByTag(tag: IslandTypeEnum): string[];
     addIslandOfTag(tag: IslandTypeEnum, islandId: string): void;
+    countPlayer(islandId: string): number;
+    addPlayerToIsland(islandId: string, playerId: string): void;
 
     getPlayerStore(): Record<string, Player>;
-    getIslandStore(): Record<string, Island>;
+    getIslandStore(): Record<string, LiveIsland>;
     getIslandOfTagStore(): Record<IslandTypeEnum, Set<string>>;
 }
 

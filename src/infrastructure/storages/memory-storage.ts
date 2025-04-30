@@ -1,11 +1,11 @@
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
 import { Player } from 'src/domain/models/game/player';
-import { Island, SocketClientId } from 'src/domain/types/game.types';
+import { LiveIsland, SocketClientId } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 export class MemoryStorage implements GameStorage {
     private players = new Map<SocketClientId, Player>();
-    private islands = new Map<string, Island>();
+    private islands = new Map<string, LiveIsland>();
     private islandsOfTags = new Map<IslandTypeEnum, Set<string>>();
 
     addPlayer(playerId: string, player: Player): void {
@@ -39,11 +39,11 @@ export class MemoryStorage implements GameStorage {
             .filter((player) => !!player);
     }
 
-    createIsland(islandId: string, island: Island): void {
+    createIsland(islandId: string, island: LiveIsland): void {
         this.islands.set(islandId, island);
     }
 
-    getIsland(islandId: string): Island | null {
+    getIsland(islandId: string): LiveIsland | null {
         return this.islands.get(islandId) ?? null;
     }
 
@@ -65,11 +65,25 @@ export class MemoryStorage implements GameStorage {
         }
     }
 
+    countPlayer(islandId: string): number {
+        const island = this.islands.get(islandId);
+        if (!island) throw new Error('섬 없음');
+
+        return island.players.size;
+    }
+
+    addPlayerToIsland(islandId: string, playerId: string): void {
+        const island = this.islands.get(islandId);
+        if (!island) throw new Error('섬 없음');
+
+        island.players.add(playerId);
+    }
+
     getPlayerStore(): Record<string, Player> {
         return Object.fromEntries(this.players.entries());
     }
 
-    getIslandStore(): Record<string, Island> {
+    getIslandStore(): Record<string, LiveIsland> {
         return Object.fromEntries(this.islands.entries());
     }
 

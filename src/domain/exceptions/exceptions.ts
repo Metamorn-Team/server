@@ -8,7 +8,7 @@ export class DomainException<T = unknown> extends Error {
 
     constructor(
         errorType: DomainExceptionType,
-        statusCode: HttpStatus,
+        statusCode: number,
         message = 'domain error',
         body?: T,
     ) {

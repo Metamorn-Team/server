@@ -17,3 +17,4 @@ export const PRODUCT_NOT_FOUND_MESSAGE = (data: string) =>
 export const NOT_ENOUGH_GOLD_MESSAGE = '골드가 부족합니다.';
 export const PRODUCT_PURCHASE_LIMIT_EXCEEDED_MESSAGE =
     '해당 상품 구매 횟수를 초과했습니다.';
+export const ISLAND_NOT_FOUND_MESSAGE = '존재하지 않는 섬입니다.';

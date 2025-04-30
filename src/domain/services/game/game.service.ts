@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import { SocketClientId } from 'src/domain/types/game.types';
+import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
@@ -13,6 +13,9 @@ import { UserReader } from 'src/domain/components/users/user-reader';
 import { Player } from 'src/domain/models/game/player';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { UNINHABITED_MAX_MEMBERS } from 'src/common/constants';
+import { IslandReader } from 'src/domain/components/islands/island-reader';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 
 @Injectable()
 export class GameService {
@@ -20,6 +23,7 @@ export class GameService {
         @Inject(GameStorage)
         private readonly gameStorage: GameStorage,
         private readonly islandWriter: IslandWriter,
+        private readonly islandReader: IslandReader,
         private readonly islandJoinWriter: IslandJoinWriter,
         private readonly userReader: UserReader,
     ) {}
@@ -77,9 +81,70 @@ export class GameService {
         return this.gameStorage.getIsland(islandId);
     }
 
-    async joinIsland(playerId: string, clientId: string, x: number, y: number) {
-        const availableIsland = await this.getAvailableRoom();
+    async joinNormalIsland(
+        playerId: string,
+        clientId: string,
+        islandId: string,
+        x: number,
+        y: number,
+    ): Promise<JoinedIslandInfo> {
+        // 1. 회원 및 섬 존재 여부 디비에서 확인
         const user = await this.userReader.readProfile(playerId);
+        const island = await this.islandReader.readOne(islandId);
+
+        // 2. 최대 인원 초과 확인
+        const countParticipants = this.gameStorage.countPlayer(islandId);
+        if (island.maxMembers <= countParticipants) {
+            // 임시 예외 코드
+            throw new DomainException(
+                DomainExceptionType.IslandFull,
+                1000,
+                'island full',
+            );
+        }
+
+        // 3. 플레이어 생성 및 섬 참여자 등록
+        // 여기부터 동시성 제어 필요
+        const player = Player.create({
+            id: user.id,
+            avatarKey: user.avatarKey,
+            clientId,
+            nickname: user.nickname,
+            roomId: islandId,
+            tag: user.tag,
+            x,
+            y,
+        });
+
+        this.gameStorage.addPlayer(playerId, player);
+        this.gameStorage.addPlayerToIsland(islandId, playerId);
+
+        const islandJoin = IslandJoinEntity.create(
+            { islandId, userId: playerId },
+            v4,
+        );
+        await this.islandJoinWriter.create(islandJoin);
+
+        const activePlayers =
+            this.getActiveUsers(islandId).filter(
+                (player) => player.id !== playerId,
+            ) || [];
+
+        return {
+            activePlayers,
+            joinedIslandId: islandId,
+            joinedPlayer: player,
+        };
+    }
+
+    async joinDesertedIsland(
+        playerId: string,
+        clientId: string,
+        x: number,
+        y: number,
+    ) {
+        const user = await this.userReader.readProfile(playerId);
+        const availableIsland = await this.getAvailableRoom();
 
         const { id, nickname, avatarKey, tag } = user;
         const { id: islandId } = availableIsland;
@@ -96,11 +161,9 @@ export class GameService {
 
         this.gameStorage.addPlayer(playerId, player);
 
-        const stdDate = new Date();
         const islandJoin = IslandJoinEntity.create(
             { islandId, userId: player.id },
             v4,
-            stdDate,
         );
         await this.islandJoinWriter.create(islandJoin);
 
@@ -116,7 +179,7 @@ export class GameService {
 
         return {
             activePlayers,
-            availableIsland,
+            joinedIslandId: availableIsland.id,
             joinedPlayer: player,
         };
     }
