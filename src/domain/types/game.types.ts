@@ -18,7 +18,6 @@ export interface LiveNormalIsland {
     name: string;
     description: string;
     coverImage: string;
-    passwordProtected: boolean;
     createdAt: Date;
 }
 
