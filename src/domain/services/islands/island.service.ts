@@ -5,13 +5,14 @@ import {
     IslandEntity,
     IslandPrototype,
 } from 'src/domain/entities/islands/island.entity';
-import { IslandStorage } from 'src/domain/interface/storages/island-storage';
+import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 @Injectable()
 export class IslandService {
     constructor(
-        @Inject(IslandStorage)
-        private readonly islandStorage: IslandStorage,
+        @Inject(DesertedIslandStorage)
+        private readonly islandStorage: DesertedIslandStorage,
         private readonly islandWriter: IslandWriter,
     ) {}
 
@@ -21,9 +22,8 @@ export class IslandService {
             id: island.id,
             max: island.maxMembers,
             players: new Set(),
-            type: prototype.type,
+            type: IslandTypeEnum.NORMAL,
         });
-        this.islandStorage.addIslandOfTag(island.type, island.id);
 
         await this.islandWriter.create(island);
     }

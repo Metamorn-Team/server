@@ -4,15 +4,15 @@ import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';
 import { Player } from 'src/domain/models/game/player';
-import { IslandStorage } from 'src/domain/interface/storages/island-storage';
+import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 
 @Injectable()
 export class GameService {
     constructor(
         @Inject(PlayerStorage)
         private readonly gameStorage: PlayerStorage,
-        @Inject(IslandStorage)
-        private readonly islandStorage: IslandStorage,
+        @Inject(DesertedIslandStorage)
+        private readonly islandStorage: DesertedIslandStorage,
     ) {}
 
     getPlayer(playerId: string) {
@@ -123,6 +123,5 @@ export class GameService {
     loggingStore(logger: Logger) {
         logger.debug('전체 회원', this.gameStorage.getPlayerStore());
         logger.debug('전체 방', this.islandStorage.getIslandStore());
-        logger.debug('타입별 방', this.islandStorage.getIslandOfTagStore());
     }
 }

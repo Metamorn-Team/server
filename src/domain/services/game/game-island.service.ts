@@ -13,15 +13,15 @@ import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
 import { Player } from 'src/domain/models/game/player';
 import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { IslandStorage } from 'src/domain/interface/storages/island-storage';
+import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 
 @Injectable()
 export class GameIslandService {
     constructor(
         @Inject(PlayerStorage)
         private readonly gameStorage: PlayerStorage,
-        @Inject(IslandStorage)
-        private readonly islandStorage: IslandStorage,
+        @Inject(DesertedIslandStorage)
+        private readonly islandStorage: DesertedIslandStorage,
         private readonly islandWriter: IslandWriter,
         private readonly islandReader: IslandReader,
         private readonly islandJoinWriter: IslandJoinWriter,
@@ -29,14 +29,9 @@ export class GameIslandService {
     ) {}
 
     async getAvailableRoom() {
-        const islandIds = this.islandStorage.getIslandIdsByTag(
-            IslandTypeEnum.DESERTED,
-        );
-
-        if (islandIds) {
-            for (const islandId of islandIds) {
-                const island = this.islandStorage.getIsland(islandId);
-
+        const islands = this.islandStorage.getAllIsland();
+        if (islands.length !== 0) {
+            for (const island of islands) {
                 if (island && island.players.size < island.max) {
                     return island;
                 }
@@ -175,18 +170,6 @@ export class GameIslandService {
             type: IslandTypeEnum.DESERTED,
         };
         this.islandStorage.createIsland(islandId, island);
-        const roomOfTags = this.islandStorage.getIslandOfTag(
-            IslandTypeEnum.DESERTED,
-        );
-
-        if (roomOfTags) {
-            roomOfTags.add(islandId);
-        } else {
-            this.islandStorage.addIslandOfTag(
-                IslandTypeEnum.DESERTED,
-                islandId,
-            );
-        }
 
         return island;
     }
