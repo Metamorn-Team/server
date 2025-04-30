@@ -8,6 +8,7 @@ export class IslandPrototype {
     readonly description?: string;
     readonly coverImage?: string;
     readonly deletedAt?: Date;
+    readonly ownerId?: string;
 }
 
 export class IslandEntity {
@@ -17,6 +18,7 @@ export class IslandEntity {
         readonly type: IslandTypeEnum,
         readonly createdAt: Date,
         readonly updatedAt: Date,
+        readonly ownerId?: string,
         readonly tag?: string,
         readonly name?: string,
         readonly description?: string,
@@ -36,6 +38,7 @@ export class IslandEntity {
             proto.type,
             stdDate,
             updatedAt ?? stdDate,
+            proto.ownerId,
             proto.tag,
             proto.name,
             proto.description,

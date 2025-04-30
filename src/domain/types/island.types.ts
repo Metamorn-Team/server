@@ -1,3 +1,7 @@
+export const islandTypes = ['NORMAL', 'DESERTED'] as const;
+
+export type IslandType = (typeof islandTypes)[number];
+
 export enum IslandTypeEnum {
     NORMAL,
     DESERTED,
