@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { GameIslandService } from 'src/domain/services/game/game-island.service';
 import { GameService } from 'src/domain/services/game/game.service';
 import { ChatMessageModule } from 'src/modules/chat-messages/chat-message.module';
 import { GameStorageModule } from 'src/modules/game/game-storage.module';
@@ -16,6 +17,6 @@ import { IslandGateway } from 'src/presentation/gateway/island.gateway';
         IslandJoinComponentModule,
         ChatMessageModule,
     ],
-    providers: [IslandGateway, ChatGateway, GameService],
+    providers: [IslandGateway, ChatGateway, GameService, GameIslandService],
 })
 export class GameModule {}

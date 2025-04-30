@@ -20,6 +20,7 @@ import {
     TypedSocket,
 } from 'src/presentation/dto/game/socket/type';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
+import { GameIslandService } from 'src/domain/services/game/game-island.service';
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -39,6 +40,7 @@ export class IslandGateway
 
     constructor(
         private readonly gameService: GameService,
+        private readonly gameIslandService: GameIslandService,
         private readonly chatMessageService: ChatMessageService,
     ) {}
 
@@ -48,12 +50,13 @@ export class IslandGateway
         @MessageBody() data: PlayerJoinRequest,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const kickedPlayer = await this.gameService.kickPlayerById(userId);
+        const kickedPlayer =
+            await this.gameIslandService.kickPlayerById(userId);
         if (kickedPlayer) {
             const { clientId, roomId, id } = kickedPlayer;
             const kickedClient = this.wss.sockets.get(clientId);
 
-            await this.gameService.leaveRoom(roomId, id);
+            await this.gameIslandService.leaveRoom(roomId, id);
             await kickedClient?.leave(roomId);
 
             client.to(roomId).emit('playerLeft', { id });
@@ -66,7 +69,12 @@ export class IslandGateway
 
         // type이 NORMAL이면 islandId로 참여
         const { activePlayers, joinedIslandId, joinedPlayer } =
-            await this.gameService.joinDesertedIsland(userId, client.id, x, y);
+            await this.gameIslandService.joinDesertedIsland(
+                userId,
+                client.id,
+                x,
+                y,
+            );
 
         await client.join(joinedIslandId);
         client.emit('playerJoinSuccess', { x, y });
@@ -79,7 +87,7 @@ export class IslandGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const player = await this.gameService.leftPlayer(userId);
+        const player = await this.gameIslandService.leftPlayer(userId);
         if (player) {
             await client.leave(player.roomId);
             client.to(player.roomId).emit('playerLeft', { id: player.id });
@@ -156,7 +164,7 @@ export class IslandGateway
 
         const { roomId } = player;
         await client.leave(roomId);
-        await this.gameService.leaveRoom(roomId, player.id);
+        await this.gameIslandService.leaveRoom(roomId, player.id);
         client.to(roomId).emit('playerLeft', { id: player.id });
         this.logger.debug(`Cliend id from Zone:${player.id} disconnected`);
     }
