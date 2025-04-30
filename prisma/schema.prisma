@@ -83,7 +83,7 @@ model Island {
   description String?   @db.VarChar(200)
   coverImage  String?   @map("cover_image")
   tag         String?   @db.VarChar(50)
-  maxMembers  Int?      @map("max_members") @db.SmallInt
+  maxMembers  Int       @map("max_members") @db.SmallInt
   type        Int       @default(0) @db.SmallInt
   createdAt   DateTime  @map("created_at")
   updatedAt   DateTime  @map("updated_at")
