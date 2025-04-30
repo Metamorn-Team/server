@@ -4,12 +4,15 @@ import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';
 import { Player } from 'src/domain/models/game/player';
+import { IslandStorage } from 'src/domain/interface/storages/island-storage';
 
 @Injectable()
 export class GameService {
     constructor(
         @Inject(GameStorage)
         private readonly gameStorage: GameStorage,
+        @Inject(IslandStorage)
+        private readonly islandStorage: IslandStorage,
     ) {}
 
     getPlayer(playerId: string) {
@@ -38,7 +41,7 @@ export class GameService {
         const attacker = this.gameStorage.getPlayer(attackerId);
         if (!attacker) throw new Error('없는 회원');
 
-        const island = this.gameStorage.getIsland(attacker.roomId);
+        const island = this.islandStorage.getIsland(attacker.roomId);
         if (!island) throw new Error('없는 섬');
 
         if (island.players.size === 0) {
@@ -119,7 +122,7 @@ export class GameService {
 
     loggingStore(logger: Logger) {
         logger.debug('전체 회원', this.gameStorage.getPlayerStore());
-        logger.debug('전체 방', this.gameStorage.getIslandStore());
-        logger.debug('타입별 방', this.gameStorage.getIslandOfTagStore());
+        logger.debug('전체 방', this.islandStorage.getIslandStore());
+        logger.debug('타입별 방', this.islandStorage.getIslandOfTagStore());
     }
 }

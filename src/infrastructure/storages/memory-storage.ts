@@ -1,12 +1,9 @@
 import { GameStorage } from 'src/domain/interface/storages/game-storage';
 import { Player } from 'src/domain/models/game/player';
-import { LiveIsland, SocketClientId } from 'src/domain/types/game.types';
-import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { SocketClientId } from 'src/domain/types/game.types';
 
 export class MemoryStorage implements GameStorage {
     private players = new Map<SocketClientId, Player>();
-    private islands = new Map<string, LiveIsland>();
-    private islandsOfTags = new Map<IslandTypeEnum, Set<string>>();
 
     addPlayer(playerId: string, player: Player): void {
         this.players.set(playerId, player);
@@ -31,70 +28,19 @@ export class MemoryStorage implements GameStorage {
     }
 
     getPlayersByIslandId(islandId: string): Player[] {
-        const island = this.islands.get(islandId);
-        if (!island) throw new Error('존재하지 않는 섬');
+        const activePlayers: Player[] = [];
+        const storedPlayers = this.players.values();
 
-        return Array.from(island.players)
-            .map((playerId) => this.players.get(playerId))
-            .filter((player) => !!player);
-    }
-
-    createIsland(islandId: string, island: LiveIsland): void {
-        this.islands.set(islandId, island);
-    }
-
-    getIsland(islandId: string): LiveIsland | null {
-        return this.islands.get(islandId) ?? null;
-    }
-
-    getIslandOfTag(tag: IslandTypeEnum): Set<string> | null {
-        return this.islandsOfTags.get(tag) ?? null;
-    }
-
-    getIslandIdsByTag(tag: IslandTypeEnum): string[] {
-        return Array.from(this.islandsOfTags.get(tag) ?? []);
-    }
-
-    addIslandOfTag(tag: IslandTypeEnum, islandId: string): void {
-        const roomOfTypes = this.islandsOfTags.get(tag);
-
-        if (roomOfTypes) {
-            roomOfTypes.add(islandId);
-        } else {
-            this.islandsOfTags.set(tag, new Set([islandId]));
+        for (const player of storedPlayers) {
+            if (player.roomId === islandId) {
+                activePlayers.push(player);
+            }
         }
-    }
 
-    countPlayer(islandId: string): number {
-        const island = this.islands.get(islandId);
-        if (!island) throw new Error('섬 없음');
-
-        return island.players.size;
-    }
-
-    addPlayerToIsland(islandId: string, playerId: string): void {
-        const island = this.islands.get(islandId);
-        if (!island) throw new Error('섬 없음');
-
-        island.players.add(playerId);
+        return activePlayers;
     }
 
     getPlayerStore(): Record<string, Player> {
         return Object.fromEntries(this.players.entries());
-    }
-
-    getIslandStore(): Record<string, LiveIsland> {
-        return Object.fromEntries(this.islands.entries());
-    }
-
-    getIslandOfTagStore(): Record<IslandTypeEnum, Set<string>> {
-        const result: Record<IslandTypeEnum, Set<string>> = {} as Record<
-            IslandTypeEnum,
-            Set<string>
-        >;
-        this.islandsOfTags.forEach((value, key) => {
-            result[key] = value;
-        });
-        return result;
     }
 }

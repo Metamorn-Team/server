@@ -13,12 +13,15 @@ import { GameStorage } from 'src/domain/interface/storages/game-storage';
 import { Player } from 'src/domain/models/game/player';
 import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { IslandStorage } from 'src/domain/interface/storages/island-storage';
 
 @Injectable()
 export class GameIslandService {
     constructor(
         @Inject(GameStorage)
         private readonly gameStorage: GameStorage,
+        @Inject(IslandStorage)
+        private readonly islandStorage: IslandStorage,
         private readonly islandWriter: IslandWriter,
         private readonly islandReader: IslandReader,
         private readonly islandJoinWriter: IslandJoinWriter,
@@ -26,13 +29,13 @@ export class GameIslandService {
     ) {}
 
     async getAvailableRoom() {
-        const islandIds = this.gameStorage.getIslandIdsByTag(
+        const islandIds = this.islandStorage.getIslandIdsByTag(
             IslandTypeEnum.DESERTED,
         );
 
         if (islandIds) {
             for (const islandId of islandIds) {
-                const island = this.gameStorage.getIsland(islandId);
+                const island = this.islandStorage.getIsland(islandId);
 
                 if (island && island.players.size < island.max) {
                     return island;
@@ -44,7 +47,7 @@ export class GameIslandService {
     }
 
     getIsland(islandId: string) {
-        return this.gameStorage.getIsland(islandId);
+        return this.islandStorage.getIsland(islandId);
     }
 
     async joinNormalIsland(
@@ -59,7 +62,7 @@ export class GameIslandService {
         const island = await this.islandReader.readOne(islandId);
 
         // 2. 최대 인원 초과 확인
-        const countParticipants = this.gameStorage.countPlayer(islandId);
+        const countParticipants = this.islandStorage.countPlayer(islandId);
         if (island.maxMembers <= countParticipants) {
             // 임시 예외 코드
             throw new DomainException(
@@ -83,7 +86,7 @@ export class GameIslandService {
         });
 
         this.gameStorage.addPlayer(playerId, player);
-        this.gameStorage.addPlayerToIsland(islandId, playerId);
+        this.islandStorage.addPlayerToIsland(islandId, playerId);
 
         const islandJoin = IslandJoinEntity.create(
             { islandId, userId: playerId },
@@ -171,15 +174,18 @@ export class GameIslandService {
             players: new Set<SocketClientId>(),
             type: IslandTypeEnum.DESERTED,
         };
-        this.gameStorage.createIsland(islandId, island);
-        const roomOfTags = this.gameStorage.getIslandOfTag(
+        this.islandStorage.createIsland(islandId, island);
+        const roomOfTags = this.islandStorage.getIslandOfTag(
             IslandTypeEnum.DESERTED,
         );
 
         if (roomOfTags) {
             roomOfTags.add(islandId);
         } else {
-            this.gameStorage.addIslandOfTag(IslandTypeEnum.DESERTED, islandId);
+            this.islandStorage.addIslandOfTag(
+                IslandTypeEnum.DESERTED,
+                islandId,
+            );
         }
 
         return island;
@@ -189,7 +195,7 @@ export class GameIslandService {
         const player = this.gameStorage.getPlayer(playerId);
         if (!player) return;
 
-        const room = this.gameStorage.getIsland(player.roomId);
+        const room = this.islandStorage.getIsland(player.roomId);
         if (!room) return;
 
         const { roomId } = player;
@@ -206,7 +212,7 @@ export class GameIslandService {
         const player = this.gameStorage.getPlayer(playerId);
         if (!player) return;
 
-        const room = this.gameStorage.getIsland(islandId);
+        const room = this.islandStorage.getIsland(islandId);
         if (!room) return;
 
         await this.islandJoinWriter.left(islandId, player.id);
@@ -218,7 +224,7 @@ export class GameIslandService {
     }
 
     getActiveUsers(islandId: string) {
-        const room = this.gameStorage.getIsland(islandId);
+        const room = this.islandStorage.getIsland(islandId);
         if (!room) throw new Error('없는 방');
 
         const activeUsers: Player[] = [];
