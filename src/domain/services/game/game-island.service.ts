@@ -25,37 +25,6 @@ export class GameIslandService {
         private readonly userReader: UserReader,
     ) {}
 
-    async createRoom() {
-        const islandEntity = IslandEntity.create(
-            {
-                type: IslandTypeEnum.DESERTED,
-                maxMembers: UNINHABITED_MAX_MEMBERS,
-            },
-            v4,
-        );
-        await this.islandWriter.create(islandEntity);
-
-        const { id } = islandEntity;
-        const island = {
-            id,
-            max: UNINHABITED_MAX_MEMBERS,
-            players: new Set<SocketClientId>(),
-            type: IslandTypeEnum.DESERTED,
-        };
-        this.gameStorage.createIsland(id, island);
-        const roomOfTags = this.gameStorage.getIslandOfTag(
-            IslandTypeEnum.DESERTED,
-        );
-
-        if (roomOfTags) {
-            roomOfTags.add(id);
-        } else {
-            this.gameStorage.addIslandOfTag(IslandTypeEnum.DESERTED, id);
-        }
-
-        return island;
-    }
-
     async getAvailableRoom() {
         const islandIds = this.gameStorage.getIslandIdsByTag(
             IslandTypeEnum.DESERTED,
@@ -71,7 +40,7 @@ export class GameIslandService {
             }
         }
 
-        return await this.createRoom();
+        return await this.createIsland();
     }
 
     getIsland(islandId: string) {
@@ -126,6 +95,7 @@ export class GameIslandService {
             this.getActiveUsers(islandId).filter(
                 (player) => player.id !== playerId,
             ) || [];
+        // 여기까지
 
         return {
             activePlayers,
@@ -143,6 +113,7 @@ export class GameIslandService {
         const user = await this.userReader.readProfile(playerId);
         const availableIsland = await this.getAvailableRoom();
 
+        // 여기부터 동시성 제어 필요.
         const { id: islandId } = availableIsland;
         const player = Player.create({
             id: user.id,
@@ -157,27 +128,61 @@ export class GameIslandService {
 
         this.gameStorage.addPlayer(playerId, player);
 
+        availableIsland.players.add(playerId);
+
+        const activePlayers =
+            this.getActiveUsers(availableIsland.id).filter(
+                (player) => player.id !== playerId,
+            ) || [];
+        // 여기까지
+
         const islandJoin = IslandJoinEntity.create(
             { islandId, userId: player.id },
             v4,
         );
         await this.islandJoinWriter.create(islandJoin);
 
-        const room = this.gameStorage.getIsland(islandId);
-        if (!room) throw new Error('없는 방');
-
-        room.players.add(playerId);
-
-        const activePlayers =
-            this.getActiveUsers(availableIsland.id).filter(
-                (player) => player.id !== playerId,
-            ) || [];
-
         return {
             activePlayers,
             joinedIslandId: availableIsland.id,
             joinedPlayer: player,
         };
+    }
+
+    async createIsland() {
+        // DB
+        const islandEntity = IslandEntity.create(
+            {
+                type: IslandTypeEnum.DESERTED,
+                maxMembers: UNINHABITED_MAX_MEMBERS,
+            },
+            v4,
+        );
+        await this.islandWriter.create(islandEntity);
+
+        // Memory
+        return this.createLiveIsland(islandEntity.id);
+    }
+
+    createLiveIsland(islandId: string) {
+        const island = {
+            id: islandId,
+            max: UNINHABITED_MAX_MEMBERS,
+            players: new Set<SocketClientId>(),
+            type: IslandTypeEnum.DESERTED,
+        };
+        this.gameStorage.createIsland(islandId, island);
+        const roomOfTags = this.gameStorage.getIslandOfTag(
+            IslandTypeEnum.DESERTED,
+        );
+
+        if (roomOfTags) {
+            roomOfTags.add(islandId);
+        } else {
+            this.gameStorage.addIslandOfTag(IslandTypeEnum.DESERTED, islandId);
+        }
+
+        return island;
     }
 
     async leftPlayer(playerId: string) {

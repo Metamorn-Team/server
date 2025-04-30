@@ -19,7 +19,6 @@ import {
     ServerToClient,
     TypedSocket,
 } from 'src/presentation/dto/game/socket/type';
-import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
 
 @UseGuards(WsAuthGuard)
@@ -41,7 +40,6 @@ export class IslandGateway
     constructor(
         private readonly gameService: GameService,
         private readonly gameIslandService: GameIslandService,
-        private readonly chatMessageService: ChatMessageService,
     ) {}
 
     @SubscribeMessage('playerJoin')
