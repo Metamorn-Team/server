@@ -1,6 +1,6 @@
 import { Player } from 'src/domain/models/game/player';
 
-export interface GameStorage {
+export interface PlayerStorage {
     getPlayer(playerId: string): Player | null;
     getPlayerByClientId(clientId: string): Player | null;
     addPlayer(playerId: string, player: Player): void;
@@ -9,4 +9,4 @@ export interface GameStorage {
     getPlayerStore(): Record<string, Player>;
 }
 
-export const GameStorage = Symbol('GameStorage');
+export const PlayerStorage = Symbol('PlayerStorage');

@@ -1,8 +1,8 @@
-import { GameStorage } from 'src/domain/interface/storages/game-storage';
+import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
 import { Player } from 'src/domain/models/game/player';
 import { SocketClientId } from 'src/domain/types/game.types';
 
-export class MemoryStorage implements GameStorage {
+export class PlayerMemoryStorage implements PlayerStorage {
     private players = new Map<SocketClientId, Player>();
 
     addPlayer(playerId: string, player: Player): void {

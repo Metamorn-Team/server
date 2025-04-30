@@ -9,7 +9,7 @@ import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.en
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
-import { GameStorage } from 'src/domain/interface/storages/game-storage';
+import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
 import { Player } from 'src/domain/models/game/player';
 import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
@@ -18,8 +18,8 @@ import { IslandStorage } from 'src/domain/interface/storages/island-storage';
 @Injectable()
 export class GameIslandService {
     constructor(
-        @Inject(GameStorage)
-        private readonly gameStorage: GameStorage,
+        @Inject(PlayerStorage)
+        private readonly gameStorage: PlayerStorage,
         @Inject(IslandStorage)
         private readonly islandStorage: IslandStorage,
         private readonly islandWriter: IslandWriter,

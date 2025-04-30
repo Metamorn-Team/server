@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { GameStorage } from 'src/domain/interface/storages/game-storage';
+import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';
@@ -9,8 +9,8 @@ import { IslandStorage } from 'src/domain/interface/storages/island-storage';
 @Injectable()
 export class GameService {
     constructor(
-        @Inject(GameStorage)
-        private readonly gameStorage: GameStorage,
+        @Inject(PlayerStorage)
+        private readonly gameStorage: PlayerStorage,
         @Inject(IslandStorage)
         private readonly islandStorage: IslandStorage,
     ) {}
