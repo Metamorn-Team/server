@@ -9,7 +9,7 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { IslandService } from 'src/domain/services/islands/island.service';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { CreateIslandRequest } from 'src/presentation/dto/island/create-island.request';
+import { CreateIslandRequest } from 'src/presentation/dto/island/request/create-island.request';
 
 @ApiTags('islands')
 @ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
