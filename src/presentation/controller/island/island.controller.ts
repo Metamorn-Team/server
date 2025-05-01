@@ -10,7 +10,7 @@ import { AuthGuard } from 'src/common/guard/auth.guard';
 import { IslandReader } from 'src/domain/components/islands/island-reader';
 import { IslandService } from 'src/domain/services/islands/island.service';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { CreateIslandRequest } from 'src/presentation/dto/island/request/create-island.request';
+import { CreateIslandRequest } from 'src/presentation/dto/game/request/create-island.request';
 import { GetIslandListReqeust } from 'src/presentation/dto/island/request/get-island-list.request';
 import { LiveIslandItem } from 'src/presentation/dto/island/response/get-island-list.response';
 

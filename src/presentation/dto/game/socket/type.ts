@@ -11,11 +11,14 @@ import { PlayerJoinSuccessResponse } from '../response/player-join-success.respo
 import { AttackedResponse } from '../response/attacked.response';
 import { IslandHeartbeatResponse } from '../response/island-heartbeat';
 import { CreateIslandRequest } from 'types';
+import { CreatedIslandResponse } from 'src/presentation/dto/game/response/created-island.response';
 
 export type ClientToLoby = {
     createIsland: (data: CreateIslandRequest) => void;
 };
-export type LobyToClient = {};
+export type LobyToClient = {
+    createdIsland: (data: CreatedIslandResponse) => void;
+};
 
 export type ClientToChat = {
     sendMessage: (data: SendMessageRequest) => void;

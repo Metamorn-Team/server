@@ -24,7 +24,8 @@ export class IslandService {
             players: new Set(),
             type: IslandTypeEnum.NORMAL,
         });
-
         await this.islandWriter.create(island);
+
+        return island.id;
     }
 }

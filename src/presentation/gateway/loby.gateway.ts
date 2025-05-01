@@ -1,5 +1,6 @@
 import { Logger, UseGuards } from '@nestjs/common';
 import {
+    ConnectedSocket,
     MessageBody,
     OnGatewayConnection,
     OnGatewayDisconnect,
@@ -9,8 +10,11 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
+import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { WsValidatePipe } from 'src/common/pipe/ws-validate.pipe';
+import { IslandService } from 'src/domain/services/islands/island.service';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ClientToLoby, CreateIslandRequest, LobyToClient } from 'types';
 
 type TypedSocket = Socket<ClientToLoby, LobyToClient>;
@@ -31,9 +35,22 @@ export class LobyGateway
     @WebSocketServer()
     private readonly wss: Namespace<ClientToLoby, LobyToClient>;
 
+    constructor(private readonly islandService: IslandService) {}
+
     @SubscribeMessage('createIsland')
-    createIsland(@MessageBody(WsValidatePipe) data: CreateIslandRequest) {
+    async createIsland(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody(WsValidatePipe) data: CreateIslandRequest,
+        @CurrentUserFromSocket() userId: string,
+    ) {
         this.logger.debug(data);
+        const islandId = await this.islandService.create({
+            ...data,
+            ownerId: userId,
+            type: IslandTypeEnum.NORMAL,
+        });
+
+        client.emit('createdIsland', { islandId });
     }
 
     afterInit() {
