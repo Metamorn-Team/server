@@ -1,4 +1,3 @@
-import { Socket } from 'socket.io';
 import { PlayerJoinRequest } from '../request/player-join.request';
 import { PlayerMovedRequest } from '../request/player-moved.request';
 import { PlayerJoinResponse } from '../response/player-join.response';
@@ -47,5 +46,3 @@ export type IslandToClient = {
 
 export type ClientToServer = ClientToIsland & ClientToLoby & ClientToChat;
 export type ServerToClient = IslandToClient & LobyToClient & ChatToClient;
-
-export type TypedSocket = Socket<ClientToServer, ServerToClient>;

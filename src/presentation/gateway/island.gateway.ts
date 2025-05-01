@@ -1,5 +1,5 @@
 import { Logger, UseGuards } from '@nestjs/common';
-import { Namespace } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import {
     ConnectedSocket,
     MessageBody,
@@ -15,11 +15,12 @@ import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { GameService } from 'src/domain/services/game/game.service';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import {
-    ClientToServer,
-    ServerToClient,
-    TypedSocket,
+    ClientToIsland,
+    IslandToClient,
 } from 'src/presentation/dto/game/socket/type';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
+
+type TypedSocket = Socket<ClientToIsland, IslandToClient>;
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -33,7 +34,7 @@ export class IslandGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
     @WebSocketServer()
-    private readonly wss: Namespace<ClientToServer, ServerToClient>;
+    private readonly wss: Namespace<ClientToIsland, IslandToClient>;
 
     private readonly logger = new Logger(IslandGateway.name);
 
@@ -78,6 +79,8 @@ export class IslandGateway
         client.emit('playerJoinSuccess', { x, y });
         client.emit('activePlayers', activePlayers);
         client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
+
+        this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerLeft')
@@ -92,6 +95,8 @@ export class IslandGateway
 
             this.logger.log(`Leave cilent: ${client.id}`);
         }
+
+        this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerMoved')
@@ -165,5 +170,7 @@ export class IslandGateway
         await this.gameIslandService.leaveRoom(roomId, player.id);
         client.to(roomId).emit('playerLeft', { id: player.id });
         this.logger.debug(`Cliend id from Zone:${player.id} disconnected`);
+
+        this.gameService.loggingStore(this.logger);
     }
 }

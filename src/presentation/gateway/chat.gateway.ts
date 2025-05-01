@@ -6,17 +6,14 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
-import { Namespace } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
-import {
-    ClientToServer,
-    SendMessageRequest,
-    ServerToClient,
-    TypedSocket,
-} from 'types';
+import { ChatToClient, ClientToChat, SendMessageRequest } from 'types';
 import { v4 } from 'uuid';
+
+type TypedSocket = Socket<ClientToChat, ChatToClient>;
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -28,7 +25,7 @@ import { v4 } from 'uuid';
 })
 export class ChatGateway {
     @WebSocketServer()
-    private readonly wss: Namespace<ClientToServer, ServerToClient>;
+    private readonly wss: Namespace<ClientToChat, ChatToClient>;
 
     private readonly logger = new Logger(ChatGateway.name);
 
