@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { login } from 'test/helper/login';
-import { CreateIslandRequest } from 'src/presentation/dto/island/create-island.request';
+import { CreateIslandRequest } from 'src/presentation/dto/game/request/create-island.request';
 
 describe('IslandController (e2e)', () => {
     let app: INestApplication;
