@@ -17,6 +17,7 @@ import { ClsModule } from 'nestjs-cls';
 import { clsOptions } from 'src/configs/cls/cls-config';
 import { PurchaseModule } from 'src/modules/purchases/purchase.module';
 import { IslandModule } from 'src/modules/islands/island.module';
+import { FileModule } from 'src/modules/files/file.module';
 
 @Module({
     imports: [
@@ -35,6 +36,7 @@ import { IslandModule } from 'src/modules/islands/island.module';
         ProductModule,
         PurchaseModule,
         IslandModule,
+        FileModule,
     ],
     controllers: [AppController],
     providers: [AppService],
