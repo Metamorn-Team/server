@@ -5,14 +5,14 @@ import {
     IslandEntity,
     IslandPrototype,
 } from 'src/domain/entities/islands/island.entity';
-import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 
 @Injectable()
 export class IslandService {
     constructor(
-        @Inject(DesertedIslandStorage)
-        private readonly islandStorage: DesertedIslandStorage,
+        @Inject(NormalIslandStorage)
+        private readonly islandStorage: NormalIslandStorage,
         private readonly islandWriter: IslandWriter,
     ) {}
 
@@ -23,9 +23,16 @@ export class IslandService {
             max: island.maxMembers,
             players: new Set(),
             type: IslandTypeEnum.NORMAL,
+            coverImage: island.coverImage || '',
+            createdAt: island.createdAt || new Date(),
+            description: island.description || '알 수 없는 섬',
+            name: island.name || '알 수 없는 섬',
         });
         await this.islandWriter.create(island);
 
+        console.log(
+            `전체 섬: ${JSON.stringify(this.islandStorage.getAllIsland(), null, 2)}`,
+        );
         return island.id;
     }
 }
