@@ -19,6 +19,10 @@ import {
     IslandToClient,
 } from 'src/presentation/dto/game/socket/type';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
+import { JoinDesertedIslandReqeust } from 'src/presentation/dto/game/request/join-deserted-island.request';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 type TypedSocket = Socket<ClientToIsland, IslandToClient>;
 
@@ -43,44 +47,76 @@ export class IslandGateway
         private readonly gameIslandService: GameIslandService,
     ) {}
 
-    @SubscribeMessage('playerJoin')
-    async handlePlayerJoin(
-        @ConnectedSocket() client: TypedSocket,
-        @MessageBody() data: PlayerJoinRequest,
-        @CurrentUserFromSocket() userId: string,
+    async kick(
+        userId: string,
+        client: TypedSocket,
+        islandType: IslandTypeEnum,
     ) {
-        const kickedPlayer =
-            await this.gameIslandService.kickPlayerById(userId);
+        const kickedPlayer = await this.gameIslandService.kickPlayerById(
+            userId,
+            islandType,
+        );
         if (kickedPlayer) {
             const { clientId, roomId, id } = kickedPlayer;
             const kickedClient = this.wss.sockets.get(clientId);
 
-            await this.gameIslandService.leaveRoom(roomId, id);
+            await this.gameIslandService.leaveRoom(roomId, id, islandType);
             await kickedClient?.leave(roomId);
 
             client.to(roomId).emit('playerLeft', { id });
             kickedClient?.emit('playerKicked');
         }
+    }
+
+    @SubscribeMessage('joinDesertedIsland')
+    async handleJoinDesertedIsland(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody() data: JoinDesertedIslandReqeust,
+        @CurrentUserFromSocket() userId: string,
+    ) {
+        await this.kick(userId, client, IslandTypeEnum.DESERTED);
+
+        const { x, y } = data;
+
+        this.logger.log(`joined player : ${userId}`);
+
+        const { activePlayers, joinedIslandId, joinedPlayer } =
+            await this.gameIslandService.joinDesertedIsland(
+                userId,
+                client.id,
+                x,
+                y,
+            );
+
+        await client.join(joinedIslandId);
+        client.emit('playerJoinSuccess', { x, y });
+        client.emit('activePlayers', activePlayers);
+        client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
+
+        this.gameService.loggingStore(this.logger);
+    }
+
+    @SubscribeMessage('joinNormalIsland')
+    async handlePlayerJoin(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody() data: PlayerJoinRequest,
+        @CurrentUserFromSocket() userId: string,
+    ) {
+        await this.kick(userId, client, IslandTypeEnum.DESERTED);
 
         const { x, y, islandId } = data;
 
         this.logger.log(`joined player : ${userId}`);
 
         // type이 NORMAL이면 islandId로 참여
-        const { activePlayers, joinedIslandId, joinedPlayer } = islandId
-            ? await this.gameIslandService.joinNormalIsland(
-                  userId,
-                  client.id,
-                  islandId,
-                  x,
-                  y,
-              )
-            : await this.gameIslandService.joinDesertedIsland(
-                  userId,
-                  client.id,
-                  x,
-                  y,
-              );
+        const { activePlayers, joinedIslandId, joinedPlayer } =
+            await this.gameIslandService.joinNormalIsland(
+                userId,
+                client.id,
+                islandId,
+                x,
+                y,
+            );
 
         await client.join(joinedIslandId);
         client.emit('playerJoinSuccess', { x, y });
@@ -165,19 +201,36 @@ export class IslandGateway
     }
 
     async handleDisconnect(client: TypedSocket & { userId: string }) {
-        const userId = client.userId;
-        const player = this.gameService.getPlayer(userId);
-        this.logger.debug(
-            `call disconnect id from Island:${client.userId} disconnected`,
-        );
-        if (!player || player.clientId !== client.id) return;
+        try {
+            const userId = client.userId;
+            const player = this.gameService.getPlayer(userId);
+            this.logger.debug(
+                `call disconnect id from Island:${client.userId} disconnected`,
+            );
 
-        const { roomId } = player;
-        await client.leave(roomId);
-        await this.gameIslandService.leaveRoom(roomId, player.id);
-        client.to(roomId).emit('playerLeft', { id: player.id });
-        this.logger.debug(`Cliend id from Island:${player.id} disconnected`);
+            if (player.clientId !== client.id) return;
+            const { roomId } = player;
+            await client.leave(roomId);
+            await this.gameIslandService.leaveRoom(
+                roomId,
+                player.id,
+                player.islandType,
+            );
+            client.to(roomId).emit('playerLeft', { id: player.id });
+            this.logger.debug(
+                `Cliend id from Island:${player.id} disconnected`,
+            );
 
-        this.gameService.loggingStore(this.logger);
+            this.gameService.loggingStore(this.logger);
+        } catch (e) {
+            if (
+                e instanceof DomainException &&
+                e.errorType === DomainExceptionType.PlayerNotFoundInStorage
+            ) {
+                return;
+            }
+
+            throw e;
+        }
     }
 }

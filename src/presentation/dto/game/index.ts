@@ -2,6 +2,7 @@ export * from './request/player-join.request';
 export * from './request/player-moved.request';
 export * from './request/send-message.request';
 export * from './request/create-island.request';
+export * from './request/join-deserted-island.request';
 
 export * from './response/active-players.response';
 export * from './response/player-join.response';

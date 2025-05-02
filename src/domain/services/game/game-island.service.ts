@@ -31,7 +31,7 @@ export class GameIslandService {
         private readonly userReader: UserReader,
     ) {}
 
-    async getAvailableRoom() {
+    async getAvailableDesertedIsland() {
         const islands = this.desertedIslandStorage.getAllIsland();
         if (islands.length !== 0) {
             for (const island of islands) {
@@ -115,7 +115,7 @@ export class GameIslandService {
         y: number,
     ) {
         const user = await this.userReader.readProfile(playerId);
-        const availableIsland = await this.getAvailableRoom();
+        const availableIsland = await this.getAvailableDesertedIsland();
 
         // 여기부터 동시성 제어 필요.
         const { id: islandId } = availableIsland;
@@ -184,49 +184,46 @@ export class GameIslandService {
 
     async leftPlayer(playerId: string) {
         const player = this.gameStorage.getPlayer(playerId);
-        if (!player) return;
 
-        const room =
+        const island =
             player.islandType === IslandTypeEnum.NORMAL
                 ? this.normalIslandStorage.getIsland(player.roomId)
                 : this.desertedIslandStorage.getIsland(player.roomId);
-        if (!room) return;
 
         const { roomId } = player;
 
         await this.islandJoinWriter.left(roomId, player.id);
 
         this.gameStorage.deletePlayer(playerId);
-        room.players.delete(playerId);
+        island.players.delete(playerId);
 
         return player;
     }
 
-    async leaveRoom(islandId: string, playerId: string) {
+    async leaveRoom(islandId: string, playerId: string, type: IslandTypeEnum) {
         const player = this.gameStorage.getPlayer(playerId);
-        if (!player) return;
-
-        const room = this.desertedIslandStorage.getIsland(islandId);
-        if (!room) return;
+        const island =
+            type === IslandTypeEnum.NORMAL
+                ? this.normalIslandStorage.getIsland(islandId)
+                : this.desertedIslandStorage.getIsland(islandId);
 
         await this.islandJoinWriter.left(islandId, player.id);
 
         this.gameStorage.deletePlayer(playerId);
-        room.players.delete(playerId);
+        island.players.delete(playerId);
 
         return player;
     }
 
     getActiveUsers(type: IslandTypeEnum, islandId: string) {
-        const room =
+        const island =
             type === IslandTypeEnum.NORMAL
                 ? this.normalIslandStorage.getIsland(islandId)
                 : this.desertedIslandStorage.getIsland(islandId);
-        if (!room) throw new Error('없는 방');
 
         const activeUsers: Player[] = [];
 
-        room.players.forEach((playerId) => {
+        island.players.forEach((playerId) => {
             const player = this.gameStorage.getPlayer(playerId);
             if (player) {
                 activeUsers.push(player);
@@ -236,11 +233,20 @@ export class GameIslandService {
         return activeUsers;
     }
 
-    async kickPlayerById(playerId: string) {
-        const player = this.gameStorage.getPlayer(playerId);
-        if (player) {
-            await this.leaveRoom(player.roomId, playerId);
+    async kickPlayerById(playerId: string, type: IslandTypeEnum) {
+        try {
+            const player = this.gameStorage.getPlayer(playerId);
+
+            await this.leaveRoom(player.roomId, playerId, type);
             return player;
+        } catch (e) {
+            if (
+                e instanceof DomainException &&
+                e.errorType === DomainExceptionType.PlayerNotFoundInStorage
+            ) {
+                return;
+            }
+            throw e;
         }
     }
 }

@@ -13,6 +13,7 @@ import { IslandHeartbeatResponse } from '../response/island-heartbeat';
 import {
     CreateIslandRequest,
     GetIslandListReqeust,
+    JoinDesertedIslandReqeust,
     LiveIslandItem,
 } from 'types';
 import { CreatedIslandResponse } from 'src/presentation/dto/game/response/created-island.response';
@@ -35,7 +36,8 @@ export type ChatToClient = {
 };
 
 export type ClientToIsland = {
-    playerJoin: (data: PlayerJoinRequest) => void;
+    joinDesertedIsland: (data: JoinDesertedIslandReqeust) => void;
+    joinNormalIsland: (data: PlayerJoinRequest) => void;
     playerLeft: () => void;
     playerKicked: () => void;
     playerMoved: (data: PlayerMovedRequest) => void;
