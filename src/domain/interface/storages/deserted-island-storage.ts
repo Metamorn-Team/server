@@ -7,6 +7,7 @@ export interface DesertedIslandStorage {
     countPlayer(islandId: string): number;
     addPlayerToIsland(islandId: string, playerId: string): void;
     getIslandStore(): Record<string, LiveDesertedIsland>;
+    getPlayerIdsByIslandId(islandId: string): string[];
 }
 
 export const DesertedIslandStorage = Symbol('DesertedIslandStorage');

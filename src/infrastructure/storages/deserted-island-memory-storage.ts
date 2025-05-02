@@ -35,4 +35,11 @@ export class DesertedIslandMemoryStorage implements DesertedIslandStorage {
     getIslandStore(): Record<string, LiveDesertedIsland> {
         return Object.fromEntries(this.desertedIslands.entries());
     }
+
+    getPlayerIdsByIslandId(islandId: string): string[] {
+        const island = this.desertedIslands.get(islandId);
+        if (!island) throw new Error('섬 없음');
+
+        return Array.from(island.players);
+    }
 }

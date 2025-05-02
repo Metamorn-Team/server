@@ -7,6 +7,7 @@ export interface NormalIslandStorage {
     countPlayer(islandId: string): number;
     addPlayerToIsland(islandId: string, playerId: string): void;
     getIslandStore(): Record<string, LiveNormalIsland>;
+    getPlayerIdsByIslandId(islandId: string): string[];
 }
 
 export const NormalIslandStorage = Symbol('NormalIslandStorage');

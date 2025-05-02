@@ -35,4 +35,11 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
     getIslandStore(): Record<string, LiveNormalIsland> {
         return Object.fromEntries(this.normalIslands.entries());
     }
+
+    getPlayerIdsByIslandId(islandId: string): string[] {
+        const island = this.normalIslands.get(islandId);
+        if (!island) throw new Error('섬 없음');
+
+        return Array.from(island.players);
+    }
 }
