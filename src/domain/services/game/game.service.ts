@@ -5,6 +5,8 @@ import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';
 import { Player } from 'src/domain/models/game/player';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
+import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 @Injectable()
 export class GameService {
@@ -12,7 +14,9 @@ export class GameService {
         @Inject(PlayerStorage)
         private readonly gameStorage: PlayerStorage,
         @Inject(DesertedIslandStorage)
-        private readonly islandStorage: DesertedIslandStorage,
+        private readonly desertedIslandStorage: DesertedIslandStorage,
+        @Inject(NormalIslandStorage)
+        private readonly normalIslandStorage: NormalIslandStorage,
     ) {}
 
     getPlayer(playerId: string) {
@@ -41,7 +45,10 @@ export class GameService {
         const attacker = this.gameStorage.getPlayer(attackerId);
         if (!attacker) throw new Error('없는 회원');
 
-        const island = this.islandStorage.getIsland(attacker.roomId);
+        const island =
+            attacker.islandType === IslandTypeEnum.NORMAL
+                ? this.normalIslandStorage.getIsland(attacker.roomId)
+                : this.desertedIslandStorage.getIsland(attacker.roomId);
         if (!island) throw new Error('없는 섬');
 
         if (island.players.size === 0) {
@@ -111,9 +118,26 @@ export class GameService {
         playerId: string,
     ): { id: string; lastActivity: number }[] {
         const player = this.gameStorage.getPlayer(playerId);
-        if (!player) throw new Error();
+        if (!player) throw new Error('플레이어 없음');
 
-        const players = this.gameStorage.getPlayersByIslandId(player.roomId);
+        const playerIds =
+            player.islandType === IslandTypeEnum.NORMAL
+                ? this.normalIslandStorage.getPlayerIdsByIslandId(player.roomId)
+                : this.desertedIslandStorage.getPlayerIdsByIslandId(
+                      player.roomId,
+                  );
+        const players = playerIds
+            .map((playerId) => {
+                const player = this.gameStorage.getPlayer(playerId);
+                if (player) {
+                    return {
+                        id: player.id,
+                        lastActivity: player.lastActivity,
+                    };
+                }
+            })
+            .filter((player) => !!player);
+
         return players.map((player) => ({
             id: player.id,
             lastActivity: player.lastActivity,
@@ -122,6 +146,6 @@ export class GameService {
 
     loggingStore(logger: Logger) {
         logger.debug('전체 회원', this.gameStorage.getPlayerStore());
-        logger.debug('전체 방', this.islandStorage.getIslandStore());
+        logger.debug('전체 방', this.desertedIslandStorage.getIslandStore());
     }
 }

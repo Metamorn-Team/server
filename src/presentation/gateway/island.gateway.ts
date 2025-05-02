@@ -62,18 +62,25 @@ export class IslandGateway
             kickedClient?.emit('playerKicked');
         }
 
-        const { x, y } = data;
+        const { x, y, islandId } = data;
 
         this.logger.log(`joined player : ${userId}`);
 
         // type이 NORMAL이면 islandId로 참여
-        const { activePlayers, joinedIslandId, joinedPlayer } =
-            await this.gameIslandService.joinDesertedIsland(
-                userId,
-                client.id,
-                x,
-                y,
-            );
+        const { activePlayers, joinedIslandId, joinedPlayer } = islandId
+            ? await this.gameIslandService.joinNormalIsland(
+                  userId,
+                  client.id,
+                  islandId,
+                  x,
+                  y,
+              )
+            : await this.gameIslandService.joinDesertedIsland(
+                  userId,
+                  client.id,
+                  x,
+                  y,
+              );
 
         await client.join(joinedIslandId);
         client.emit('playerJoinSuccess', { x, y });
@@ -154,14 +161,14 @@ export class IslandGateway
     }
 
     handleConnection(client: TypedSocket) {
-        this.logger.log(`Connected new client to Zone: ${client.id}`);
+        this.logger.log(`Connected new client to Island: ${client.id}`);
     }
 
     async handleDisconnect(client: TypedSocket & { userId: string }) {
         const userId = client.userId;
         const player = this.gameService.getPlayer(userId);
         this.logger.debug(
-            `call disconnect id from Zone:${client.userId} disconnected`,
+            `call disconnect id from Island:${client.userId} disconnected`,
         );
         if (!player || player.clientId !== client.id) return;
 
@@ -169,7 +176,7 @@ export class IslandGateway
         await client.leave(roomId);
         await this.gameIslandService.leaveRoom(roomId, player.id);
         client.to(roomId).emit('playerLeft', { id: player.id });
-        this.logger.debug(`Cliend id from Zone:${player.id} disconnected`);
+        this.logger.debug(`Cliend id from Island:${player.id} disconnected`);
 
         this.gameService.loggingStore(this.logger);
     }

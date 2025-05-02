@@ -1,3 +1,3 @@
-export class CreatedIslandResponse {
+export interface CreatedIslandResponse {
     readonly islandId: string;
 }

@@ -14,6 +14,7 @@ import { Player } from 'src/domain/models/game/player';
 import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
+import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 
 @Injectable()
 export class GameIslandService {
@@ -21,7 +22,9 @@ export class GameIslandService {
         @Inject(PlayerStorage)
         private readonly gameStorage: PlayerStorage,
         @Inject(DesertedIslandStorage)
-        private readonly islandStorage: DesertedIslandStorage,
+        private readonly desertedIslandStorage: DesertedIslandStorage,
+        @Inject(NormalIslandStorage)
+        private readonly normalIslandStorage: NormalIslandStorage,
         private readonly islandWriter: IslandWriter,
         private readonly islandReader: IslandReader,
         private readonly islandJoinWriter: IslandJoinWriter,
@@ -29,7 +32,7 @@ export class GameIslandService {
     ) {}
 
     async getAvailableRoom() {
-        const islands = this.islandStorage.getAllIsland();
+        const islands = this.desertedIslandStorage.getAllIsland();
         if (islands.length !== 0) {
             for (const island of islands) {
                 if (island && island.players.size < island.max) {
@@ -42,7 +45,7 @@ export class GameIslandService {
     }
 
     getIsland(islandId: string) {
-        return this.islandStorage.getIsland(islandId);
+        return this.desertedIslandStorage.getIsland(islandId);
     }
 
     async joinNormalIsland(
@@ -54,10 +57,12 @@ export class GameIslandService {
     ): Promise<JoinedIslandInfo> {
         // 1. 회원 및 섬 존재 여부 디비에서 확인
         const user = await this.userReader.readProfile(playerId);
+        // TODO 메모리에서 확인해야함
         const island = await this.islandReader.readOne(islandId);
 
         // 2. 최대 인원 초과 확인
-        const countParticipants = this.islandStorage.countPlayer(islandId);
+        const countParticipants =
+            this.normalIslandStorage.countPlayer(islandId);
         if (island.maxMembers <= countParticipants) {
             // 임시 예외 코드
             throw new DomainException(
@@ -75,13 +80,14 @@ export class GameIslandService {
             clientId,
             nickname: user.nickname,
             roomId: islandId,
+            islandType: island.type,
             tag: user.tag,
             x,
             y,
         });
 
         this.gameStorage.addPlayer(playerId, player);
-        this.islandStorage.addPlayerToIsland(islandId, playerId);
+        this.normalIslandStorage.addPlayerToIsland(islandId, playerId);
 
         const islandJoin = IslandJoinEntity.create(
             { islandId, userId: playerId },
@@ -90,7 +96,7 @@ export class GameIslandService {
         await this.islandJoinWriter.create(islandJoin);
 
         const activePlayers =
-            this.getActiveUsers(islandId).filter(
+            this.getActiveUsers(island.type, islandId).filter(
                 (player) => player.id !== playerId,
             ) || [];
         // 여기까지
@@ -118,6 +124,7 @@ export class GameIslandService {
             clientId,
             nickname: user.nickname,
             avatarKey: user.avatarKey,
+            islandType: availableIsland.type,
             tag: user.tag,
             roomId: islandId,
             x,
@@ -129,9 +136,10 @@ export class GameIslandService {
         availableIsland.players.add(playerId);
 
         const activePlayers =
-            this.getActiveUsers(availableIsland.id).filter(
-                (player) => player.id !== playerId,
-            ) || [];
+            this.getActiveUsers(
+                availableIsland.type,
+                availableIsland.id,
+            ).filter((player) => player.id !== playerId) || [];
         // 여기까지
 
         const islandJoin = IslandJoinEntity.create(
@@ -169,7 +177,7 @@ export class GameIslandService {
             players: new Set<SocketClientId>(),
             type: IslandTypeEnum.DESERTED,
         };
-        this.islandStorage.createIsland(islandId, island);
+        this.desertedIslandStorage.createIsland(islandId, island);
 
         return island;
     }
@@ -178,7 +186,10 @@ export class GameIslandService {
         const player = this.gameStorage.getPlayer(playerId);
         if (!player) return;
 
-        const room = this.islandStorage.getIsland(player.roomId);
+        const room =
+            player.islandType === IslandTypeEnum.NORMAL
+                ? this.normalIslandStorage.getIsland(player.roomId)
+                : this.desertedIslandStorage.getIsland(player.roomId);
         if (!room) return;
 
         const { roomId } = player;
@@ -195,7 +206,7 @@ export class GameIslandService {
         const player = this.gameStorage.getPlayer(playerId);
         if (!player) return;
 
-        const room = this.islandStorage.getIsland(islandId);
+        const room = this.desertedIslandStorage.getIsland(islandId);
         if (!room) return;
 
         await this.islandJoinWriter.left(islandId, player.id);
@@ -206,8 +217,11 @@ export class GameIslandService {
         return player;
     }
 
-    getActiveUsers(islandId: string) {
-        const room = this.islandStorage.getIsland(islandId);
+    getActiveUsers(type: IslandTypeEnum, islandId: string) {
+        const room =
+            type === IslandTypeEnum.NORMAL
+                ? this.normalIslandStorage.getIsland(islandId)
+                : this.desertedIslandStorage.getIsland(islandId);
         if (!room) throw new Error('없는 방');
 
         const activeUsers: Player[] = [];

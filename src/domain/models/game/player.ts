@@ -1,3 +1,5 @@
+import { IslandTypeEnum } from 'src/domain/types/island.types';
+
 export interface PlayerPrototype {
     readonly id: string;
     readonly clientId: string;
@@ -5,6 +7,7 @@ export interface PlayerPrototype {
     readonly tag: string;
     readonly avatarKey: string;
     readonly roomId: string;
+    readonly islandType: IslandTypeEnum;
     readonly x: number;
     readonly y: number;
     readonly isFacingRight?: boolean;
@@ -17,6 +20,7 @@ export class Player {
         public readonly id: string,
         public readonly clientId: string,
         public roomId: string,
+        public islandType: IslandTypeEnum,
         public nickname: string,
         public tag: string,
         public avatarKey: string,
@@ -31,6 +35,7 @@ export class Player {
         key: K,
         value: Player[K],
     ) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         (this as any)[key] = value;
         this.lastActivity = Date.now();
     }
@@ -54,6 +59,7 @@ export class Player {
             proto.id,
             proto.clientId,
             proto.roomId,
+            proto.islandType,
             proto.nickname,
             proto.tag,
             proto.avatarKey,
