@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 import { LiveDesertedIsland } from 'src/domain/types/game.types';
 
@@ -10,8 +13,17 @@ export class DesertedIslandMemoryStorage implements DesertedIslandStorage {
         this.desertedIslands.set(islandId, island);
     }
 
-    getIsland(islandId: string): LiveDesertedIsland | null {
-        return this.desertedIslands.get(islandId) ?? null;
+    getIsland(islandId: string): LiveDesertedIsland {
+        const island = this.desertedIslands.get(islandId);
+        if (!island) {
+            throw new DomainException(
+                DomainExceptionType.IslandNotFound,
+                1000,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        return island;
     }
 
     getAllIsland(): LiveDesertedIsland[] {
@@ -20,14 +32,26 @@ export class DesertedIslandMemoryStorage implements DesertedIslandStorage {
 
     countPlayer(islandId: string): number {
         const island = this.desertedIslands.get(islandId);
-        if (!island) throw new Error('섬 없음');
+        if (!island) {
+            throw new DomainException(
+                DomainExceptionType.IslandNotFound,
+                1000,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+        }
 
         return island.players.size;
     }
 
     addPlayerToIsland(islandId: string, playerId: string): void {
         const island = this.desertedIslands.get(islandId);
-        if (!island) throw new Error('섬 없음');
+        if (!island) {
+            throw new DomainException(
+                DomainExceptionType.IslandNotFound,
+                1000,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+        }
 
         island.players.add(playerId);
     }
@@ -38,7 +62,13 @@ export class DesertedIslandMemoryStorage implements DesertedIslandStorage {
 
     getPlayerIdsByIslandId(islandId: string): string[] {
         const island = this.desertedIslands.get(islandId);
-        if (!island) throw new Error('섬 없음');
+        if (!island) {
+            throw new DomainException(
+                DomainExceptionType.IslandNotFound,
+                1000,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+        }
 
         return Array.from(island.players);
     }

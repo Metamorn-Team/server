@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { LiveNormalIsland } from 'src/domain/types/game.types';
 
@@ -10,8 +13,16 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
         this.normalIslands.set(islandId, island);
     }
 
-    getIsland(islandId: string): LiveNormalIsland | null {
-        return this.normalIslands.get(islandId) ?? null;
+    getIsland(islandId: string): LiveNormalIsland {
+        const island = this.normalIslands.get(islandId) ?? null;
+        if (!island)
+            throw new DomainException(
+                DomainExceptionType.IslandNotFound,
+                1000,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+
+        return island;
     }
 
     getAllIsland(): LiveNormalIsland[] {
@@ -20,14 +31,26 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
 
     countPlayer(islandId: string): number {
         const island = this.normalIslands.get(islandId);
-        if (!island) throw new Error('섬 없음');
+        if (!island) {
+            throw new DomainException(
+                DomainExceptionType.IslandNotFound,
+                1000,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+        }
 
         return island.players.size;
     }
 
     addPlayerToIsland(islandId: string, playerId: string): void {
         const island = this.normalIslands.get(islandId);
-        if (!island) throw new Error('섬 없음');
+        if (!island) {
+            throw new DomainException(
+                DomainExceptionType.IslandNotFound,
+                1000,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+        }
 
         island.players.add(playerId);
     }
@@ -38,7 +61,13 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
 
     getPlayerIdsByIslandId(islandId: string): string[] {
         const island = this.normalIslands.get(islandId);
-        if (!island) throw new Error('섬 없음');
+        if (!island) {
+            throw new DomainException(
+                DomainExceptionType.IslandNotFound,
+                1000,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+        }
 
         return Array.from(island.players);
     }
