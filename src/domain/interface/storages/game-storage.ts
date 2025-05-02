@@ -5,7 +5,6 @@ export interface PlayerStorage {
     getPlayerByClientId(clientId: string): Player | null;
     addPlayer(playerId: string, player: Player): void;
     deletePlayer(playerId: string): void;
-    getPlayersByIslandId(islandId: string): Player[];
     getPlayerStore(): Record<string, Player>;
 }
 

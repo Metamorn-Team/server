@@ -10,14 +10,20 @@ import { MessageSent } from '../response/message-sent.response';
 import { PlayerJoinSuccessResponse } from '../response/player-join-success.response';
 import { AttackedResponse } from '../response/attacked.response';
 import { IslandHeartbeatResponse } from '../response/island-heartbeat';
-import { CreateIslandRequest } from 'types';
+import {
+    CreateIslandRequest,
+    GetIslandListReqeust,
+    LiveIslandItem,
+} from 'types';
 import { CreatedIslandResponse } from 'src/presentation/dto/game/response/created-island.response';
 
 export type ClientToLoby = {
     createIsland: (data: CreateIslandRequest) => void;
+    getActiveIslands: (data: GetIslandListReqeust) => void;
 };
 export type LobyToClient = {
     createdIsland: (data: CreatedIslandResponse) => void;
+    getActiveIslands: (data: LiveIslandItem[]) => void;
 };
 
 export type ClientToChat = {

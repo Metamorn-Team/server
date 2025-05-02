@@ -9,16 +9,27 @@ import { IslandComponentModule } from 'src/modules/islands/island-component.modu
 import { UserComponentModule } from 'src/modules/users/users-component.module';
 import { ChatGateway } from 'src/presentation/gateway/chat.gateway';
 import { IslandGateway } from 'src/presentation/gateway/island.gateway';
+import { LobyGateway } from 'src/presentation/gateway/loby.gateway';
+import { IslandModule } from 'src/modules/islands/island.module';
+import { NormalIslandStorageModule } from 'src/modules/game/normal-island.storaga.module';
 
 @Module({
     imports: [
         GameStorageModule,
         DesertedIslandStorageModule,
+        NormalIslandStorageModule,
         UserComponentModule,
         IslandComponentModule,
+        IslandModule,
         IslandJoinComponentModule,
         ChatMessageModule,
     ],
-    providers: [IslandGateway, ChatGateway, GameService, GameIslandService],
+    providers: [
+        LobyGateway,
+        IslandGateway,
+        ChatGateway,
+        GameService,
+        GameIslandService,
+    ],
 })
 export class GameModule {}

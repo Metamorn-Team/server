@@ -27,19 +27,6 @@ export class PlayerMemoryStorage implements PlayerStorage {
         this.players.delete(playerId);
     }
 
-    getPlayersByIslandId(islandId: string): Player[] {
-        const activePlayers: Player[] = [];
-        const storedPlayers = this.players.values();
-
-        for (const player of storedPlayers) {
-            if (player.roomId === islandId) {
-                activePlayers.push(player);
-            }
-        }
-
-        return activePlayers;
-    }
-
     getPlayerStore(): Record<string, Player> {
         return Object.fromEntries(this.players.entries());
     }
