@@ -25,6 +25,9 @@
         "docker:down": "docker compose down"
     },
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.800.0",
+        "@aws-sdk/s3-request-presigner": "^3.800.0",
+        "@msgpack/msgpack": "^3.1.1",
         "@nestjs-cls/transactional": "^2.7.0",
         "@nestjs-cls/transactional-adapter-prisma": "^1.2.20",
         "@nestjs/common": "^11.0.11",
@@ -45,6 +48,7 @@
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
         "socket.io": "^4.8.1",
+        "socket.io-msgpack-parser": "^3.0.2",
         "uuid": "^11.1.0"
     },
     "devDependencies": {
