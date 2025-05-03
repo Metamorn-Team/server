@@ -14,7 +14,7 @@ export class FileController {
         description: '생성 성공',
         type: GetPresignedUrlResponse,
     })
-    @Get()
+    @Get('presigned')
     async getPresignedUrl(@Query() dto: GetPresignedUrlRequest) {
         return await this.s3PresignedManager.getPresignedUrl(dto.path);
     }
