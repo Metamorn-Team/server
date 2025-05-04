@@ -47,8 +47,9 @@ export class FriendsService {
                     e.errorType === DomainExceptionType.PlayerNotFoundInStorage
                 ) {
                     isOnline = false;
+                } else {
+                    throw e;
                 }
-                throw e;
             }
 
             return {
