@@ -19,7 +19,7 @@ export class IslandReader {
         const island = await this.islandRepository.findOneById(id);
         if (!island) {
             throw new DomainException(
-                DomainExceptionType.IslandNotFound,
+                DomainExceptionType.ISLAND_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
                 ISLAND_NOT_FOUND_MESSAGE,
             );

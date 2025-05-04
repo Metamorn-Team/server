@@ -225,7 +225,7 @@ export class IslandGateway
         } catch (e) {
             if (
                 e instanceof DomainException &&
-                e.errorType === DomainExceptionType.PlayerNotFoundInStorage
+                e.errorType === DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE
             ) {
                 return;
             }

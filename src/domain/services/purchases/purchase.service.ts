@@ -117,7 +117,7 @@ export class PurchaseService {
 
         if (missingIds.length > 0) {
             throw new DomainException(
-                DomainExceptionType.ProductNotFound,
+                DomainExceptionType.PRODUCT_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
                 PRODUCT_NOT_FOUND_MESSAGE(JSON.stringify(missingIds)),
             );
@@ -127,7 +127,7 @@ export class PurchaseService {
     private calculateGoldBalance(goldBalance: number, totalPrice: number) {
         if (goldBalance < totalPrice) {
             throw new DomainException(
-                DomainExceptionType.NotEnoughGold,
+                DomainExceptionType.NOT_ENOUGH_GOLD,
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 NOT_ENOUGH_GOLD_MESSAGE,
             );
@@ -143,7 +143,7 @@ export class PurchaseService {
         );
         if (has) {
             throw new DomainException(
-                DomainExceptionType.ProductPurchaseLimitExceeded,
+                DomainExceptionType.PRODUCT_PURCHASE_LIMIT_EXCEEDED,
                 HttpStatus.CONFLICT,
                 PRODUCT_PURCHASE_LIMIT_EXCEEDED_MESSAGE,
             );

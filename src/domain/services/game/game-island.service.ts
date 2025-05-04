@@ -66,7 +66,7 @@ export class GameIslandService {
         if (island.maxMembers <= countParticipants) {
             // 임시 예외 코드
             throw new DomainException(
-                DomainExceptionType.IslandFull,
+                DomainExceptionType.ISLAND_FULL,
                 1000,
                 'island full',
             );
@@ -242,7 +242,7 @@ export class GameIslandService {
         } catch (e) {
             if (
                 e instanceof DomainException &&
-                e.errorType === DomainExceptionType.PlayerNotFoundInStorage
+                e.errorType === DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE
             ) {
                 return;
             }

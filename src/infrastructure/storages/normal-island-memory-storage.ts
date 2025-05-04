@@ -17,7 +17,7 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
         const island = this.normalIslands.get(islandId) ?? null;
         if (!island)
             throw new DomainException(
-                DomainExceptionType.IslandNotFound,
+                DomainExceptionType.ISLAND_NOT_FOUND,
                 1000,
                 ISLAND_NOT_FOUND_MESSAGE,
             );
@@ -33,7 +33,7 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
         const island = this.normalIslands.get(islandId);
         if (!island) {
             throw new DomainException(
-                DomainExceptionType.IslandNotFound,
+                DomainExceptionType.ISLAND_NOT_FOUND,
                 1000,
                 ISLAND_NOT_FOUND_MESSAGE,
             );
@@ -46,7 +46,7 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
         const island = this.normalIslands.get(islandId);
         if (!island) {
             throw new DomainException(
-                DomainExceptionType.IslandNotFound,
+                DomainExceptionType.ISLAND_NOT_FOUND,
                 1000,
                 ISLAND_NOT_FOUND_MESSAGE,
             );
@@ -63,7 +63,7 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
         const island = this.normalIslands.get(islandId);
         if (!island) {
             throw new DomainException(
-                DomainExceptionType.IslandNotFound,
+                DomainExceptionType.ISLAND_NOT_FOUND,
                 1000,
                 ISLAND_NOT_FOUND_MESSAGE,
             );

@@ -20,7 +20,7 @@ export class ProductCategoryReader {
 
         if (!category) {
             throw new DomainException(
-                DomainExceptionType.ProductCategoryNotFound,
+                DomainExceptionType.PRODUCT_CATEGORY_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
             );
         }

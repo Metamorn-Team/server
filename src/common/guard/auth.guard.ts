@@ -34,7 +34,7 @@ export class AuthGuard implements CanActivate {
             );
         } catch (e: unknown) {
             throw new DomainException(
-                DomainExceptionType.InvalidToken,
+                DomainExceptionType.INVALID_TOKEN,
                 HttpStatus.UNAUTHORIZED,
                 INVALID_TOKEN_MESSAGE,
             );
@@ -45,7 +45,7 @@ export class AuthGuard implements CanActivate {
         const { authorization } = request.headers;
         if (!authorization || authorization.trim() === '') {
             throw new DomainException(
-                DomainExceptionType.InvalidToken,
+                DomainExceptionType.INVALID_TOKEN,
                 HttpStatus.UNAUTHORIZED,
                 INVALID_TOKEN_MESSAGE,
             );

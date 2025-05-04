@@ -34,7 +34,7 @@ export class WsAuthGuard implements CanActivate {
             );
         } catch (e: unknown) {
             throw new DomainException(
-                DomainExceptionType.InvalidToken,
+                DomainExceptionType.INVALID_TOKEN,
                 HttpStatus.UNAUTHORIZED,
                 INVALID_TOKEN_MESSAGE,
             );
@@ -49,7 +49,7 @@ export class WsAuthGuard implements CanActivate {
             authorization.trim() === ''
         ) {
             throw new DomainException(
-                DomainExceptionType.InvalidToken,
+                DomainExceptionType.INVALID_TOKEN,
                 HttpStatus.UNAUTHORIZED,
                 INVALID_TOKEN_MESSAGE,
             );

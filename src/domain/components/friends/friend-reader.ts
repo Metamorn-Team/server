@@ -41,7 +41,7 @@ export class FriendReader {
 
         if (!request) {
             throw new DomainException(
-                DomainExceptionType.FriendRequestNotFound,
+                DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
                 FRIEND_REQUEST_NOT_FOUND_MESSAGE,
             );
@@ -57,7 +57,7 @@ export class FriendReader {
 
         if (!friendRequest) {
             throw new DomainException(
-                DomainExceptionType.FriendRequestNotFound,
+                DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
                 FRIEND_REQUEST_NOT_FOUND_MESSAGE,
             );

@@ -24,7 +24,7 @@ export class UserReader {
 
         if (!user) {
             throw new DomainException(
-                DomainExceptionType.UserNotFound,
+                DomainExceptionType.USER_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
                 USER_NOT_FOUND_MESSAGE,
             );
@@ -38,7 +38,7 @@ export class UserReader {
 
         if (!user) {
             throw new DomainException(
-                DomainExceptionType.UserNotFound,
+                DomainExceptionType.USER_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
                 USER_NOT_FOUND_MESSAGE,
             );
@@ -52,7 +52,7 @@ export class UserReader {
 
         if (!user) {
             throw new DomainException(
-                DomainExceptionType.UserNotFound,
+                DomainExceptionType.USER_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
                 USER_NOT_FOUND_MESSAGE,
             );
@@ -66,7 +66,7 @@ export class UserReader {
 
         if (!user) {
             throw new DomainException(
-                DomainExceptionType.UserNotFound,
+                DomainExceptionType.USER_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
                 USER_NOT_FOUND_MESSAGE,
             );
@@ -104,7 +104,7 @@ export class UserReader {
         }
 
         throw new DomainException(
-            DomainExceptionType.InvalidInput,
+            DomainExceptionType.INVALID_INPUT,
             HttpStatus.BAD_REQUEST,
             INVALID_INPUT_MESSAGE,
         );

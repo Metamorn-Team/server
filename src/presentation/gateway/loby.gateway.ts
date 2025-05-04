@@ -18,7 +18,7 @@ import {
     CreateIslandRequest,
     GetIslandListReqeust,
     LobyToClient,
-} from 'types';
+} from 'src/presentation/dto';
 
 type TypedSocket = Socket<ClientToLoby, LobyToClient>;
 

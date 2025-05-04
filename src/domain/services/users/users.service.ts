@@ -28,7 +28,7 @@ export class UserService {
 
             if (user) {
                 throw new DomainException(
-                    DomainExceptionType.TagConflict,
+                    DomainExceptionType.TAG_CONFLICT,
                     HttpStatus.CONFLICT,
                     TAG_CONFLICT_MESSAGE,
                 );
@@ -36,7 +36,7 @@ export class UserService {
         } catch (e: unknown) {
             if (
                 e instanceof DomainException &&
-                e.errorType === DomainExceptionType.UserNotFound
+                e.errorType === DomainExceptionType.USER_NOT_FOUND
             ) {
                 return await this.userWriter.updateTag(userId, tag);
             }
@@ -56,7 +56,7 @@ export class UserService {
 
         if (currentUserId === targetUserId) {
             throw new DomainException(
-                DomainExceptionType.GetUserBadRequest,
+                DomainExceptionType.GET_USER_BAD_REQUEST,
                 HttpStatus.BAD_REQUEST,
                 GET_USER_BAD_REQUEST_MESSAGE,
             );

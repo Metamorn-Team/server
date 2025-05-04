@@ -16,7 +16,7 @@ export class PlayerMemoryStorage implements PlayerStorage {
         const player = this.players.get(playerId);
         if (!player)
             throw new DomainException(
-                DomainExceptionType.PlayerNotFoundInStorage,
+                DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE,
                 1000,
                 PLAYER_NOT_FOUND_IN_STORAGE,
             );
@@ -32,7 +32,7 @@ export class PlayerMemoryStorage implements PlayerStorage {
         }
 
         throw new DomainException(
-            DomainExceptionType.PlayerNotFoundInStorage,
+            DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE,
             1000,
             PLAYER_NOT_FOUND_IN_STORAGE,
         );

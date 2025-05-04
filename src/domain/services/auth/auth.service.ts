@@ -46,7 +46,7 @@ export class AuthService {
 
             if (!(user.provider === provider)) {
                 throw new DomainException<OauthUserInfo>(
-                    DomainExceptionType.ProviderConflict,
+                    DomainExceptionType.PROVIDER_CONFLICT,
                     HttpStatus.CONFLICT,
                     PROVIDER_CONFLICT,
                     userInfo,
@@ -71,10 +71,10 @@ export class AuthService {
         } catch (e) {
             if (
                 e instanceof DomainException &&
-                e.errorType === DomainExceptionType.UserNotFound
+                e.errorType === DomainExceptionType.USER_NOT_FOUND
             ) {
                 throw new DomainException<OauthUserInfo>(
-                    DomainExceptionType.UserNotRegistered,
+                    DomainExceptionType.USER_NOT_REGISTERED,
                     HttpStatus.NOT_FOUND,
                     USER_NOT_REGISTERED_MESSAGE,
                     userInfo,

@@ -44,7 +44,8 @@ export class FriendsService {
             } catch (e: unknown) {
                 if (
                     e instanceof DomainException &&
-                    e.errorType === DomainExceptionType.PlayerNotFoundInStorage
+                    e.errorType ===
+                        DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE
                 ) {
                     isOnline = false;
                 } else {
@@ -146,7 +147,7 @@ export class FriendsService {
         } catch (e) {
             if (
                 e instanceof DomainException &&
-                e.errorType === DomainExceptionType.FriendRequestNotFound
+                e.errorType === DomainExceptionType.FRIEND_REQUEST_NOT_FOUND
             ) {
                 return 'NONE';
             }
