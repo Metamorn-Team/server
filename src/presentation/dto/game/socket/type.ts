@@ -47,6 +47,7 @@ export type ClientToIsland = {
     playerMoved: (data: PlayerMovedRequest) => void;
     attack: () => void;
     islandHearbeat: () => void;
+    jump: () => void;
 };
 export type IslandToClient = {
     playerJoin: (data: PlayerJoinResponse) => void;
@@ -57,6 +58,7 @@ export type IslandToClient = {
     activePlayers: (data: ActivePlayerResponse) => void;
     attacked: (data: AttackedResponse) => void;
     islandHearbeat: (data: IslandHeartbeatResponse) => void;
+    jump: (userId: string) => void;
 };
 
 export type ClientToServer = ClientToIsland & ClientToLoby & ClientToChat;
