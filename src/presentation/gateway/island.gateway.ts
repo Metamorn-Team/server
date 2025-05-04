@@ -180,6 +180,15 @@ export class IslandGateway
         }
     }
 
+    @SubscribeMessage('jump')
+    jump(
+        @ConnectedSocket() client: TypedSocket,
+        @CurrentUserFromSocket() userId: string,
+    ) {
+        const { roomId } = this.gameService.getPlayer(userId);
+        client.to(roomId).emit('jump', userId);
+    }
+
     @SubscribeMessage('islandHearbeat')
     handleHeartbeat(
         @ConnectedSocket() client: TypedSocket,
