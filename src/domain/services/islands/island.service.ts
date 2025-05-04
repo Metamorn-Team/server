@@ -39,6 +39,7 @@ export class IslandService {
     }
 
     checkCanJoin(islandId: string): {
+        islandId?: string;
         canJoin: boolean;
         reason?: string;
     } {
@@ -53,7 +54,7 @@ export class IslandService {
                 };
             }
 
-            return { canJoin: true };
+            return { islandId: island.id, canJoin: true };
         } catch (e: unknown) {
             if (
                 e instanceof DomainException &&
