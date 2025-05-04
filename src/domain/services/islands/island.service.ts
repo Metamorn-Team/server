@@ -7,6 +7,8 @@ import {
 } from 'src/domain/entities/islands/island.entity';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 
 @Injectable()
 export class IslandService {
@@ -34,5 +36,35 @@ export class IslandService {
             `전체 섬: ${JSON.stringify(this.islandStorage.getAllIsland(), null, 2)}`,
         );
         return island.id;
+    }
+
+    checkCanJoin(islandId: string): {
+        canJoin: boolean;
+        reason?: string;
+    } {
+        try {
+            const island = this.islandStorage.getIsland(islandId);
+
+            const isFull = island.max <= island.players.size;
+            if (isFull) {
+                return {
+                    canJoin: false,
+                    reason: '섬에 자리가 없어요..',
+                };
+            }
+
+            return { canJoin: true };
+        } catch (e: unknown) {
+            if (
+                e instanceof DomainException &&
+                e.errorType === DomainExceptionType.ISLAND_NOT_FOUND
+            ) {
+                return {
+                    canJoin: false,
+                    reason: '이미 사라진 섬이에요..',
+                };
+            }
+            throw e;
+        }
     }
 }

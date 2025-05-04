@@ -19,6 +19,8 @@ import {
     GetIslandListReqeust,
     LobyToClient,
 } from 'src/presentation/dto';
+import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join.request';
+import { CanJoinIslandResponse } from 'src/presentation/dto/game/response/can-join-island.response';
 
 type TypedSocket = Socket<ClientToLoby, LobyToClient>;
 
@@ -55,6 +57,13 @@ export class LobyGateway {
         });
 
         client.emit('createdIsland', { islandId });
+    }
+
+    @SubscribeMessage('canJoinIsland')
+    checkCanJoinIsland(
+        @MessageBody(WsValidatePipe) data: CanJoinIslandRequest,
+    ): CanJoinIslandResponse {
+        return this.islandService.checkCanJoin(data.islandId);
     }
 
     @SubscribeMessage('getActiveIslands')

@@ -17,14 +17,18 @@ import {
     LiveIslandItem,
 } from 'types';
 import { CreatedIslandResponse } from 'src/presentation/dto/game/response/created-island.response';
+import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join.request';
+import { CanJoinIslandResponse } from 'src/presentation/dto/game/response/can-join-island.response';
 
 export type ClientToLoby = {
     createIsland: (data: CreateIslandRequest) => void;
     getActiveIslands: (data: GetIslandListReqeust) => void;
+    canJoinIsland: (data: CanJoinIslandRequest) => void;
 };
 export type LobyToClient = {
     createdIsland: (data: CreatedIslandResponse) => void;
     getActiveIslands: (data: LiveIslandItem[]) => void;
+    canJoinIsland: (data: CanJoinIslandResponse) => void;
 };
 
 export type ClientToChat = {
