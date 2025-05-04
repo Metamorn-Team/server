@@ -35,9 +35,21 @@ export class FriendsService {
             await this.friendReader.readFriendsList(userId, limit, cursor);
 
         const mappedResponseData = friendData.map((friendRelation) => {
-            const isOnline = !!this.gameStorage.getPlayer(
-                friendRelation.friend.id,
-            );
+            let isOnline: boolean;
+
+            try {
+                isOnline = !!this.gameStorage.getPlayer(
+                    friendRelation.friend.id,
+                );
+            } catch (e: unknown) {
+                if (
+                    e instanceof DomainException &&
+                    e.errorType === DomainExceptionType.PlayerNotFoundInStorage
+                ) {
+                    isOnline = false;
+                }
+                throw e;
+            }
 
             return {
                 id: friendRelation.friend.id,
