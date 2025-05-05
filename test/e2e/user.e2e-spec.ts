@@ -65,6 +65,7 @@ describe('UserController (e2e)', () => {
                 nickname: user.nickname,
                 provider: user.provider,
                 tag: user.tag,
+                bio: user.bio!,
                 friendStatus: 'NONE',
             };
 
@@ -96,6 +97,7 @@ describe('UserController (e2e)', () => {
                 nickname: user.nickname,
                 provider: user.provider,
                 tag: user.tag,
+                bio: user.bio!,
                 friendStatus: 'ACCEPTED',
             };
 
@@ -128,6 +130,7 @@ describe('UserController (e2e)', () => {
                 nickname: user.nickname,
                 provider: user.provider,
                 tag: user.tag,
+                bio: user.bio!,
                 friendStatus: 'SENT',
             };
 
@@ -160,6 +163,7 @@ describe('UserController (e2e)', () => {
                 nickname: user.nickname,
                 provider: user.provider,
                 tag: user.tag,
+                bio: user.bio!,
                 friendStatus: 'RECEIVED',
             };
 
