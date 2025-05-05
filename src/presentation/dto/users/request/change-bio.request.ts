@@ -3,11 +3,11 @@ import { Length, ValidateIf } from 'class-validator';
 
 export class ChangeBioRequest {
     @ApiProperty({
-        example: '자기소개입니다.',
-        description: '자기소개 텍스트 (최대 30자)',
+        example: '저는 접니다.',
+        description: '자기소개 텍스트 (최대 300자), null이면 없애기',
         nullable: true,
     })
-    @ValidateIf((v) => v !== null)
+    @ValidateIf((v: ChangeBioRequest) => v.bio !== null)
     @Length(1, 300)
     readonly bio: string | null;
 }
