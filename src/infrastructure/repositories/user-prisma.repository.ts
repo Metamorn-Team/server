@@ -154,7 +154,7 @@ export class UserPrismaRepository implements UserRepository {
     }
 
     async update(id: string, data: Partial<UserEntity>): Promise<void> {
-        const { nickname, tag, avatarKey, gold } = data;
+        const { nickname, tag, avatarKey, gold, bio } = data;
 
         await this.prisma.user.update({
             data: {
@@ -162,6 +162,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag,
                 avatarKey,
                 gold,
+                bio,
             },
             where: {
                 id,
