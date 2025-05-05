@@ -30,6 +30,9 @@ export class GetUserResponse {
     @ApiProperty({ description: '타겟 사용자의 아바타 키' })
     readonly avatarKey: string;
 
+    @ApiProperty({ example: '나는 나다' })
+    readonly bio: string | null;
+
     @ApiProperty({
         description:
             '요청자와 타겟 유저가 친구 상태일 경우 ACCEPTED 아닐 경우 null',

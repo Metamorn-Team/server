@@ -10,6 +10,7 @@ export interface UserInfo {
     readonly tag: string;
     readonly provider: Provider;
     readonly avatarKey: string;
+    readonly bio: string | null;
 }
 
 export interface UserPrototype {

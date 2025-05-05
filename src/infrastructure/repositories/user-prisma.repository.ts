@@ -23,6 +23,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 id: searchUserId,
@@ -39,6 +40,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 email: email,
@@ -56,6 +58,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 tag: tag,
@@ -80,6 +83,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 id: {
@@ -119,6 +123,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 id: {
