@@ -15,7 +15,11 @@ import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { ResponseResult } from 'test/helper/types';
 import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
 import { FriendRequestStatus } from '@prisma/client';
-import { GetUserResponse, SearchUsersRequest } from 'src/presentation/dto';
+import {
+    ChangeBioRequest,
+    GetUserResponse,
+    SearchUsersRequest,
+} from 'src/presentation/dto';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -245,6 +249,71 @@ describe('UserController (e2e)', () => {
 
             expect(status).toEqual(204);
             expect(updatedUser).not.toBeNull();
+        });
+    });
+
+    describe('(PATCH) /users/bio - 소개 변경', () => {
+        it('소개 변경 정삭 동작', async () => {
+            const { accessToken, userId } = await login(app);
+
+            const dto: ChangeBioRequest = {
+                bio: '저는 저에요',
+            };
+
+            const response = await request(app.getHttpServer())
+                .patch('/users/bio')
+                .send(dto)
+                .set('Authorization', accessToken);
+            const { status } = response;
+            const updatedUser = await prisma.user.findFirst({
+                where: {
+                    id: userId,
+                },
+            });
+
+            expect(status).toEqual(204);
+            expect(updatedUser?.bio).toEqual(dto.bio);
+        });
+
+        it('소개는 1자 이상 300자 이하여야 한다.', async () => {
+            const { accessToken } = await login(app);
+
+            const emptyBioDto: ChangeBioRequest = {
+                bio: '',
+            };
+
+            const tooLongBioDto: ChangeBioRequest = {
+                bio: '메타몬'.repeat(101), // 303자
+            };
+
+            const responseForEmptyBio = await request(app.getHttpServer())
+                .patch('/users/bio')
+                .send(emptyBioDto)
+                .set('Authorization', accessToken);
+
+            const responseForTooLongBio = await request(app.getHttpServer())
+                .patch('/users/bio')
+                .send(tooLongBioDto)
+                .set('Authorization', accessToken);
+
+            expect(responseForEmptyBio.status).toEqual(400);
+            expect(responseForTooLongBio.status).toEqual(400);
+        });
+
+        it('소개는 null일 수 있다.', async () => {
+            const { accessToken } = await login(app);
+
+            const nullBioDto: ChangeBioRequest = {
+                bio: null,
+            };
+
+            const response = await request(app.getHttpServer())
+                .patch('/users/bio')
+                .send(nullBioDto)
+                .set('Authorization', accessToken);
+            const { status } = response;
+
+            expect(status).toEqual(204);
         });
     });
 
