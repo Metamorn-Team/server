@@ -129,7 +129,7 @@ export class FriendsService {
         await this.friendWriter.deleteFriendship(friendshipId);
     }
 
-    async checkFriendship(
+    async getFriendshipStatus(
         userId: string,
         targeytUserId: string,
     ): Promise<FriendRequestStatus> {

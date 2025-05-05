@@ -19,6 +19,7 @@ import {
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-reader';
+import { FriendsService } from 'src/domain/services/friends/friends.service';
 import { UserService } from 'src/domain/services/users/users.service';
 import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
 import { ChangeBioRequest } from 'src/presentation/dto/users/request/change-bio.request';
@@ -40,6 +41,7 @@ export class UserController {
     constructor(
         private readonly userService: UserService,
         private readonly userReader: UserReader,
+        private readonly friendService: FriendsService,
     ) {}
 
     @ApiOperation({
@@ -132,10 +134,16 @@ export class UserController {
         @CurrentUser() currentUserId: string,
         @Param('id') targetUserId: string,
     ): Promise<GetUserResponse> {
-        return await this.userService.getUserProfile(
+        const user = await this.userReader.readProfile(targetUserId);
+        const friendStatus = await this.friendService.getFriendshipStatus(
             currentUserId,
             targetUserId,
         );
+
+        return {
+            ...user,
+            friendStatus,
+        };
     }
 
     @ApiOperation({

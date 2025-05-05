@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Provider } from '../../shared';
+import { FriendRequestStatus } from '../../../../domain/types/friend.types';
 
 export class GetUserResponse {
     @ApiProperty({
@@ -34,5 +35,5 @@ export class GetUserResponse {
             '요청자와 타겟 유저가 친구 상태일 경우 ACCEPTED 아닐 경우 null',
         example: 'ACCEPTED',
     })
-    readonly friendStatus: string | null;
+    readonly friendStatus: FriendRequestStatus;
 }
