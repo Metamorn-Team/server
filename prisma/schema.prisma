@@ -27,17 +27,17 @@ enum OAuthProvider {
 }
 
 model User {
-  id          String        @id @db.Uuid
-  email       String        @db.VarChar(255)
-  provider    OAuthProvider
-  nickname    String
-  tag         String
-  description String?       @db.VarChar
-  avatarKey   String
-  gold        Int           @default(0)
-  createdAt   DateTime      @map("created_at")
-  updatedAt   DateTime      @map("updated_at")
-  deletedAt   DateTime?     @map("deleted_at")
+  id        String        @id @db.Uuid
+  email     String        @db.VarChar(255)
+  provider  OAuthProvider
+  nickname  String
+  tag       String
+  bio       String?       @db.VarChar
+  avatarKey String
+  gold      Int           @default(0)
+  createdAt DateTime      @map("created_at")
+  updatedAt DateTime      @map("updated_at")
+  deletedAt DateTime?     @map("deleted_at")
 
   islandJoins            IslandJoin[]
   chatMessages           ChatMessage[]
