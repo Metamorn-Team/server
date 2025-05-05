@@ -48,6 +48,10 @@ export class UserService {
         await this.userWriter.updateAvatarKey(userId, avatarKey);
     }
 
+    async changeBio(userId: string, bio: string | null) {
+        await this.userWriter.updateBio(userId, bio);
+    }
+
     async getUserProfile(
         currentUserId: string,
         targetUserId: string,

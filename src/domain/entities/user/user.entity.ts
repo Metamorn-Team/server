@@ -12,7 +12,7 @@ export class UserEntity {
         readonly createdAt: Date,
         readonly updatedAt: Date,
         readonly deletedAt: Date | null = null,
-        readonly description?: string,
+        readonly bio?: string | null,
         readonly gold = 0,
     ) {}
 
@@ -32,7 +32,7 @@ export class UserEntity {
             stdDate,
             updatedAt ? updatedAt : stdDate,
             null,
-            input.description,
+            input.bio,
         );
     }
 }

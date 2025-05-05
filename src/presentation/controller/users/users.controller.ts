@@ -21,6 +21,7 @@ import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { UserService } from 'src/domain/services/users/users.service';
 import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
+import { ChangeBioRequest } from 'src/presentation/dto/users/request/change-bio.request';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
 import { SearchUsersRequest } from 'src/presentation/dto/users/request/search-users.request';
@@ -178,5 +179,19 @@ export class UserController {
         @CurrentUser() userId: string,
     ) {
         await this.userService.changeAvatar(userId, dto.avatarKey);
+    }
+
+    @ApiOperation({
+        summary: '설명 변경',
+        description: '로그인한 사용자의 설명을 변경합니다.',
+    })
+    @ApiResponse({ status: 204, description: '소개 변경 성공 (No Content)' })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Patch('bio')
+    async changeBio(
+        @Body() dto: ChangeBioRequest,
+        @CurrentUser() userId: string,
+    ) {
+        await this.userService.changeBio(userId, dto.bio);
     }
 }

@@ -18,7 +18,7 @@ export interface UserPrototype {
     readonly tag: string;
     readonly provider: Provider;
     readonly avatarKey: string;
-    readonly description?: string;
+    readonly bio?: string;
 }
 
 export interface PaginatedUsers {
