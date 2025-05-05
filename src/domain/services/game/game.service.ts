@@ -1,177 +1,23 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { v4 } from 'uuid';
-import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import { IslandTag, SocketClientId } from 'src/domain/types/game.types';
-import { IslandWriter } from 'src/domain/components/islands/island-writer';
-import { IslandEntity } from 'src/domain/entities/islands/island.entity';
-import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
-import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
+import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';
-import { UserReader } from 'src/domain/components/users/user-reader';
 import { Player } from 'src/domain/models/game/player';
+import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
+import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 @Injectable()
 export class GameService {
     constructor(
-        @Inject(GameStorage)
-        private readonly gameStorage: GameStorage,
-        private readonly islandWriter: IslandWriter,
-        private readonly islandJoinWriter: IslandJoinWriter,
-        private readonly userReader: UserReader,
+        @Inject(PlayerStorage)
+        private readonly gameStorage: PlayerStorage,
+        @Inject(DesertedIslandStorage)
+        private readonly desertedIslandStorage: DesertedIslandStorage,
+        @Inject(NormalIslandStorage)
+        private readonly normalIslandStorage: NormalIslandStorage,
     ) {}
-
-    async createRoom(tag: IslandTag) {
-        const stdDate = new Date();
-        const island = IslandEntity.create({ tag }, v4, stdDate);
-        await this.islandWriter.create(island);
-
-        const { id } = island;
-
-        const room = {
-            id,
-            max: 5,
-            players: new Set<SocketClientId>(),
-            type: tag,
-        };
-        this.gameStorage.createIsland(id, room);
-        const roomOfTags = this.gameStorage.getIslandOfTag(tag);
-
-        if (roomOfTags) {
-            roomOfTags.add(id);
-        } else {
-            this.gameStorage.addIslandOfTag(tag, id);
-        }
-
-        return room;
-    }
-
-    async getAvailableRoom(tag: IslandTag) {
-        const roomIds = this.gameStorage.getIslandIdsByTag(tag);
-
-        if (roomIds) {
-            for (const roomId of roomIds) {
-                const room = this.gameStorage.getIsland(roomId);
-
-                if (room && room.players.size < room.max) {
-                    return room;
-                }
-            }
-        }
-
-        return await this.createRoom(tag);
-    }
-
-    getIsland(islandId: string) {
-        return this.gameStorage.getIsland(islandId);
-    }
-
-    async joinRoom(
-        islandType: 'dev' | 'design',
-        playerId: string,
-        clientId: string,
-        x: number,
-        y: number,
-    ) {
-        const availableIsland = await this.getAvailableRoom(islandType);
-        const user = await this.userReader.readProfile(playerId);
-
-        const { id, nickname, avatarKey, tag } = user;
-        const { id: islandId } = availableIsland;
-        const player = Player.create({
-            id,
-            clientId,
-            nickname,
-            avatarKey,
-            tag,
-            roomId: islandId,
-            x,
-            y,
-        });
-
-        this.gameStorage.addPlayer(playerId, player);
-
-        const stdDate = new Date();
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: player.id },
-            v4,
-            stdDate,
-        );
-        await this.islandJoinWriter.create(islandJoin);
-
-        const room = this.gameStorage.getIsland(islandId);
-        if (!room) throw new Error('없는 방');
-
-        room.players.add(playerId);
-
-        const activePlayers =
-            this.getActiveUsers(availableIsland.id).filter(
-                (player) => player.id !== playerId,
-            ) || [];
-
-        return {
-            activePlayers,
-            availableIsland,
-            joinedPlayer: player,
-        };
-    }
-
-    async leftPlayer(playerId: string) {
-        const player = this.gameStorage.getPlayer(playerId);
-        if (!player) return;
-
-        const room = this.gameStorage.getIsland(player.roomId);
-        if (!room) return;
-
-        const { roomId } = player;
-
-        await this.islandJoinWriter.left(roomId, player.id);
-
-        this.gameStorage.deletePlayer(playerId);
-        room.players.delete(playerId);
-
-        return player;
-    }
-
-    async leaveRoom(islandId: string, playerId: string) {
-        const player = this.gameStorage.getPlayer(playerId);
-        if (!player) return;
-
-        const room = this.gameStorage.getIsland(islandId);
-        if (!room) return;
-
-        await this.islandJoinWriter.left(islandId, player.id);
-
-        this.gameStorage.deletePlayer(playerId);
-        room.players.delete(playerId);
-
-        return player;
-    }
-
-    getActiveUsers(islandId: string) {
-        const room = this.gameStorage.getIsland(islandId);
-        if (!room) throw new Error('없는 방');
-
-        const activeUsers: Player[] = [];
-
-        room.players.forEach((playerId) => {
-            const player = this.gameStorage.getPlayer(playerId);
-            if (player) {
-                activeUsers.push(player);
-            }
-        });
-
-        return activeUsers;
-    }
-
-    kickPlayerById(playerId: string) {
-        const player = this.gameStorage.getPlayer(playerId);
-        if (player) {
-            this.leaveRoom(player.roomId, playerId);
-            return player;
-        }
-    }
 
     getPlayer(playerId: string) {
         return this.gameStorage.getPlayer(playerId);
@@ -199,7 +45,10 @@ export class GameService {
         const attacker = this.gameStorage.getPlayer(attackerId);
         if (!attacker) throw new Error('없는 회원');
 
-        const island = this.gameStorage.getIsland(attacker.roomId);
+        const island =
+            attacker.islandType === IslandTypeEnum.NORMAL
+                ? this.normalIslandStorage.getIsland(attacker.roomId)
+                : this.desertedIslandStorage.getIsland(attacker.roomId);
         if (!island) throw new Error('없는 섬');
 
         if (island.players.size === 0) {
@@ -269,9 +118,26 @@ export class GameService {
         playerId: string,
     ): { id: string; lastActivity: number }[] {
         const player = this.gameStorage.getPlayer(playerId);
-        if (!player) throw new Error();
+        if (!player) throw new Error('플레이어 없음');
 
-        const players = this.gameStorage.getPlayersByIslandId(player.roomId);
+        const playerIds =
+            player.islandType === IslandTypeEnum.NORMAL
+                ? this.normalIslandStorage.getPlayerIdsByIslandId(player.roomId)
+                : this.desertedIslandStorage.getPlayerIdsByIslandId(
+                      player.roomId,
+                  );
+        const players = playerIds
+            .map((playerId) => {
+                const player = this.gameStorage.getPlayer(playerId);
+                if (player) {
+                    return {
+                        id: player.id,
+                        lastActivity: player.lastActivity,
+                    };
+                }
+            })
+            .filter((player) => !!player);
+
         return players.map((player) => ({
             id: player.id,
             lastActivity: player.lastActivity,
@@ -280,7 +146,6 @@ export class GameService {
 
     loggingStore(logger: Logger) {
         logger.debug('전체 회원', this.gameStorage.getPlayerStore());
-        logger.debug('전체 방', this.gameStorage.getIslandStore());
-        logger.debug('타입별 방', this.gameStorage.getIslandOfTagStore());
+        logger.debug('전체 방', this.desertedIslandStorage.getIslandStore());
     }
 }

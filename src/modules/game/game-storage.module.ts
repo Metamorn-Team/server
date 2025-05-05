@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { GameStorage } from 'src/domain/interface/storages/game-storage';
-import { MemoryStorage } from 'src/infrastructure/storages/memory-storage';
+import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
+import { PlayerMemoryStorage } from 'src/infrastructure/storages/player-memory-storage';
 
 @Module({
-    providers: [{ provide: GameStorage, useClass: MemoryStorage }],
-    exports: [{ provide: GameStorage, useClass: MemoryStorage }],
+    providers: [{ provide: PlayerStorage, useClass: PlayerMemoryStorage }],
+    exports: [{ provide: PlayerStorage, useClass: PlayerMemoryStorage }],
 })
 export class GameStorageModule {}

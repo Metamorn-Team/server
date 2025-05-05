@@ -1,4 +1,3 @@
-import { Socket } from 'socket.io';
 import { PlayerJoinRequest } from '../request/player-join.request';
 import { PlayerMovedRequest } from '../request/player-moved.request';
 import { PlayerJoinResponse } from '../response/player-join.response';
@@ -11,18 +10,46 @@ import { MessageSent } from '../response/message-sent.response';
 import { PlayerJoinSuccessResponse } from '../response/player-join-success.response';
 import { AttackedResponse } from '../response/attacked.response';
 import { IslandHeartbeatResponse } from '../response/island-heartbeat';
+import {
+    CreateIslandRequest,
+    GetIslandListReqeust,
+    JoinDesertedIslandReqeust,
+    LiveIslandItem,
+} from 'types';
+import { CreatedIslandResponse } from 'src/presentation/dto/game/response/created-island.response';
+import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join.request';
+import { CanJoinIslandResponse } from 'src/presentation/dto/game/response/can-join-island.response';
 
-export interface ClientToServer {
-    playerJoin: (data: PlayerJoinRequest) => void;
+export type ClientToLoby = {
+    createIsland: (data: CreateIslandRequest) => void;
+    getActiveIslands: (data: GetIslandListReqeust) => void;
+    canJoinIsland: (data: CanJoinIslandRequest) => void;
+};
+export type LobyToClient = {
+    createdIsland: (data: CreatedIslandResponse) => void;
+    getActiveIslands: (data: LiveIslandItem[]) => void;
+    canJoinIsland: (data: CanJoinIslandResponse) => void;
+};
+
+export type ClientToChat = {
+    sendMessage: (data: SendMessageRequest) => void;
+};
+export type ChatToClient = {
+    receiveMessage: (data: ReceiveMessage) => void;
+    messageSent: (data: MessageSent) => void;
+};
+
+export type ClientToIsland = {
+    joinDesertedIsland: (data: JoinDesertedIslandReqeust) => void;
+    joinNormalIsland: (data: PlayerJoinRequest) => void;
     playerLeft: () => void;
     playerKicked: () => void;
     playerMoved: (data: PlayerMovedRequest) => void;
     attack: () => void;
-    sendMessage: (data: SendMessageRequest) => void;
     islandHearbeat: () => void;
-}
-
-export interface ServerToClient {
+    jump: () => void;
+};
+export type IslandToClient = {
     playerJoin: (data: PlayerJoinResponse) => void;
     playerJoinSuccess: (data: PlayerJoinSuccessResponse) => void;
     playerKicked: () => void;
@@ -30,9 +57,9 @@ export interface ServerToClient {
     playerMoved: (data: PlayerMovedResponse) => void;
     activePlayers: (data: ActivePlayerResponse) => void;
     attacked: (data: AttackedResponse) => void;
-    receiveMessage: (data: ReceiveMessage) => void;
-    messageSent: (data: MessageSent) => void;
     islandHearbeat: (data: IslandHeartbeatResponse) => void;
-}
+    jump: (userId: string) => void;
+};
 
-export type TypedSocket = Socket<ClientToServer, ServerToClient>;
+export type ClientToServer = ClientToIsland & ClientToLoby & ClientToChat;
+export type ServerToClient = IslandToClient & LobyToClient & ChatToClient;

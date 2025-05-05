@@ -1,22 +1,11 @@
 import { Player } from 'src/domain/models/game/player';
-import { Island, IslandTag } from 'src/domain/types/game.types';
 
-export interface GameStorage {
-    getPlayer(playerId: string): Player | null;
-    getPlayerByClientId(clientId: string): Player | null;
+export interface PlayerStorage {
+    getPlayer(playerId: string): Player;
+    getPlayerByClientId(clientId: string): Player;
     addPlayer(playerId: string, player: Player): void;
     deletePlayer(playerId: string): void;
-    getPlayersByIslandId(islandId: string): Player[];
-
-    createIsland(islandId: string, island: Island): void;
-    getIsland(islandId: string): Island | null;
-    getIslandOfTag(tag: IslandTag): Set<string> | null;
-    getIslandIdsByTag(tag: IslandTag): string[];
-    addIslandOfTag(tag: IslandTag, islandId: string): void;
-
     getPlayerStore(): Record<string, Player>;
-    getIslandStore(): Record<string, Island>;
-    getIslandOfTagStore(): Record<IslandTag, Set<string>>;
 }
 
-export const GameStorage = Symbol('GameStorage');
+export const PlayerStorage = Symbol('PlayerStorage');

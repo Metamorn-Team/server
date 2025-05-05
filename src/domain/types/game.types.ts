@@ -1,10 +1,38 @@
-export type IslandTag = 'dev' | 'design';
+import { Player } from 'src/domain/models/game/player';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 export type SocketClientId = string;
 
-export interface Island {
+export interface LiveDesertedIsland {
     id: string;
     players: Set<string>;
-    type: IslandTag;
+    type: IslandTypeEnum;
     max: number;
+}
+
+export interface LiveNormalIsland {
+    id: string;
+    players: Set<string>;
+    type: IslandTypeEnum;
+    max: number;
+    name: string;
+    description: string;
+    coverImage: string;
+    createdAt: Date;
+}
+
+export interface Island {
+    readonly id: string;
+    readonly name: string | null;
+    readonly description: string | null;
+    readonly coverImage: string | null;
+    readonly maxMembers: number;
+    readonly type: IslandTypeEnum;
+    readonly createdAt: Date;
+}
+
+export interface JoinedIslandInfo {
+    readonly activePlayers: Player[];
+    readonly joinedIslandId: string;
+    readonly joinedPlayer: Player;
 }

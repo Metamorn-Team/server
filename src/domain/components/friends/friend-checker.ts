@@ -19,7 +19,7 @@ export class FriendChecker {
         try {
             if (user1Id === user2Id) {
                 throw new DomainException(
-                    DomainExceptionType.FriendRequestBadRequest,
+                    DomainExceptionType.FRIEND_REQUEST_BAD_REQUEST,
                     HttpStatus.BAD_REQUEST,
                     FRIEND_REQUEST_BAD_REQUEST_MESSAGE,
                 );
@@ -36,7 +36,7 @@ export class FriendChecker {
 
             if (existingRequeest) {
                 throw new DomainException(
-                    DomainExceptionType.FriendRequestConflict,
+                    DomainExceptionType.FRIEND_REQUEST_CONFLICT,
                     HttpStatus.CONFLICT,
                     FRIEND_REQUEST_CONFLICT_MESSAGE,
                 );
@@ -46,7 +46,7 @@ export class FriendChecker {
         } catch (e: unknown) {
             if (
                 e instanceof DomainException &&
-                e.errorType === DomainExceptionType.FriendRequestNotFound
+                e.errorType === DomainExceptionType.FRIEND_REQUEST_NOT_FOUND
             ) {
                 return;
             }

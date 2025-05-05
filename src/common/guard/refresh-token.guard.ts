@@ -34,7 +34,7 @@ export class RefreshTokenGuard implements CanActivate {
             return await this.jwtService.verifyAsync<{ sub: string }>(Token);
         } catch (e: unknown) {
             throw new DomainException(
-                DomainExceptionType.InvalidToken,
+                DomainExceptionType.INVALID_TOKEN,
                 HttpStatus.UNAUTHORIZED,
                 e as string,
             );

@@ -15,7 +15,7 @@ export class UserChecker {
 
             if (user && user.provider !== provider) {
                 throw new DomainException(
-                    DomainExceptionType.UserEmailConflict,
+                    DomainExceptionType.USER_EMAIL_CONFLICT,
                     HttpStatus.CONFLICT,
                     USER_EMAIL_CONFLIC_MESSAGE,
                 );

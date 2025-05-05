@@ -6,21 +6,20 @@ import {
     FriendPrototype,
     FriendRequestDirection,
     FriendRequestStatus,
-    FriendWithRelationInfo,
 } from 'src/domain/types/friend.types';
 import { v4 } from 'uuid';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { GetFriendRequestsResponse } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
 import { GetFriendsResponse } from 'src/presentation/dto';
-import { GameStorage } from 'src/domain/interface/storages/game-storage';
+import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 
 @Injectable()
 export class FriendsService {
     constructor(
-        @Inject(GameStorage)
-        private readonly gameStorage: GameStorage,
+        @Inject(PlayerStorage)
+        private readonly gameStorage: PlayerStorage,
         private readonly friendReader: FriendReader,
         private readonly friendWriter: FriendWriter,
         private readonly friendChecker: FriendChecker,
@@ -36,9 +35,23 @@ export class FriendsService {
             await this.friendReader.readFriendsList(userId, limit, cursor);
 
         const mappedResponseData = friendData.map((friendRelation) => {
-            const isOnline = !!this.gameStorage.getPlayer(
-                friendRelation.friend.id,
-            );
+            let isOnline: boolean;
+
+            try {
+                isOnline = !!this.gameStorage.getPlayer(
+                    friendRelation.friend.id,
+                );
+            } catch (e: unknown) {
+                if (
+                    e instanceof DomainException &&
+                    e.errorType ===
+                        DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE
+                ) {
+                    isOnline = false;
+                } else {
+                    throw e;
+                }
+            }
 
             return {
                 id: friendRelation.friend.id,
@@ -134,7 +147,7 @@ export class FriendsService {
         } catch (e) {
             if (
                 e instanceof DomainException &&
-                e.errorType === DomainExceptionType.FriendRequestNotFound
+                e.errorType === DomainExceptionType.FRIEND_REQUEST_NOT_FOUND
             ) {
                 return 'NONE';
             }

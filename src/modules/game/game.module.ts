@@ -1,22 +1,35 @@
 import { Module } from '@nestjs/common';
-import { GameStorage } from 'src/domain/interface/storages/game-storage';
+import { GameIslandService } from 'src/domain/services/game/game-island.service';
 import { GameService } from 'src/domain/services/game/game.service';
-import { MemoryStorage } from 'src/infrastructure/storages/memory-storage';
 import { ChatMessageModule } from 'src/modules/chat-messages/chat-message.module';
 import { GameStorageModule } from 'src/modules/game/game-storage.module';
+import { DesertedIslandStorageModule } from 'src/modules/game/desert-island-storage.module';
 import { IslandJoinComponentModule } from 'src/modules/island-joins/island-join-component.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
 import { UserComponentModule } from 'src/modules/users/users-component.module';
+import { ChatGateway } from 'src/presentation/gateway/chat.gateway';
 import { IslandGateway } from 'src/presentation/gateway/island.gateway';
+import { LobyGateway } from 'src/presentation/gateway/loby.gateway';
+import { IslandModule } from 'src/modules/islands/island.module';
+import { NormalIslandStorageModule } from 'src/modules/game/normal-island.storaga.module';
 
 @Module({
     imports: [
         GameStorageModule,
+        DesertedIslandStorageModule,
+        NormalIslandStorageModule,
         UserComponentModule,
         IslandComponentModule,
+        IslandModule,
         IslandJoinComponentModule,
         ChatMessageModule,
     ],
-    providers: [IslandGateway, GameService],
+    providers: [
+        LobyGateway,
+        IslandGateway,
+        ChatGateway,
+        GameService,
+        GameIslandService,
+    ],
 })
 export class GameModule {}

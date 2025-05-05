@@ -5,3 +5,5 @@ export * from './friends';
 export * from './product';
 export * from './product-categories';
 export * from './purchases';
+export * from './island';
+export * from './files';

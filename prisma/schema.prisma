@@ -45,6 +45,7 @@ model User {
   purchases              Purchase[]
   goldTransactions       GoldTransaction[]
   userOwnedItems         UserOwnedItem[]
+  islands                Island[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -78,15 +79,46 @@ model FriendRequest {
 }
 
 model Island {
-  id        String    @id @db.Uuid
-  tag       String    @db.VarChar(50)
-  createdAt DateTime  @map("created_at")
-  updatedAt DateTime  @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id          String    @id @db.Uuid
+  ownerId     String?   @db.Uuid
+  name        String?   @db.VarChar(50)
+  description String?   @db.VarChar(200)
+  coverImage  String?   @map("cover_image")
+  tag         String?   @db.VarChar(50)
+  maxMembers  Int       @map("max_members") @db.SmallInt
+  type        Int       @default(0) @db.SmallInt
+  createdAt   DateTime  @map("created_at")
+  updatedAt   DateTime  @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
 
+  owner       User?        @relation(fields: [ownerId], references: [id])
   islandJoins IslandJoin[]
+  islandTag   IslandTag[]
 
+  @@index([ownerId])
   @@map("island")
+}
+
+model IslandTag {
+  islandId String @db.Uuid
+  tagId    String @db.Uuid
+
+  island Island @relation(fields: [islandId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([islandId, tagId])
+  @@index([tagId])
+  @@map("island_tag")
+}
+
+model Tag {
+  id        String   @id @db.Uuid
+  name      String   @db.VarChar(50)
+  createdAt DateTime @map("created_at")
+
+  islandTags IslandTag[]
+
+  @@map("tag")
 }
 
 model IslandJoin {
