@@ -71,4 +71,8 @@ export class NormalIslandMemoryStorage implements NormalIslandStorage {
 
         return Array.from(island.players);
     }
+
+    delete(islandId: string): void {
+        this.normalIslands.delete(islandId);
+    }
 }

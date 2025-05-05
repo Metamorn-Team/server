@@ -185,17 +185,21 @@ export class GameIslandService {
     async leftPlayer(playerId: string) {
         const player = this.gameStorage.getPlayer(playerId);
 
+        const { roomId } = player;
+
         const island =
             player.islandType === IslandTypeEnum.NORMAL
-                ? this.normalIslandStorage.getIsland(player.roomId)
-                : this.desertedIslandStorage.getIsland(player.roomId);
-
-        const { roomId } = player;
+                ? this.normalIslandStorage.getIsland(roomId)
+                : this.desertedIslandStorage.getIsland(roomId);
 
         await this.islandJoinWriter.left(roomId, player.id);
 
         this.gameStorage.deletePlayer(playerId);
         island.players.delete(playerId);
+
+        if (island.players.size === 0) {
+            await this.islandWriter.remove(island.id);
+        }
 
         return player;
     }

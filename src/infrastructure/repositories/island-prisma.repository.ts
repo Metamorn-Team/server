@@ -37,4 +37,11 @@ export class IslandPrismaRepository implements IslandRepository {
               }
             : null;
     }
+
+    async delete(id: string): Promise<void> {
+        await this.prisma.island.update({
+            data: { deletedAt: new Date() },
+            where: { id },
+        });
+    }
 }
