@@ -18,6 +18,7 @@ import { clsOptions } from 'src/configs/cls/cls-config';
 import { PurchaseModule } from 'src/modules/purchases/purchase.module';
 import { IslandModule } from 'src/modules/islands/island.module';
 import { FileModule } from 'src/modules/files/file.module';
+import { TagModule } from 'src/modules/tags/tag.module';
 
 @Module({
     imports: [
@@ -37,6 +38,7 @@ import { FileModule } from 'src/modules/files/file.module';
         PurchaseModule,
         IslandModule,
         FileModule,
+        TagModule,
     ],
     controllers: [AppController],
     providers: [AppService],

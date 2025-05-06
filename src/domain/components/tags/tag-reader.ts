@@ -11,4 +11,8 @@ export class TagReader {
     readByNames(names: string[]) {
         return this.tagRepository.findByNames(names);
     }
+
+    readAll() {
+        return this.tagRepository.findAll();
+    }
 }

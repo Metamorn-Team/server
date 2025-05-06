@@ -30,4 +30,13 @@ export class TagPrismaRepository implements TagRepository {
             },
         });
     }
+
+    async findAll(): Promise<Tag[]> {
+        return await this.prisma.tag.findMany({
+            select: {
+                id: true,
+                name: true,
+            },
+        });
+    }
 }
