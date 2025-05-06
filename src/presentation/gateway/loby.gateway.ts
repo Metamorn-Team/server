@@ -49,11 +49,15 @@ export class LobyGateway {
         @CurrentUserFromSocket() userId: string,
     ) {
         this.logger.debug(data);
-        const islandId = await this.islandService.create({
-            ...data,
-            ownerId: userId,
-            type: IslandTypeEnum.NORMAL,
-        });
+        const { tags, ...rest } = data;
+        const islandId = await this.islandService.create(
+            {
+                ...rest,
+                ownerId: userId,
+                type: IslandTypeEnum.NORMAL,
+            },
+            tags,
+        );
 
         client.emit('createdIsland', { islandId });
     }

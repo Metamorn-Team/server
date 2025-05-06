@@ -36,11 +36,15 @@ export class IslandController {
         @Body() dto: CreateIslandRequest,
         @CurrentUser() userId: string,
     ) {
-        await this.islandService.create({
-            ...dto,
-            ownerId: userId,
-            type: IslandTypeEnum.NORMAL,
-        });
+        const { tags, ...rest } = dto;
+        await this.islandService.create(
+            {
+                ...rest,
+                ownerId: userId,
+                type: IslandTypeEnum.NORMAL,
+            },
+            tags,
+        );
     }
 
     @ApiOperation({ summary: '활성 상태의 섬 조회' })

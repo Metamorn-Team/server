@@ -18,6 +18,7 @@ export interface LiveNormalIsland {
     name: string;
     description: string;
     coverImage: string;
+    tags: string[];
     createdAt: Date;
 }
 
@@ -28,6 +29,7 @@ export interface Island {
     readonly coverImage: string | null;
     readonly maxMembers: number;
     readonly type: IslandTypeEnum;
+    readonly tags: string[];
     readonly createdAt: Date;
 }
 
