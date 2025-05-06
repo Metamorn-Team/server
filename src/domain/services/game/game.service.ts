@@ -4,19 +4,17 @@ import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';
 import { Player } from 'src/domain/models/game/player';
-import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
-import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
+import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 
 @Injectable()
 export class GameService {
     constructor(
         @Inject(PlayerStorage)
         private readonly gameStorage: PlayerStorage,
-        @Inject(DesertedIslandStorage)
-        private readonly desertedIslandStorage: DesertedIslandStorage,
-        @Inject(NormalIslandStorage)
-        private readonly normalIslandStorage: NormalIslandStorage,
+        private readonly normalIslandStorageReader: NormalIslandStorageReader,
+        private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
     ) {}
 
     getPlayer(playerId: string) {
@@ -47,8 +45,8 @@ export class GameService {
 
         const island =
             attacker.islandType === IslandTypeEnum.NORMAL
-                ? this.normalIslandStorage.getIsland(attacker.roomId)
-                : this.desertedIslandStorage.getIsland(attacker.roomId);
+                ? this.normalIslandStorageReader.readOne(attacker.roomId)
+                : this.desertedIslandStorageReader.readOne(attacker.roomId);
         if (!island) throw new Error('없는 섬');
 
         if (island.players.size === 0) {
@@ -122,10 +120,9 @@ export class GameService {
 
         const playerIds =
             player.islandType === IslandTypeEnum.NORMAL
-                ? this.normalIslandStorage.getPlayerIdsByIslandId(player.roomId)
-                : this.desertedIslandStorage.getPlayerIdsByIslandId(
-                      player.roomId,
-                  );
+                ? this.normalIslandStorageReader.getAllPlayer(player.roomId)
+                : this.desertedIslandStorageReader.getAllPlayer(player.roomId);
+
         const players = playerIds
             .map((playerId) => {
                 const player = this.gameStorage.getPlayer(playerId);
@@ -146,6 +143,7 @@ export class GameService {
 
     loggingStore(logger: Logger) {
         logger.debug('전체 회원', this.gameStorage.getPlayerStore());
-        logger.debug('전체 방', this.desertedIslandStorage.getIslandStore());
+        logger.debug('무인도', this.desertedIslandStorageReader.getStore());
+        logger.debug('일반 섬', this.normalIslandStorageReader.getStore());
     }
 }
