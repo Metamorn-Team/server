@@ -1,4 +1,4 @@
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger, UseFilters, UseGuards } from '@nestjs/common';
 import { Namespace, Socket } from 'socket.io';
 import {
     ConnectedSocket,
@@ -23,9 +23,11 @@ import { JoinDesertedIslandReqeust } from 'src/presentation/dto/game/request/joi
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 
 type TypedSocket = Socket<ClientToIsland, IslandToClient>;
 
+@UseFilters(WsExceptionFilter)
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
     path: '/game',

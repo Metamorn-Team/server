@@ -1,4 +1,4 @@
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger, UseFilters, UseGuards } from '@nestjs/common';
 import {
     ConnectedSocket,
     MessageBody,
@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
+import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { WsValidatePipe } from 'src/common/pipe/ws-validate.pipe';
 import { IslandReader } from 'src/domain/components/islands/island-reader';
@@ -23,6 +24,7 @@ import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join
 
 type TypedSocket = Socket<ClientToLoby, LobyToClient>;
 
+@UseFilters(WsExceptionFilter)
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
     path: '/game',

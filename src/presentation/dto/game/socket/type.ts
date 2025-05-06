@@ -49,6 +49,7 @@ export type ClientToIsland = {
     islandHearbeat: () => void;
     jump: () => void;
 };
+
 export type IslandToClient = {
     playerJoin: (data: PlayerJoinResponse) => void;
     playerJoinSuccess: (data: PlayerJoinSuccessResponse) => void;
@@ -61,5 +62,12 @@ export type IslandToClient = {
     jump: (userId: string) => void;
 };
 
+export type ErrorToClient = {
+    wsError: (error: { name: string; message: string }) => void;
+};
+
 export type ClientToServer = ClientToIsland & ClientToLoby & ClientToChat;
-export type ServerToClient = IslandToClient & LobyToClient & ChatToClient;
+export type ServerToClient = IslandToClient &
+    LobyToClient &
+    ChatToClient &
+    ErrorToClient;
