@@ -18,4 +18,7 @@ export class LiveIslandItem {
 
     @ApiProperty({ example: 'https://island-image.com' })
     readonly coverImage: string;
+
+    @ApiProperty({ example: ['자유', '수다'] })
+    readonly tags: string[];
 }

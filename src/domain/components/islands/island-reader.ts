@@ -43,6 +43,7 @@ export class IslandReader {
             name: island.name,
             description: island.description,
             coverImage: island.coverImage,
+            tags: island.tags,
         }));
     }
 }
