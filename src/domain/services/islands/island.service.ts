@@ -14,6 +14,10 @@ import { TagReader } from 'src/domain/components/tags/tag-reader';
 import { TAG_AT_LEAST_ONE_MESSAGE } from 'src/domain/exceptions/message';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IslandTagWriter } from 'src/domain/components/island-tags/island-tag-writer';
+import {
+    ISLAND_FULL,
+    ISLAND_NOT_FOUND_MESSAGE,
+} from 'src/domain/exceptions/client-use-messag';
 
 @Injectable()
 export class IslandService {
@@ -81,7 +85,7 @@ export class IslandService {
             if (isFull) {
                 return {
                     canJoin: false,
-                    reason: '섬에 자리가 없어요..',
+                    reason: ISLAND_FULL,
                 };
             }
 
@@ -93,7 +97,7 @@ export class IslandService {
             ) {
                 return {
                     canJoin: false,
-                    reason: '이미 사라진 섬이에요..',
+                    reason: ISLAND_NOT_FOUND_MESSAGE,
                 };
             }
             throw e;

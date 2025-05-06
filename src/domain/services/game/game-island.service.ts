@@ -15,6 +15,7 @@ import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
+import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 
 @Injectable()
 export class GameIslandService {
@@ -68,7 +69,7 @@ export class GameIslandService {
             throw new DomainException(
                 DomainExceptionType.ISLAND_FULL,
                 1000,
-                'island full',
+                ISLAND_FULL,
             );
         }
 
