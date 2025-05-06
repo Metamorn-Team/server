@@ -1,6 +1,10 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { DomainException } from 'src/domain/exceptions/exceptions';
+import {
+    WsExceptions,
+    WsExceptionsType,
+} from 'src/presentation/dto/game/socket/known-exception';
 import { ErrorToClient } from 'types';
 
 @Catch()
@@ -28,11 +32,15 @@ export class WsExceptionFilter implements ExceptionFilter {
         }
     }
 
-    private getErrorTypeFromException(exception: Error): string {
+    private getErrorTypeFromException(exception: Error): WsExceptionsType {
         if (exception instanceof DomainException) {
-            return exception.errorType;
+            if (exception.errorType in WsExceptions) {
+                return WsExceptions[
+                    exception.errorType as keyof typeof WsExceptions
+                ];
+            }
         }
-        return 'UNKNOWN';
+        return WsExceptions.UNKNOWN;
     }
 
     private getMessageFromException(exception: Error): string {
