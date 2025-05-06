@@ -5,6 +5,7 @@ import { AppModule } from 'src/app.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { login } from 'test/helper/login';
 import { CreateIslandRequest } from 'src/presentation/dto/game/request/create-island.request';
+import { generateTag } from 'test/helper/generators';
 
 describe('IslandController (e2e)', () => {
     let app: INestApplication;
@@ -21,7 +22,9 @@ describe('IslandController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await db.islandTag.deleteMany();
         await db.island.deleteMany();
+        await db.tag.deleteMany();
         await db.user.deleteMany();
     });
 
@@ -30,6 +33,13 @@ describe('IslandController (e2e)', () => {
     });
 
     describe('GET /islands - 섬 생성', () => {
+        const names = ['자유', '공부', '게임', '수다'];
+        const tags = names.map((name) => generateTag(name));
+
+        beforeEach(async () => {
+            await db.tag.createMany({ data: tags });
+        });
+
         it('섬 생성 정상 동작', async () => {
             const { accessToken } = await login(app);
 
@@ -38,6 +48,7 @@ describe('IslandController (e2e)', () => {
                 description: '멋진 섬입니다.',
                 maxMembers: 5,
                 name: '멋진 섬',
+                tags: names.slice(0, 3),
             };
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
