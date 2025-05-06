@@ -32,6 +32,7 @@ model User {
   provider  OAuthProvider
   nickname  String
   tag       String
+  bio       String?       @db.VarChar
   avatarKey String
   gold      Int           @default(0)
   createdAt DateTime      @map("created_at")

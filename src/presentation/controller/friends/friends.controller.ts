@@ -141,7 +141,7 @@ export class FriendsController {
         @Query('targetId', ParseUUIDPipe) targetUserId: string,
         @CurrentUser() userId: string,
     ): Promise<CheckFriendshipResponse> {
-        const status = await this.friendsService.checkFriendship(
+        const status = await this.friendsService.getFriendshipStatus(
             userId,
             targetUserId,
         );

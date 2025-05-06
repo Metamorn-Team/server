@@ -40,6 +40,7 @@ export const generateUserEntityV2 = (partial?: Partial<UserEntity>) => {
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
         partial?.deletedAt || null,
+        partial?.bio || '난 나다',
         partial?.gold,
     );
 };

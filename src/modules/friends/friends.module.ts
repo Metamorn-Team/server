@@ -9,5 +9,6 @@ import { GameStorageModule } from 'src/modules/game/game-storage.module';
     imports: [FriendsComponentModule, UserComponentModule, GameStorageModule],
     controllers: [FriendsController],
     providers: [FriendsService],
+    exports: [FriendsService],
 })
 export class FriendsModule {}

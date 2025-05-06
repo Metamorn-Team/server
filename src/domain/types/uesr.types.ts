@@ -10,6 +10,7 @@ export interface UserInfo {
     readonly tag: string;
     readonly provider: Provider;
     readonly avatarKey: string;
+    readonly bio: string | null;
 }
 
 export interface UserPrototype {
@@ -18,6 +19,7 @@ export interface UserPrototype {
     readonly tag: string;
     readonly provider: Provider;
     readonly avatarKey: string;
+    readonly bio?: string;
 }
 
 export interface PaginatedUsers {

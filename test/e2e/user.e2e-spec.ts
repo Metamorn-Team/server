@@ -8,14 +8,22 @@ import { AppModule } from 'src/app.module';
 import { login } from 'test/helper/login';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
 import { ChangeTagRequest } from 'src/presentation/dto/users/request/change-tag.request';
-import { generateFriendship, generateUserEntity } from 'test/helper/generators';
+import {
+    generateFriendship,
+    generateUserEntity,
+    generateUserEntityV2,
+} from 'test/helper/generators';
 import { v4 } from 'uuid';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { ResponseResult } from 'test/helper/types';
 import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
 import { FriendRequestStatus } from '@prisma/client';
-import { GetUserResponse, SearchUsersRequest } from 'src/presentation/dto';
+import {
+    ChangeBioRequest,
+    GetUserResponse,
+    SearchUsersRequest,
+} from 'src/presentation/dto';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -41,43 +49,60 @@ describe('UserController (e2e)', () => {
     });
 
     describe('(GET) /users/:id', () => {
+        const user = generateUserEntityV2();
+
+        beforeEach(async () => {
+            await prisma.user.create({ data: user });
+        });
+
         it('유저 정보 조회 정상 동작', async () => {
             const { accessToken } = await login(app);
 
-            const user = await prisma.user.create({
-                data: generateUserEntity('test@email.com', 'test', '11111'),
-            });
+            const expected: GetUserResponse = {
+                id: user.id,
+                avatarKey: user.avatarKey,
+                email: user.email,
+                nickname: user.nickname,
+                provider: user.provider,
+                tag: user.tag,
+                bio: user.bio!,
+                friendStatus: 'NONE',
+            };
 
-            const response = await request(app.getHttpServer())
+            const response = (await request(app.getHttpServer())
                 .get(`/users/${user.id}`)
-                .set('Authorization', accessToken);
-
-            const { status } = response;
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<GetUserResponse>;
+            const { status, body } = response;
 
             expect(status).toEqual(200);
-            expect(response.body).toHaveProperty('email', user.email);
-            expect(response.body).toHaveProperty('nickname', user.nickname);
-            expect(response.body).toHaveProperty('tag', user.tag);
+            expect(body).toEqual(expected);
         });
 
         it('친구 관계인 유저 정보 조회 시 friendStatus가 "ACCEPTED"여야 한다', async () => {
             const currentUser = await login(app);
-            const targetUser = await prisma.user.create({
-                data: generateUserEntity(
-                    'target@email.com',
-                    'targetUser',
-                    'tagTarget',
-                ),
-            });
 
             await prisma.friendRequest.create({
-                data: generateFriendship(currentUser.userId, targetUser.id, {
+                data: generateFriendship(currentUser.userId, user.id, {
                     status: FriendRequestStatus.ACCEPTED,
                 }),
             });
 
+            const expected: GetUserResponse = {
+                id: user.id,
+                avatarKey: user.avatarKey,
+                email: user.email,
+                nickname: user.nickname,
+                provider: user.provider,
+                tag: user.tag,
+                bio: user.bio!,
+                friendStatus: 'ACCEPTED',
+            };
+
             const response = (await request(app.getHttpServer())
-                .get(`/users/${targetUser.id}`)
+                .get(`/users/${user.id}`)
                 .set(
                     'Authorization',
                     currentUser.accessToken,
@@ -86,22 +111,31 @@ describe('UserController (e2e)', () => {
             const { status, body } = response;
 
             expect(status).toEqual(HttpStatus.OK);
-            expect(body).toHaveProperty('id', targetUser.id);
-            expect(body).toHaveProperty('friendStatus', 'ACCEPTED');
+            expect(body).toEqual(expected);
         });
 
-        it('친구 관계가 아닌 유저 정보 조회 시 friendStatus가 null이어야 한다', async () => {
+        it('내가 요청을 보낸 유저 정보 조회 시 friendStatus가 "SENT"여야 한다', async () => {
             const currentUser = await login(app);
-            const nonFriendUser = await prisma.user.create({
-                data: generateUserEntity(
-                    'nonfriend@email.com',
-                    'nonFriend',
-                    'tagNonFriend',
-                ),
+
+            await prisma.friendRequest.create({
+                data: generateFriendship(currentUser.userId, user.id, {
+                    status: FriendRequestStatus.PENDING,
+                }),
             });
 
+            const expected: GetUserResponse = {
+                id: user.id,
+                avatarKey: user.avatarKey,
+                email: user.email,
+                nickname: user.nickname,
+                provider: user.provider,
+                tag: user.tag,
+                bio: user.bio!,
+                friendStatus: 'SENT',
+            };
+
             const response = (await request(app.getHttpServer())
-                .get(`/users/${nonFriendUser.id}`)
+                .get(`/users/${user.id}`)
                 .set(
                     'Authorization',
                     currentUser.accessToken,
@@ -110,19 +144,40 @@ describe('UserController (e2e)', () => {
             const { status, body } = response;
 
             expect(status).toEqual(HttpStatus.OK);
-            expect(body).toHaveProperty('id', nonFriendUser.id);
-            expect(body).toHaveProperty('friendStatus', null);
+            expect(body).toEqual(expected);
         });
 
-        it('자신의 프로필 정보 조회 시 400 에러 코드 응답', async () => {
+        it('내가 요청을 보낸 유저 정보 조회 시 friendStatus가 "SENT"여야 한다', async () => {
             const currentUser = await login(app);
-            const response = await request(app.getHttpServer())
-                .get(`/users/${currentUser.userId}`)
-                .set('Authorization', currentUser.accessToken);
 
-            const { status } = response;
+            await prisma.friendRequest.create({
+                data: generateFriendship(user.id, currentUser.userId, {
+                    status: FriendRequestStatus.PENDING,
+                }),
+            });
 
-            expect(status).toEqual(HttpStatus.BAD_REQUEST);
+            const expected: GetUserResponse = {
+                id: user.id,
+                avatarKey: user.avatarKey,
+                email: user.email,
+                nickname: user.nickname,
+                provider: user.provider,
+                tag: user.tag,
+                bio: user.bio!,
+                friendStatus: 'RECEIVED',
+            };
+
+            const response = (await request(app.getHttpServer())
+                .get(`/users/${user.id}`)
+                .set(
+                    'Authorization',
+                    currentUser.accessToken,
+                )) as ResponseResult<GetUserResponse>;
+
+            const { status, body } = response;
+
+            expect(status).toEqual(HttpStatus.OK);
+            expect(body).toEqual(expected);
         });
 
         it('유저 검색 유저ID 에러 동작', async () => {
@@ -245,6 +300,71 @@ describe('UserController (e2e)', () => {
 
             expect(status).toEqual(204);
             expect(updatedUser).not.toBeNull();
+        });
+    });
+
+    describe('(PATCH) /users/bio - 소개 변경', () => {
+        it('소개 변경 정삭 동작', async () => {
+            const { accessToken, userId } = await login(app);
+
+            const dto: ChangeBioRequest = {
+                bio: '저는 저에요',
+            };
+
+            const response = await request(app.getHttpServer())
+                .patch('/users/bio')
+                .send(dto)
+                .set('Authorization', accessToken);
+            const { status } = response;
+            const updatedUser = await prisma.user.findFirst({
+                where: {
+                    id: userId,
+                },
+            });
+
+            expect(status).toEqual(204);
+            expect(updatedUser?.bio).toEqual(dto.bio);
+        });
+
+        it('소개는 1자 이상 300자 이하여야 한다.', async () => {
+            const { accessToken } = await login(app);
+
+            const emptyBioDto: ChangeBioRequest = {
+                bio: '',
+            };
+
+            const tooLongBioDto: ChangeBioRequest = {
+                bio: '메타몬'.repeat(101), // 303자
+            };
+
+            const responseForEmptyBio = await request(app.getHttpServer())
+                .patch('/users/bio')
+                .send(emptyBioDto)
+                .set('Authorization', accessToken);
+
+            const responseForTooLongBio = await request(app.getHttpServer())
+                .patch('/users/bio')
+                .send(tooLongBioDto)
+                .set('Authorization', accessToken);
+
+            expect(responseForEmptyBio.status).toEqual(400);
+            expect(responseForTooLongBio.status).toEqual(400);
+        });
+
+        it('소개는 null일 수 있다.', async () => {
+            const { accessToken } = await login(app);
+
+            const nullBioDto: ChangeBioRequest = {
+                bio: null,
+            };
+
+            const response = await request(app.getHttpServer())
+                .patch('/users/bio')
+                .send(nullBioDto)
+                .set('Authorization', accessToken);
+            const { status } = response;
+
+            expect(status).toEqual(204);
         });
     });
 

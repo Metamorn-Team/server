@@ -4,11 +4,7 @@ import { UserReader } from 'src/domain/components/users/user-reader';
 import { UserWriter } from 'src/domain/components/users/user-writer';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
-import {
-    GET_USER_BAD_REQUEST_MESSAGE,
-    TAG_CONFLICT_MESSAGE,
-} from 'src/domain/exceptions/message';
-import { GetUserResponse } from 'src/presentation/dto';
+import { TAG_CONFLICT_MESSAGE } from 'src/domain/exceptions/message';
 
 @Injectable()
 export class UserService {
@@ -48,36 +44,7 @@ export class UserService {
         await this.userWriter.updateAvatarKey(userId, avatarKey);
     }
 
-    async getUserProfile(
-        currentUserId: string,
-        targetUserId: string,
-    ): Promise<GetUserResponse> {
-        const user = await this.userReader.readProfile(targetUserId);
-
-        if (currentUserId === targetUserId) {
-            throw new DomainException(
-                DomainExceptionType.GET_USER_BAD_REQUEST,
-                HttpStatus.BAD_REQUEST,
-                GET_USER_BAD_REQUEST_MESSAGE,
-            );
-        }
-
-        try {
-            const request = await this.friendReader.readRequestBetweenUsers(
-                currentUserId,
-                targetUserId,
-            );
-            const { status: friendStatus } = request;
-
-            return {
-                ...user,
-                friendStatus,
-            };
-        } catch (_) {
-            return {
-                ...user,
-                friendStatus: null,
-            };
-        }
+    async changeBio(userId: string, bio: string | null) {
+        await this.userWriter.updateBio(userId, bio);
     }
 }

@@ -23,6 +23,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 id: searchUserId,
@@ -39,6 +40,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 email: email,
@@ -56,6 +58,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 tag: tag,
@@ -80,6 +83,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 id: {
@@ -119,6 +123,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag: true,
                 provider: true,
                 avatarKey: true,
+                bio: true,
             },
             where: {
                 id: {
@@ -154,7 +159,7 @@ export class UserPrismaRepository implements UserRepository {
     }
 
     async update(id: string, data: Partial<UserEntity>): Promise<void> {
-        const { nickname, tag, avatarKey, gold } = data;
+        const { nickname, tag, avatarKey, gold, bio } = data;
 
         await this.prisma.user.update({
             data: {
@@ -162,6 +167,7 @@ export class UserPrismaRepository implements UserRepository {
                 tag,
                 avatarKey,
                 gold,
+                bio,
             },
             where: {
                 id,
