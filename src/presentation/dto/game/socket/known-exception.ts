@@ -6,3 +6,7 @@ export const WsExceptions = {
 } as const;
 
 export type WsExceptionsType = (typeof WsExceptions)[keyof typeof WsExceptions];
+export type WsErrorBody = {
+    name: WsExceptionsType;
+    message: string;
+};
