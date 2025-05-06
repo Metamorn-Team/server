@@ -10,6 +10,7 @@ import {
     Patch,
     Post,
     Query,
+    UseFilters,
     UseGuards,
 } from '@nestjs/common';
 import {
@@ -20,6 +21,7 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
+import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import {
@@ -35,6 +37,7 @@ import { CheckFriendshipResponse } from 'src/presentation/dto/friends/response/c
 @ApiResponse({ status: 400, description: '잘못된 요청' })
 @ApiResponse({ status: 401, description: '인증 실패 (토큰 누락 또는 만료)' })
 @ApiBearerAuth()
+@UseFilters(HttpExceptionFilter)
 @UseGuards(AuthGuard)
 @Controller('friends')
 export class FriendsController {

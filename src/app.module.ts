@@ -5,7 +5,6 @@ import { AppService } from 'src/app.service';
 import { UserModule } from 'src/modules/users/users.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
-import { FilterModule } from 'src/common/filter/filter.module';
 import { InterceptorsModule } from 'src/common/interceptor/interceptors.module';
 import { GameModule } from 'src/modules/game/game.module';
 import { UserComponentModule } from './modules/users/users-component.module';
@@ -25,7 +24,6 @@ import { TagModule } from 'src/modules/tags/tag.module';
         ConfigModule.forRoot({ isGlobal: true }),
         ClsModule.forRoot(clsOptions),
         InterceptorsModule,
-        FilterModule,
         PipeModule,
         PrismaModule,
         UserComponentModule,

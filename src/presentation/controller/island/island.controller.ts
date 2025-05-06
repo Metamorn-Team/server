@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Post,
+    Query,
+    UseFilters,
+    UseGuards,
+} from '@nestjs/common';
 import {
     ApiBearerAuth,
     ApiOperation,
@@ -6,6 +14,7 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
+import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { IslandReader } from 'src/domain/components/islands/island-reader';
 import { IslandService } from 'src/domain/services/islands/island.service';
@@ -18,6 +27,7 @@ import { LiveIslandItem } from 'src/presentation/dto/island/response/get-island-
 @ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
 @ApiResponse({ status: 401, description: '인증 실패' })
 @ApiBearerAuth()
+@UseFilters(HttpExceptionFilter)
 @UseGuards(AuthGuard)
 @Controller('islands')
 export class IslandController {
