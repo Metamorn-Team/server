@@ -19,6 +19,7 @@ import {
 import { CreatedIslandResponse } from 'src/presentation/dto/game/response/created-island.response';
 import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join.request';
 import { CanJoinIslandResponse } from 'src/presentation/dto/game/response/can-join-island.response';
+import { WsKnownException } from 'src/presentation/dto/game/socket/known-exception';
 
 export type ClientToLoby = {
     createIsland: (data: CreateIslandRequest) => void;
@@ -63,7 +64,10 @@ export type IslandToClient = {
 };
 
 export type ErrorToClient = {
-    wsError: (error: { name: string; message: string }) => void;
+    wsError: (error: {
+        name: (typeof WsKnownException)[keyof typeof WsKnownException];
+        message: string;
+    }) => void;
 };
 
 export type ClientToServer = ClientToIsland & ClientToLoby & ClientToChat;
