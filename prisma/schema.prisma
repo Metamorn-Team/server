@@ -94,7 +94,7 @@ model Island {
 
   owner       User?        @relation(fields: [ownerId], references: [id])
   islandJoins IslandJoin[]
-  islandTag   IslandTag[]
+  islandTags  IslandTag[]
 
   @@index([ownerId])
   @@map("island")
@@ -114,7 +114,7 @@ model IslandTag {
 
 model Tag {
   id        String   @id @db.Uuid
-  name      String   @db.VarChar(50)
+  name      String   @unique @db.VarChar(50)
   createdAt DateTime @map("created_at")
 
   islandTags IslandTag[]
