@@ -18,7 +18,7 @@ import { IslandTypeEnum } from 'src/domain/types/island.types';
 import {
     ClientToLoby,
     CreateIslandRequest,
-    GetIslandListReqeust,
+    GetLiveIslandListReqeust,
     LobyToClient,
 } from 'src/presentation/dto';
 import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join.request';
@@ -78,7 +78,7 @@ export class LobyGateway {
     @SubscribeMessage('getActiveIslands')
     getIslands(
         @ConnectedSocket() client: TypedSocket,
-        @MessageBody(WsValidatePipe) data: GetIslandListReqeust,
+        @MessageBody(WsValidatePipe) data: GetLiveIslandListReqeust,
     ) {
         const islands = this.islandStorageReader.readIslands(
             data.page,

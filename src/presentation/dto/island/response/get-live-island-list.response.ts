@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class LiveIslandItem {
+class LiveIslandItem {
     @ApiProperty({ example: 'uuid' })
     readonly id: string;
 
@@ -21,4 +21,12 @@ export class LiveIslandItem {
 
     @ApiProperty({ example: ['자유', '수다'] })
     readonly tags: string[];
+}
+
+export class GetLiveIslandListResponse {
+    @ApiProperty()
+    readonly islands: LiveIslandItem[];
+
+    @ApiProperty({ example: 50, description: '해당 태그의 전체 섬 수 ' })
+    readonly count: number;
 }

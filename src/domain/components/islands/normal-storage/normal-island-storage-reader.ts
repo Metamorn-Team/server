@@ -12,15 +12,23 @@ export class NormalIslandStorageReader {
         return this.normalIslandStorage.getIsland(islandId);
     }
 
-    readIslands(page: number, limit = 20) {
-        const islands = this.normalIslandStorage.getAllIsland();
+    readIslands(page: number, limit = 20, tag?: string) {
+        let allIslands = this.normalIslandStorage.getAllIsland();
 
-        islands.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        if (tag) {
+            allIslands = allIslands.filter((island) =>
+                island.tags.includes(tag),
+            );
+        }
+
+        allIslands.sort(
+            (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+        );
 
         const start = (page - 1) * limit;
         const end = start + limit;
 
-        return islands.slice(start, end).map((island) => ({
+        const islands = allIslands.slice(start, end).map((island) => ({
             id: island.id,
             maxMembers: island.max,
             countParticipants: island.players.size,
@@ -29,6 +37,12 @@ export class NormalIslandStorageReader {
             coverImage: island.coverImage,
             tags: island.tags,
         }));
+        const count = allIslands.length;
+
+        return {
+            islands,
+            count,
+        };
     }
 
     countPlayerByIsland(islandId: string) {
