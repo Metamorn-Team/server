@@ -20,6 +20,7 @@ export class WsExceptionFilter implements ExceptionFilter {
 
         const res = { name, message };
 
+        this.logger.error(exception);
         this.log(res);
         client.emit('wsError', res);
     }
