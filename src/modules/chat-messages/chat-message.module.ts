@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
 import { ChatMessageComponentModule } from 'src/modules/chat-messages/chat-message-component.module';
-import { GameStorageModule } from 'src/modules/game/game-storage.module';
+import { PlayerStorageModule } from 'src/modules/game/player-storage.module';
 
 @Module({
-    imports: [GameStorageModule, ChatMessageComponentModule],
+    imports: [PlayerStorageModule, ChatMessageComponentModule],
     providers: [ChatMessageService],
     exports: [ChatMessageService],
 })

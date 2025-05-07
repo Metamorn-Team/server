@@ -1,5 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
+import { Injectable, Logger } from '@nestjs/common';
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';
@@ -7,26 +6,26 @@ import { Player } from 'src/domain/models/game/player';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
+import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 
 @Injectable()
 export class GameService {
     constructor(
-        @Inject(PlayerStorage)
-        private readonly gameStorage: PlayerStorage,
+        private readonly playerStorageReader: PlayerStorageReader,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
     ) {}
 
     getPlayer(playerId: string) {
-        return this.gameStorage.getPlayer(playerId);
+        return this.playerStorageReader.readOne(playerId);
     }
 
     getPlayerByClientId(clientId: string) {
-        return this.gameStorage.getPlayerByClientId(clientId);
+        return this.playerStorageReader.readOneByClientId(clientId);
     }
 
     move(playerId: string, x: number, y: number): Player | null {
-        const player = this.gameStorage.getPlayer(playerId);
+        const player = this.playerStorageReader.readOne(playerId);
 
         if (!player) return null;
         if (player.lastMoved + MOVING_THRESHOLD > Date.now()) return null;
@@ -40,7 +39,7 @@ export class GameService {
     }
 
     attack(attackerId: string) {
-        const attacker = this.gameStorage.getPlayer(attackerId);
+        const attacker = this.playerStorageReader.readOne(attackerId);
         if (!attacker) throw new Error('없는 회원');
 
         const island =
@@ -115,7 +114,7 @@ export class GameService {
     hearbeatFromIsland(
         playerId: string,
     ): { id: string; lastActivity: number }[] {
-        const player = this.gameStorage.getPlayer(playerId);
+        const player = this.playerStorageReader.readOne(playerId);
         if (!player) throw new Error('플레이어 없음');
 
         const playerIds =
@@ -125,7 +124,7 @@ export class GameService {
 
         const players = playerIds
             .map((playerId) => {
-                const player = this.gameStorage.getPlayer(playerId);
+                const player = this.playerStorageReader.readOne(playerId);
                 if (player) {
                     return {
                         id: player.id,
@@ -142,7 +141,7 @@ export class GameService {
     }
 
     loggingStore(logger: Logger) {
-        logger.debug('전체 회원', this.gameStorage.getPlayerStore());
+        logger.debug('전체 회원', this.playerStorageReader.getStore());
         logger.debug('무인도', this.desertedIslandStorageReader.getStore());
         logger.debug('일반 섬', this.normalIslandStorageReader.getStore());
     }

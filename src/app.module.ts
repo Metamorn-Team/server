@@ -15,7 +15,6 @@ import { ProductModule } from 'src/modules/products/product.module';
 import { ClsModule } from 'nestjs-cls';
 import { clsOptions } from 'src/configs/cls/cls-config';
 import { PurchaseModule } from 'src/modules/purchases/purchase.module';
-import { IslandModule } from 'src/modules/islands/island.module';
 import { FileModule } from 'src/modules/files/file.module';
 import { TagModule } from 'src/modules/tags/tag.module';
 
@@ -34,7 +33,6 @@ import { TagModule } from 'src/modules/tags/tag.module';
         ProductCategoryModule,
         ProductModule,
         PurchaseModule,
-        IslandModule,
         FileModule,
         TagModule,
     ],

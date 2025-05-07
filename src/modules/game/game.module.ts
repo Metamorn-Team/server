@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
 import { GameService } from 'src/domain/services/game/game.service';
 import { ChatMessageModule } from 'src/modules/chat-messages/chat-message.module';
-import { GameStorageModule } from 'src/modules/game/game-storage.module';
 import { IslandJoinComponentModule } from 'src/modules/island-joins/island-join-component.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
 import { UserComponentModule } from 'src/modules/users/users-component.module';
@@ -14,10 +13,10 @@ import { DesertedIslandStorageComponentModule } from 'src/modules/islands/desert
 import { GameIslandCreateService } from 'src/domain/services/game/game-island-create.service';
 import { TagComponentModule } from 'src/modules/tags/tag-component.module';
 import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-component.module';
+import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
 
 @Module({
     imports: [
-        GameStorageModule,
         UserComponentModule,
         IslandComponentModule,
         IslandJoinComponentModule,
@@ -25,6 +24,7 @@ import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-com
         TagComponentModule,
         IslandTagComponentModule,
 
+        PlayerStorageComponentModule,
         NormalIslandStorageComponentModule,
         DesertedIslandStorageComponentModule,
     ],

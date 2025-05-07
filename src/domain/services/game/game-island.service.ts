@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { UNINHABITED_MAX_MEMBERS } from 'src/common/constants';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
@@ -9,7 +9,6 @@ import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.en
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
-import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
 import { Player } from 'src/domain/models/game/player';
 import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
@@ -19,17 +18,19 @@ import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-writer';
 import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
+import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
+import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
 
 @Injectable()
 export class GameIslandService {
     constructor(
-        @Inject(PlayerStorage)
-        private readonly gameStorage: PlayerStorage,
         private readonly islandWriter: IslandWriter,
         private readonly islandReader: IslandReader,
         private readonly islandJoinWriter: IslandJoinWriter,
         private readonly userReader: UserReader,
 
+        private readonly playerStorageReader: PlayerStorageReader,
+        private readonly playerStorageWriter: PlayerStorageWriter,
         private readonly normalIslandStorageWriter: NormalIslandStorageWriter,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
@@ -87,7 +88,7 @@ export class GameIslandService {
             y,
         });
 
-        this.gameStorage.addPlayer(playerId, player);
+        this.playerStorageWriter.create(player);
         this.normalIslandStorageReader.addPlayer(islandId, playerId);
 
         const islandJoin = IslandJoinEntity.create(
@@ -132,7 +133,7 @@ export class GameIslandService {
             y,
         });
 
-        this.gameStorage.addPlayer(playerId, player);
+        this.playerStorageWriter.create(player);
 
         availableIsland.players.add(playerId);
 
@@ -184,7 +185,7 @@ export class GameIslandService {
     }
 
     async leftPlayer(playerId: string) {
-        const player = this.gameStorage.getPlayer(playerId);
+        const player = this.playerStorageReader.readOne(playerId);
 
         const { roomId } = player;
 
@@ -195,7 +196,7 @@ export class GameIslandService {
 
         await this.islandJoinWriter.left(roomId, player.id);
 
-        this.gameStorage.deletePlayer(playerId);
+        this.playerStorageWriter.remove(playerId);
         island.players.delete(playerId);
 
         if (island.players.size === 0) {
@@ -207,7 +208,7 @@ export class GameIslandService {
     }
 
     async leaveRoom(islandId: string, playerId: string, type: IslandTypeEnum) {
-        const player = this.gameStorage.getPlayer(playerId);
+        const player = this.playerStorageReader.readOne(playerId);
         const island =
             type === IslandTypeEnum.NORMAL
                 ? this.normalIslandStorageReader.readOne(islandId)
@@ -215,7 +216,7 @@ export class GameIslandService {
 
         await this.islandJoinWriter.left(islandId, player.id);
 
-        this.gameStorage.deletePlayer(playerId);
+        this.playerStorageWriter.remove(playerId);
         island.players.delete(playerId);
 
         return player;
@@ -230,7 +231,7 @@ export class GameIslandService {
         const activeUsers: Player[] = [];
 
         island.players.forEach((playerId) => {
-            const player = this.gameStorage.getPlayer(playerId);
+            const player = this.playerStorageReader.readOne(playerId);
             if (player) {
                 activeUsers.push(player);
             }
@@ -241,7 +242,7 @@ export class GameIslandService {
 
     async kickPlayerById(playerId: string, type: IslandTypeEnum) {
         try {
-            const player = this.gameStorage.getPlayer(playerId);
+            const player = this.playerStorageReader.readOne(playerId);
 
             await this.leaveRoom(player.roomId, playerId, type);
             return player;
