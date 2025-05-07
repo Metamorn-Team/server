@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ChatMessageWriter } from 'src/domain/components/chat-message/chat-message-writer';
 import { ChatMessageEntity } from 'src/domain/entities/chat-messages/chat-message.entity';
-import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
+import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { v4 } from 'uuid';
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger, UseFilters, UseGuards } from '@nestjs/common';
 import {
     ConnectedSocket,
     MessageBody,
@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
+import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
 import { ChatToClient, ClientToChat, SendMessageRequest } from 'types';
@@ -15,6 +16,7 @@ import { v4 } from 'uuid';
 
 type TypedSocket = Socket<ClientToChat, ChatToClient>;
 
+@UseFilters(WsExceptionFilter)
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
     path: '/game',

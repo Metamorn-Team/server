@@ -18,3 +18,4 @@ export * from './response/created-island.response';
 export * from './response/can-join-island.response';
 
 export * from './socket/type';
+export * from './socket/known-exception';

@@ -52,7 +52,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
             return exception.getStatus();
         }
         if (exception instanceof DomainException) {
-            return exception.statusCode;
+            return exception.statusCode as number;
         }
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }
@@ -73,7 +73,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
         if (exception instanceof DomainException) {
             let errorBody = {
                 message: exception.message,
-                statusCode: exception.statusCode,
+                statusCode:
+                    typeof exception.statusCode === 'number'
+                        ? exception.statusCode
+                        : HttpStatus.INTERNAL_SERVER_ERROR,
                 error: exception.errorType,
             };
             if (this.isExistBodyInException(exception)) {

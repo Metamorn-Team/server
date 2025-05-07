@@ -1,3 +1,3 @@
-export * from './request/get-island-list.request';
+export * from './request/get-live-island-list.request';
 
-export * from './response/get-island-list.response';
+export * from './response/get-live-island-list.response';

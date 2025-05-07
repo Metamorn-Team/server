@@ -11,7 +11,7 @@ import { v4 } from 'uuid';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { GetFriendRequestsResponse } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
 import { GetFriendsResponse } from 'src/presentation/dto';
-import { PlayerStorage } from 'src/domain/interface/storages/game-storage';
+import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 

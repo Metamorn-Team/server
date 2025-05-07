@@ -7,6 +7,7 @@ import {
     Param,
     Patch,
     Query,
+    UseFilters,
     UseGuards,
 } from '@nestjs/common';
 import {
@@ -17,6 +18,7 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
+import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
@@ -35,6 +37,7 @@ import { SearchUserResponse } from 'src/presentation/dto/users/response/search-u
 @ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
 @ApiResponse({ status: 401, description: '인증 실패' })
 @ApiBearerAuth()
+@UseFilters(HttpExceptionFilter)
 @UseGuards(AuthGuard)
 @Controller('users')
 export class UserController {

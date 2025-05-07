@@ -1,4 +1,12 @@
-import { Body, Controller, Param, Post, Res, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Param,
+    Post,
+    Res,
+    UseFilters,
+    UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from 'src/domain/services/auth/auth.service';
 import { Provider } from 'src/shared/types';
@@ -18,8 +26,10 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
+import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
 
 @ApiTags('auth')
+@UseFilters(HttpExceptionFilter)
 @Controller('auth')
 export class AuthController {
     private readonly refreshCookieTime: number;

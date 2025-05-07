@@ -4,6 +4,7 @@ import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
+import { TagEntity } from 'src/domain/entities/tag/tag.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ItemGradeEnum } from 'src/domain/types/item.types';
@@ -141,4 +142,8 @@ export const generatePurchase = (
         partial?.status || PurchaseStatusEnum.COMPLETE,
         partial?.refundedAt || null,
     );
+};
+
+export const generateTag = (name: string) => {
+    return new TagEntity(v4(), name, new Date());
 };

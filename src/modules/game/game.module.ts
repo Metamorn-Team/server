@@ -2,27 +2,31 @@ import { Module } from '@nestjs/common';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
 import { GameService } from 'src/domain/services/game/game.service';
 import { ChatMessageModule } from 'src/modules/chat-messages/chat-message.module';
-import { GameStorageModule } from 'src/modules/game/game-storage.module';
-import { DesertedIslandStorageModule } from 'src/modules/game/desert-island-storage.module';
 import { IslandJoinComponentModule } from 'src/modules/island-joins/island-join-component.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
 import { UserComponentModule } from 'src/modules/users/users-component.module';
 import { ChatGateway } from 'src/presentation/gateway/chat.gateway';
 import { IslandGateway } from 'src/presentation/gateway/island.gateway';
 import { LobyGateway } from 'src/presentation/gateway/loby.gateway';
-import { IslandModule } from 'src/modules/islands/island.module';
-import { NormalIslandStorageModule } from 'src/modules/game/normal-island.storaga.module';
+import { NormalIslandStorageComponentModule } from 'src/modules/islands/normal-island-storage-component.module';
+import { DesertedIslandStorageComponentModule } from 'src/modules/islands/deserted-island-storage-component.module';
+import { GameIslandCreateService } from 'src/domain/services/game/game-island-create.service';
+import { TagComponentModule } from 'src/modules/tags/tag-component.module';
+import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-component.module';
+import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
 
 @Module({
     imports: [
-        GameStorageModule,
-        DesertedIslandStorageModule,
-        NormalIslandStorageModule,
         UserComponentModule,
         IslandComponentModule,
-        IslandModule,
         IslandJoinComponentModule,
         ChatMessageModule,
+        TagComponentModule,
+        IslandTagComponentModule,
+
+        PlayerStorageComponentModule,
+        NormalIslandStorageComponentModule,
+        DesertedIslandStorageComponentModule,
     ],
     providers: [
         LobyGateway,
@@ -30,6 +34,7 @@ import { NormalIslandStorageModule } from 'src/modules/game/normal-island.storag
         ChatGateway,
         GameService,
         GameIslandService,
+        GameIslandCreateService,
     ],
 })
 export class GameModule {}

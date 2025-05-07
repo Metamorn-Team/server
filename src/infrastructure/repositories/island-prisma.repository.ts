@@ -23,6 +23,16 @@ export class IslandPrismaRepository implements IslandRepository {
                 maxMembers: true,
                 type: true,
                 createdAt: true,
+                islandTags: {
+                    select: {
+                        tag: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
             },
             where: {
                 id,
@@ -34,6 +44,7 @@ export class IslandPrismaRepository implements IslandRepository {
             ? {
                   ...result,
                   type: convertNumberToIslandType(result.type),
+                  tags: result.islandTags.map((tag) => tag.tag.name),
               }
             : null;
     }

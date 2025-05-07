@@ -10,24 +10,23 @@ import { MessageSent } from '../response/message-sent.response';
 import { PlayerJoinSuccessResponse } from '../response/player-join-success.response';
 import { AttackedResponse } from '../response/attacked.response';
 import { IslandHeartbeatResponse } from '../response/island-heartbeat';
-import {
-    CreateIslandRequest,
-    GetIslandListReqeust,
-    JoinDesertedIslandReqeust,
-    LiveIslandItem,
-} from 'types';
-import { CreatedIslandResponse } from 'src/presentation/dto/game/response/created-island.response';
-import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join.request';
-import { CanJoinIslandResponse } from 'src/presentation/dto/game/response/can-join-island.response';
+import { CreatedIslandResponse } from '../response/created-island.response';
+import { CanJoinIslandRequest } from '../request/can-join.request';
+import { CanJoinIslandResponse } from '../response/can-join-island.response';
+import { CreateIslandRequest } from '../request/create-island.request';
+import { GetLiveIslandListReqeust } from '../../island/request/get-live-island-list.request';
+import { GetLiveIslandListResponse } from '../../island/response/get-live-island-list.response';
+import { JoinDesertedIslandReqeust } from '../request/join-deserted-island.request';
+import { WsErrorBody } from './known-exception';
 
 export type ClientToLoby = {
     createIsland: (data: CreateIslandRequest) => void;
-    getActiveIslands: (data: GetIslandListReqeust) => void;
+    getActiveIslands: (data: GetLiveIslandListReqeust) => void;
     canJoinIsland: (data: CanJoinIslandRequest) => void;
 };
 export type LobyToClient = {
     createdIsland: (data: CreatedIslandResponse) => void;
-    getActiveIslands: (data: LiveIslandItem[]) => void;
+    getActiveIslands: (data: GetLiveIslandListResponse) => void;
     canJoinIsland: (data: CanJoinIslandResponse) => void;
 };
 
@@ -49,6 +48,7 @@ export type ClientToIsland = {
     islandHearbeat: () => void;
     jump: () => void;
 };
+
 export type IslandToClient = {
     playerJoin: (data: PlayerJoinResponse) => void;
     playerJoinSuccess: (data: PlayerJoinSuccessResponse) => void;
@@ -61,5 +61,12 @@ export type IslandToClient = {
     jump: (userId: string) => void;
 };
 
+export type ErrorToClient = {
+    wsError: (error: WsErrorBody) => void;
+};
+
 export type ClientToServer = ClientToIsland & ClientToLoby & ClientToChat;
-export type ServerToClient = IslandToClient & LobyToClient & ChatToClient;
+export type ServerToClient = IslandToClient &
+    LobyToClient &
+    ChatToClient &
+    ErrorToClient;

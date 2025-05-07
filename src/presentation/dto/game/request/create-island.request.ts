@@ -7,6 +7,9 @@ import {
     Min,
     Max,
     Length,
+    IsArray,
+    ArrayMaxSize,
+    ArrayMinSize,
 } from 'class-validator';
 
 export class CreateIslandRequest {
@@ -34,4 +37,11 @@ export class CreateIslandRequest {
     @IsString()
     @IsUrl()
     readonly coverImage: string;
+
+    @ApiProperty({ example: '자유' })
+    @Length(1, 10, { each: true })
+    @IsArray()
+    @ArrayMaxSize(3)
+    @ArrayMinSize(1)
+    readonly tags: string[];
 }

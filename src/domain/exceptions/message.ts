@@ -19,3 +19,5 @@ export const PRODUCT_PURCHASE_LIMIT_EXCEEDED_MESSAGE =
     '해당 상품 구매 횟수를 초과했습니다.';
 export const ISLAND_NOT_FOUND_MESSAGE = '존재하지 않는 섬입니다.';
 export const PLAYER_NOT_FOUND_IN_STORAGE = '참여 중인 회원이 아닙니다.';
+export const TAG_AT_LEAST_ONE_MESSAGE =
+    '섬의 태그는 적어도 하나 이상이어야합니다.';
