@@ -12,7 +12,7 @@ export class NormalIslandStorageReader {
         return this.normalIslandStorage.getIsland(islandId);
     }
 
-    readIslands(page: number, limit = 20, tag?: string) {
+    readIslands(page: number, limit = 20, tag?: string | null) {
         let allIslands = this.normalIslandStorage.getAllIsland();
 
         if (tag) {

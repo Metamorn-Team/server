@@ -11,7 +11,7 @@ export class GetLiveIslandListReqeust {
     @IsOptional()
     @Type(() => Number)
     @IsInt()
-    @Min(3)
+    @Min(1)
     readonly limit?: number;
 
     @ApiProperty({ example: '자유' })

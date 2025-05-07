@@ -83,6 +83,7 @@ export class LobyGateway {
         const islands = this.islandStorageReader.readIslands(
             data.page,
             data.limit,
+            data.tag,
         );
         client.emit('getActiveIslands', islands);
     }
