@@ -8,20 +8,22 @@ export class DesertedIslandStorageReader {
         private readonly desertedIslandStorage: DesertedIslandStorage,
     ) {}
 
-    readAll() {
-        return this.desertedIslandStorage.getAllIsland();
+    async readAll() {
+        return await this.desertedIslandStorage.getAllIsland();
     }
 
-    readOne(id: string) {
-        return this.desertedIslandStorage.getIsland(id);
+    async readOne(id: string) {
+        return await this.desertedIslandStorage.getIsland(id);
     }
 
-    getAllPlayer(islandId: string) {
-        return this.desertedIslandStorage.getPlayerIdsByIslandId(islandId);
+    async getAllPlayer(islandId: string) {
+        return await this.desertedIslandStorage.getPlayerIdsByIslandId(
+            islandId,
+        );
     }
 
     // logging
-    getStore() {
-        return this.desertedIslandStorage.getIslandStore();
-    }
+    // getStore() {
+    //     return this.desertedIslandStorage.getIslandStore();
+    // }
 }

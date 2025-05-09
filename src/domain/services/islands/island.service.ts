@@ -46,7 +46,7 @@ export class IslandService {
 
         await this.createTransaction(island, islandTags);
 
-        this.islandStorage.createIsland(island.id, {
+        await this.islandStorage.createIsland(island.id, {
             id: island.id,
             max: island.maxMembers,
             players: new Set(),
@@ -73,13 +73,13 @@ export class IslandService {
         await this.islandTagWriter.createMany(islandTags);
     }
 
-    checkCanJoin(islandId: string): {
+    async checkCanJoin(islandId: string): Promise<{
         islandId?: string;
         canJoin: boolean;
         reason?: string;
-    } {
+    }> {
         try {
-            const island = this.islandStorage.getIsland(islandId);
+            const island = await this.islandStorage.getIsland(islandId);
 
             const isFull = island.max <= island.players.size;
             if (isFull) {

@@ -67,20 +67,22 @@ export class LobyGateway {
     }
 
     @SubscribeMessage('canJoinIsland')
-    checkCanJoinIsland(
+    async checkCanJoinIsland(
         @ConnectedSocket() client: TypedSocket,
         @MessageBody(WsValidatePipe) data: CanJoinIslandRequest,
     ) {
-        const response = this.gameIslandService.checkCanJoin(data.islandId);
+        const response = await this.gameIslandService.checkCanJoin(
+            data.islandId,
+        );
         client.emit('canJoinIsland', response);
     }
 
     @SubscribeMessage('getActiveIslands')
-    getIslands(
+    async getIslands(
         @ConnectedSocket() client: TypedSocket,
         @MessageBody(WsValidatePipe) data: GetLiveIslandListReqeust,
     ) {
-        const islands = this.islandStorageReader.readIslands(
+        const islands = await this.islandStorageReader.readIslands(
             data.page,
             data.limit,
             data.tag,

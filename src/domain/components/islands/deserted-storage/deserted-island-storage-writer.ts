@@ -9,7 +9,15 @@ export class DesertedIslandStorageWriter {
         private readonly desertedIslandStorage: DesertedIslandStorage,
     ) {}
 
-    create(island: LiveDesertedIsland) {
-        this.desertedIslandStorage.createIsland(island.id, island);
+    async create(island: LiveDesertedIsland) {
+        await this.desertedIslandStorage.createIsland(island.id, island);
+    }
+
+    async addPlayer(islandId: string, playerId: string) {
+        await this.desertedIslandStorage.addPlayerToIsland(islandId, playerId);
+    }
+
+    async removePlayer(islandId: string, playerId: string) {
+        await this.desertedIslandStorage.removePlayer(islandId, playerId);
     }
 }

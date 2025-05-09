@@ -7,27 +7,28 @@ import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
+import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
 
 @Injectable()
 export class GameService {
     constructor(
         private readonly playerStorageReader: PlayerStorageReader,
+        private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
     ) {}
 
     getPlayer(playerId: string) {
-        return this.playerStorageReader.readOne(playerId);
+        return this.playerMemoryStorageManager.readOne(playerId);
     }
 
     getPlayerByClientId(clientId: string) {
-        return this.playerStorageReader.readOneByClientId(clientId);
+        return this.playerMemoryStorageManager.readOneByClientId(clientId);
     }
 
     move(playerId: string, x: number, y: number): Player | null {
-        const player = this.playerStorageReader.readOne(playerId);
+        const player = this.getPlayer(playerId);
 
-        if (!player) return null;
         if (player.lastMoved + MOVING_THRESHOLD > Date.now()) return null;
         if (player.x === x && player.y === y) return null;
 
@@ -38,14 +39,16 @@ export class GameService {
         return player;
     }
 
-    attack(attackerId: string) {
-        const attacker = this.playerStorageReader.readOne(attackerId);
+    async attack(attackerId: string) {
+        const attacker = this.getPlayer(attackerId);
         if (!attacker) throw new Error('없는 회원');
 
         const island =
             attacker.islandType === IslandTypeEnum.NORMAL
-                ? this.normalIslandStorageReader.readOne(attacker.roomId)
-                : this.desertedIslandStorageReader.readOne(attacker.roomId);
+                ? await this.normalIslandStorageReader.readOne(attacker.roomId)
+                : await this.desertedIslandStorageReader.readOne(
+                      attacker.roomId,
+                  );
         if (!island) throw new Error('없는 섬');
 
         if (island.players.size === 0) {
@@ -111,20 +114,23 @@ export class GameService {
         return distanceSquared < playerRadius * playerRadius;
     }
 
-    hearbeatFromIsland(
+    async hearbeatFromIsland(
         playerId: string,
-    ): { id: string; lastActivity: number }[] {
-        const player = this.playerStorageReader.readOne(playerId);
-        if (!player) throw new Error('플레이어 없음');
+    ): Promise<{ id: string; lastActivity: number }[]> {
+        const player = this.getPlayer(playerId);
 
         const playerIds =
             player.islandType === IslandTypeEnum.NORMAL
-                ? this.normalIslandStorageReader.getAllPlayer(player.roomId)
-                : this.desertedIslandStorageReader.getAllPlayer(player.roomId);
+                ? await this.normalIslandStorageReader.getAllPlayer(
+                      player.roomId,
+                  )
+                : await this.desertedIslandStorageReader.getAllPlayer(
+                      player.roomId,
+                  );
 
         const players = playerIds
             .map((playerId) => {
-                const player = this.playerStorageReader.readOne(playerId);
+                const player = this.getPlayer(playerId);
                 if (player) {
                     return {
                         id: player.id,
@@ -140,9 +146,9 @@ export class GameService {
         }));
     }
 
-    loggingStore(logger: Logger) {
-        logger.debug('전체 회원', this.playerStorageReader.getStore());
-        logger.debug('무인도', this.desertedIslandStorageReader.getStore());
-        logger.debug('일반 섬', this.normalIslandStorageReader.getStore());
-    }
+    // loggingStore(logger: Logger) {
+    //     logger.debug('전체 회원', this.playerStorageReader.getStore());
+    //     logger.debug('무인도', this.desertedIslandStorageReader.getStore());
+    //     logger.debug('일반 섬', this.normalIslandStorageReader.getStore());
+    // }
 }

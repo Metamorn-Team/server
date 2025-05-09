@@ -38,7 +38,7 @@ export class GameIslandService {
     ) {}
 
     async getAvailableDesertedIsland() {
-        const islands = this.desertedIslandStorageReader.readAll();
+        const islands = await this.desertedIslandStorageReader.readAll();
         if (islands.length !== 0) {
             for (const island of islands) {
                 if (island && island.players.size < island.max) {
@@ -62,11 +62,13 @@ export class GameIslandService {
         y: number,
     ): Promise<JoinedIslandInfo> {
         // 1. 회원 및 섬 존재 여부 디비에서 확인
+        const now = new Date().toISOString();
+        console.log(`[${now}] joinNormalIsland called for player ${playerId}`);
         const user = await this.userReader.readProfile(playerId);
         const island = await this.islandReader.readOne(islandId);
 
         const countParticipants =
-            this.normalIslandStorageReader.countPlayerByIsland(islandId);
+            await this.normalIslandStorageReader.countPlayerByIsland(islandId);
         if (island.maxMembers <= countParticipants) {
             // 임시 예외 코드
             throw new DomainException(
@@ -88,8 +90,8 @@ export class GameIslandService {
             y,
         });
 
-        this.playerStorageWriter.create(player);
-        this.normalIslandStorageReader.addPlayer(islandId, playerId);
+        await this.playerStorageWriter.create(player);
+        await this.normalIslandStorageWriter.addPlayer(islandId, playerId);
 
         const islandJoin = IslandJoinEntity.create(
             { islandId, userId: playerId },
@@ -97,10 +99,9 @@ export class GameIslandService {
         );
         await this.islandJoinWriter.create(islandJoin);
 
+        const allPlayers = await this.getActiveUsers(island.type, islandId);
         const activePlayers =
-            this.getActiveUsers(island.type, islandId).filter(
-                (player) => player.id !== playerId,
-            ) || [];
+            allPlayers.filter((player) => player.id !== playerId) || [];
         // 여기까지
 
         return {
@@ -133,15 +134,15 @@ export class GameIslandService {
             y,
         });
 
-        this.playerStorageWriter.create(player);
+        await this.playerStorageWriter.create(player);
+        await this.desertedIslandStorageWriter.addPlayer(islandId, playerId);
 
-        availableIsland.players.add(playerId);
-
+        const allPlayers = await this.getActiveUsers(
+            availableIsland.type,
+            availableIsland.id,
+        );
         const activePlayers =
-            this.getActiveUsers(
-                availableIsland.type,
-                availableIsland.id,
-            ).filter((player) => player.id !== playerId) || [];
+            allPlayers.filter((player) => player.id !== playerId) || [];
         // 여기까지
 
         const islandJoin = IslandJoinEntity.create(
@@ -172,77 +173,100 @@ export class GameIslandService {
         return this.createLiveIsland(islandEntity.id);
     }
 
-    createLiveIsland(islandId: string) {
+    async createLiveIsland(islandId: string) {
         const island = {
             id: islandId,
             max: UNINHABITED_MAX_MEMBERS,
             players: new Set<SocketClientId>(),
             type: IslandTypeEnum.DESERTED,
         };
-        this.desertedIslandStorageWriter.create(island);
+        await this.desertedIslandStorageWriter.create(island);
 
         return island;
     }
 
     async leftPlayer(playerId: string) {
-        const player = this.playerStorageReader.readOne(playerId);
+        const player = await this.playerStorageReader.readOne(playerId);
 
         const { roomId } = player;
 
         const island =
             player.islandType === IslandTypeEnum.NORMAL
-                ? this.normalIslandStorageReader.readOne(roomId)
-                : this.desertedIslandStorageReader.readOne(roomId);
+                ? await this.normalIslandStorageReader.readOne(roomId)
+                : await this.desertedIslandStorageReader.readOne(roomId);
 
         await this.islandJoinWriter.left(roomId, player.id);
 
-        this.playerStorageWriter.remove(playerId);
-        island.players.delete(playerId);
+        await this.playerStorageWriter.remove(playerId);
+
+        if (player.islandType === IslandTypeEnum.NORMAL) {
+            await this.normalIslandStorageWriter.removePlayer(
+                island.id,
+                playerId,
+            );
+        } else {
+            await this.desertedIslandStorageWriter.removePlayer(
+                island.id,
+                playerId,
+            );
+        }
 
         if (island.players.size === 0) {
-            this.normalIslandStorageWriter.remove(island.id);
+            await this.normalIslandStorageWriter.remove(island.id);
             await this.islandWriter.remove(island.id);
         }
 
         return player;
     }
 
+    // NOTE 지우기
     async leaveRoom(islandId: string, playerId: string, type: IslandTypeEnum) {
-        const player = this.playerStorageReader.readOne(playerId);
+        const player = await this.playerStorageReader.readOne(playerId);
         const island =
             type === IslandTypeEnum.NORMAL
-                ? this.normalIslandStorageReader.readOne(islandId)
-                : this.desertedIslandStorageReader.readOne(islandId);
+                ? await this.normalIslandStorageReader.readOne(islandId)
+                : await this.desertedIslandStorageReader.readOne(islandId);
 
         await this.islandJoinWriter.left(islandId, player.id);
 
-        this.playerStorageWriter.remove(playerId);
-        island.players.delete(playerId);
+        await this.playerStorageWriter.remove(playerId);
+
+        if (player.islandType === IslandTypeEnum.NORMAL) {
+            await this.normalIslandStorageWriter.removePlayer(
+                island.id,
+                playerId,
+            );
+        } else {
+            await this.desertedIslandStorageWriter.removePlayer(
+                island.id,
+                playerId,
+            );
+        }
 
         return player;
     }
 
-    getActiveUsers(type: IslandTypeEnum, islandId: string) {
+    async getActiveUsers(type: IslandTypeEnum, islandId: string) {
         const island =
             type === IslandTypeEnum.NORMAL
-                ? this.normalIslandStorageReader.readOne(islandId)
-                : this.desertedIslandStorageReader.readOne(islandId);
+                ? await this.normalIslandStorageReader.readOne(islandId)
+                : await this.desertedIslandStorageReader.readOne(islandId);
 
         const activeUsers: Player[] = [];
 
-        island.players.forEach((playerId) => {
-            const player = this.playerStorageReader.readOne(playerId);
+        for (const playerId of island.players) {
+            const player = await this.playerStorageReader.readOne(playerId);
             if (player) {
                 activeUsers.push(player);
             }
-        });
+        }
 
         return activeUsers;
     }
 
     async kickPlayerById(playerId: string, type: IslandTypeEnum) {
         try {
-            const player = this.playerStorageReader.readOne(playerId);
+            const player = await this.playerStorageReader.readOne(playerId);
 
             await this.leaveRoom(player.roomId, playerId, type);
             return player;
@@ -257,13 +281,14 @@ export class GameIslandService {
         }
     }
 
-    checkCanJoin(islandId: string): {
+    async checkCanJoin(islandId: string): Promise<{
         islandId?: string;
         canJoin: boolean;
         reason?: string;
-    } {
+    }> {
         try {
-            const island = this.normalIslandStorageReader.readOne(islandId);
+            const island =
+                await this.normalIslandStorageReader.readOne(islandId);
 
             const isFull = island.max <= island.players.size;
             if (isFull) {

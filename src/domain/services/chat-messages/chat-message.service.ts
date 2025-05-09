@@ -13,7 +13,7 @@ export class ChatMessageService {
     ) {}
 
     async sendMessage(senderId: string, message: string) {
-        const player = this.gameStorage.getPlayer(senderId);
+        const player = await this.gameStorage.getPlayer(senderId);
         if (!player) throw new Error('없는 플레이어');
 
         const { roomId } = player;

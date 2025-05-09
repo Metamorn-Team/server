@@ -95,7 +95,7 @@ export class IslandGateway
         client.emit('activePlayers', activePlayers);
         client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
 
-        this.gameService.loggingStore(this.logger);
+        // this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('joinNormalIsland')
@@ -125,7 +125,7 @@ export class IslandGateway
         client.emit('activePlayers', activePlayers);
         client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
 
-        this.gameService.loggingStore(this.logger);
+        // this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerLeft')
@@ -141,7 +141,7 @@ export class IslandGateway
             this.logger.log(`Leave cilent: ${client.id}`);
         }
 
-        this.gameService.loggingStore(this.logger);
+        // this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerMoved')
@@ -162,11 +162,11 @@ export class IslandGateway
     }
 
     @SubscribeMessage('attack')
-    handleAttack(@CurrentUserFromSocket() userId: string) {
+    async handleAttack(@CurrentUserFromSocket() userId: string) {
         // NOTE 현재는 플레이어만
         try {
             const { attacker, attackedPlayers } =
-                this.gameService.attack(userId);
+                await this.gameService.attack(userId);
 
             this.wss.to(attacker.roomId).emit('attacked', {
                 attackerId: attacker.id,
@@ -192,11 +192,11 @@ export class IslandGateway
     }
 
     @SubscribeMessage('islandHearbeat')
-    handleHeartbeat(
+    async handleHeartbeat(
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const heartbeats = this.gameService.hearbeatFromIsland(userId);
+        const heartbeats = await this.gameService.hearbeatFromIsland(userId);
 
         client.emit('islandHearbeat', heartbeats);
     }
@@ -232,7 +232,7 @@ export class IslandGateway
                 `Cliend id from Island:${player.id} disconnected`,
             );
 
-            this.gameService.loggingStore(this.logger);
+            // this.gameService.loggingStore(this.logger);
         } catch (e) {
             if (
                 e instanceof DomainException &&
