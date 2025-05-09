@@ -1,11 +1,10 @@
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { PLAYER_NOT_FOUND_IN_STORAGE } from 'src/domain/exceptions/message';
-import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { Player } from 'src/domain/models/game/player';
 import { SocketClientId } from 'src/domain/types/game.types';
 
-export class PlayerMemoryStorage implements PlayerStorage {
+export class PlayerMemoryStorage {
     private players = new Map<SocketClientId, Player>();
 
     addPlayer(playerId: string, player: Player): void {
