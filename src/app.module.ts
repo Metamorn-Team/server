@@ -18,14 +18,17 @@ import { PurchaseModule } from 'src/modules/purchases/purchase.module';
 import { FileModule } from 'src/modules/files/file.module';
 import { TagModule } from 'src/modules/tags/tag.module';
 import { LoaderModule } from 'src/modules/loaders/Loader.module';
+import { RedisModule } from 'src/infrastructure/redis/redis.module';
+import { validationSchema } from 'src/env-validation';
 
 @Module({
     imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({ isGlobal: true, validationSchema }),
         ClsModule.forRoot(clsOptions),
         InterceptorsModule,
         PipeModule,
         PrismaModule,
+        RedisModule,
         UserComponentModule,
         UserModule,
         AuthModule,
