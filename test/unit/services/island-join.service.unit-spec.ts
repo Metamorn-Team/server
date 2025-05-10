@@ -1,15 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IslandJoinService } from 'src/domain/services/island-join/island-join.service';
-import { IslandService } from 'src/domain/services/islands/island.service';
 import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { IslandJoinModule } from 'src/modules/island-joins/island-join.module';
-import { IslandModule } from 'src/modules/islands/island.module';
-import {
-    generateIsland,
-    generateIslandJoin,
-    generateUserEntity,
-} from 'test/helper/generators';
+import { generateIsland, generateUserEntity } from 'test/helper/generators';
 
 describe('IslandJoinService', () => {
     let islandJoinService: IslandJoinService;

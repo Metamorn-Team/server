@@ -4,11 +4,18 @@ import { RegisterRequest } from 'src/presentation/dto/auth/request/register.requ
 import { LoginResponse } from 'src/presentation/dto/auth/response/login.response';
 import { ResponseResult } from './types';
 
+const randomString = (prefix: string) =>
+    `${prefix}_${Math.random().toString(36).substring(2, 8)}`;
+
 export const login = async (app: INestApplication) => {
+    const email = `${randomString('user')}@test.com`;
+    const nickname = randomString('nick');
+    const tag = randomString('tag');
+
     const dto: RegisterRequest = {
-        email: 'metamorn@metamorn.com',
-        nickname: '메타몬',
-        tag: 'metamorn',
+        email,
+        nickname,
+        tag,
         provider: 'GOOGLE',
         avatarKey: 'pawn',
     };

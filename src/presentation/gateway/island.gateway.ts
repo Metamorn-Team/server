@@ -22,7 +22,6 @@ import { GameIslandService } from 'src/domain/services/game/game-island.service'
 import { JoinDesertedIslandReqeust } from 'src/presentation/dto/game/request/join-deserted-island.request';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 
 type TypedSocket = Socket<ClientToIsland, IslandToClient>;
@@ -49,20 +48,13 @@ export class IslandGateway
         private readonly gameIslandService: GameIslandService,
     ) {}
 
-    async kick(
-        userId: string,
-        client: TypedSocket,
-        islandType: IslandTypeEnum,
-    ) {
-        const kickedPlayer = await this.gameIslandService.kickPlayerById(
-            userId,
-            islandType,
-        );
+    async kick(userId: string, client: TypedSocket) {
+        const kickedPlayer =
+            await this.gameIslandService.kickPlayerById(userId);
         if (kickedPlayer) {
             const { clientId, roomId, id } = kickedPlayer;
-            const kickedClient = this.wss.sockets.get(clientId);
 
-            await this.gameIslandService.leaveRoom(roomId, id, islandType);
+            const kickedClient = this.wss.sockets.get(clientId);
             await kickedClient?.leave(roomId);
 
             client.to(roomId).emit('playerLeft', { id });
@@ -76,8 +68,7 @@ export class IslandGateway
         @MessageBody() data: JoinDesertedIslandReqeust,
         @CurrentUserFromSocket() userId: string,
     ) {
-        await this.kick(userId, client, IslandTypeEnum.DESERTED);
-
+        await this.kick(userId, client);
         const { x, y } = data;
 
         this.logger.log(`joined player : ${userId}`);
@@ -95,7 +86,7 @@ export class IslandGateway
         client.emit('activePlayers', activePlayers);
         client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
 
-        this.gameService.loggingStore(this.logger);
+        // this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('joinNormalIsland')
@@ -104,13 +95,12 @@ export class IslandGateway
         @MessageBody() data: PlayerJoinRequest,
         @CurrentUserFromSocket() userId: string,
     ) {
-        await this.kick(userId, client, IslandTypeEnum.DESERTED);
+        await this.kick(userId, client);
 
         const { x, y, islandId } = data;
 
         this.logger.log(`joined player : ${userId}`);
 
-        // type이 NORMAL이면 islandId로 참여
         const { activePlayers, joinedIslandId, joinedPlayer } =
             await this.gameIslandService.joinNormalIsland(
                 userId,
@@ -124,8 +114,6 @@ export class IslandGateway
         client.emit('playerJoinSuccess', { x, y });
         client.emit('activePlayers', activePlayers);
         client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
-
-        this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerLeft')
@@ -141,7 +129,7 @@ export class IslandGateway
             this.logger.log(`Leave cilent: ${client.id}`);
         }
 
-        this.gameService.loggingStore(this.logger);
+        // this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerMoved')
@@ -162,11 +150,11 @@ export class IslandGateway
     }
 
     @SubscribeMessage('attack')
-    handleAttack(@CurrentUserFromSocket() userId: string) {
+    async handleAttack(@CurrentUserFromSocket() userId: string) {
         // NOTE 현재는 플레이어만
         try {
             const { attacker, attackedPlayers } =
-                this.gameService.attack(userId);
+                await this.gameService.attack(userId);
 
             this.wss.to(attacker.roomId).emit('attacked', {
                 attackerId: attacker.id,
@@ -192,11 +180,11 @@ export class IslandGateway
     }
 
     @SubscribeMessage('islandHearbeat')
-    handleHeartbeat(
+    async handleHeartbeat(
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const heartbeats = this.gameService.hearbeatFromIsland(userId);
+        const heartbeats = await this.gameService.hearbeatFromIsland(userId);
 
         client.emit('islandHearbeat', heartbeats);
     }
@@ -222,17 +210,13 @@ export class IslandGateway
             if (player.clientId !== client.id) return;
             const { roomId } = player;
             await client.leave(roomId);
-            await this.gameIslandService.leaveRoom(
-                roomId,
-                player.id,
-                player.islandType,
-            );
+            await this.gameIslandService.leftPlayer(player.id);
             client.to(roomId).emit('playerLeft', { id: player.id });
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
             );
 
-            this.gameService.loggingStore(this.logger);
+            // this.gameService.loggingStore(this.logger);
         } catch (e) {
             if (
                 e instanceof DomainException &&
@@ -240,8 +224,6 @@ export class IslandGateway
             ) {
                 return;
             }
-
-            throw e;
         }
     }
 }

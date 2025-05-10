@@ -8,7 +8,7 @@ import { login } from 'test/helper/login';
 describe('Products Input Validation (e2e)', () => {
     let app: INestApplication;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
             imports: [AppModule],
         }).compile();
@@ -17,8 +17,8 @@ describe('Products Input Validation (e2e)', () => {
         await app.init();
     });
 
-    afterAll(() => {
-        app.close();
+    afterAll(async () => {
+        await app.close();
     });
 
     describe('GET /products 입력 값 검증', () => {

@@ -1,19 +1,28 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { Player } from 'src/domain/models/game/player';
+import { PlayerMemoryStorage } from 'src/infrastructure/storages/player-memory-storage';
 
 @Injectable()
 export class PlayerStorageWriter {
     constructor(
         @Inject(PlayerStorage)
         private readonly playerStorage: PlayerStorage,
+        private readonly playerMemoryStorage: PlayerMemoryStorage,
     ) {}
 
-    create(player: Player) {
-        this.playerStorage.addPlayer(player.id, player);
+    async create(player: Player) {
+        await this.playerStorage.addPlayer(player.id, player);
+        this.playerMemoryStorage.addPlayer(player);
     }
 
-    remove(id: string) {
-        this.playerStorage.deletePlayer(id);
+    async remove(id: string) {
+        await this.playerStorage.deletePlayer(id);
+        this.playerMemoryStorage.deletePlayer(id);
+    }
+
+    async updateLastActivity(id: string, time = Date.now()) {
+        await this.playerStorage.updateLastActivity(id, time);
+        this.playerMemoryStorage.updateLastActivity(id, time);
     }
 }

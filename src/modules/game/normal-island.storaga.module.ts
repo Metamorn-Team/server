@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
-import { NormalIslandMemoryStorage } from 'src/infrastructure/storages/normal-island-memory-storage';
+import { NormalIslandRedisStorage } from 'src/infrastructure/redis/islands/normal-island-redis-storage';
+import { RedisModule } from 'src/infrastructure/redis/redis.module';
 
 @Module({
+    imports: [RedisModule],
     providers: [
         {
             provide: NormalIslandStorage,
-            useClass: NormalIslandMemoryStorage,
+            useClass: NormalIslandRedisStorage,
         },
     ],
     exports: [NormalIslandStorage],

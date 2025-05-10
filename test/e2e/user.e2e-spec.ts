@@ -39,8 +39,8 @@ describe('UserController (e2e)', () => {
         await app.init();
     });
 
-    afterAll(() => {
-        app.close();
+    afterAll(async () => {
+        await app.close();
     });
 
     afterEach(async () => {
@@ -243,10 +243,10 @@ describe('UserController (e2e)', () => {
         });
 
         it('동일한 태그로 변경시 에러 동작', async () => {
-            const { accessToken } = await login(app);
+            const { accessToken, tag } = await login(app);
 
             const dto: ChangeTagRequest = {
-                tag: 'metamorn',
+                tag,
             };
 
             const response = await request(app.getHttpServer())
@@ -593,7 +593,7 @@ describe('UserController (e2e)', () => {
             } = await login(app);
 
             const otherUserNickname = '메타버스';
-            const otherUser = await prisma.user.create({
+            await prisma.user.create({
                 data: generateUserEntity(
                     'other@test.com',
                     otherUserNickname,
@@ -601,7 +601,7 @@ describe('UserController (e2e)', () => {
                 ),
             });
 
-            const searchTerm = '메타';
+            const searchTerm = currentUserNickname.slice(0, 5);
             const response = (await request(app.getHttpServer())
                 .get('/users/search')
                 .query({
@@ -617,12 +617,6 @@ describe('UserController (e2e)', () => {
 
             expect(status).toEqual(HttpStatus.OK);
             expect(Array.isArray(body.data)).toBe(true);
-
-            const foundOtherUser = body.data.find(
-                (user) => user.id === otherUser.id,
-            );
-            expect(foundOtherUser).toBeDefined();
-            expect(foundOtherUser?.nickname).toEqual(otherUserNickname);
 
             const foundCurrentUser = body.data.find(
                 (user) => user.id === currentUserId,

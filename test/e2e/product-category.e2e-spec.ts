@@ -12,7 +12,7 @@ describe('ProductCategotyController (e2e)', () => {
     let app: INestApplication;
     let db: PrismaService;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
             imports: [AppModule],
         }).compile();
@@ -27,8 +27,8 @@ describe('ProductCategotyController (e2e)', () => {
         await db.user.deleteMany();
     });
 
-    afterAll(() => {
-        app.close();
+    afterAll(async () => {
+        await app.close();
     });
 
     describe('GET /product-categories - 상품 카테고리 전체 조회', () => {
@@ -62,7 +62,7 @@ describe('ProductCategotyController (e2e)', () => {
                     updatedAt: stdDate,
                 },
             ];
-            const expectedCategories = categories.sort((a, b) => {
+            categories.sort((a, b) => {
                 return a.name.localeCompare(b.name);
             });
 

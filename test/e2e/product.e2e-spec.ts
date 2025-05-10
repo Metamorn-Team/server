@@ -18,7 +18,7 @@ describe('ProductController (e2e)', () => {
     let app: INestApplication;
     let db: PrismaService;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
             imports: [AppModule],
         }).compile();
@@ -34,8 +34,8 @@ describe('ProductController (e2e)', () => {
         await db.user.deleteMany();
     });
 
-    afterAll(() => {
-        app.close();
+    afterAll(async () => {
+        await app.close();
     });
 
     describe('GET /products - 상품 목록 조회', () => {

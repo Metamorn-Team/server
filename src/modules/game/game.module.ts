@@ -14,6 +14,7 @@ import { GameIslandCreateService } from 'src/domain/services/game/game-island-cr
 import { TagComponentModule } from 'src/modules/tags/tag-component.module';
 import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-component.module';
 import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
+import { PlayerMemoryStorageComponentModule } from 'src/modules/users/player-memory-storage-component.module';
 
 @Module({
     imports: [
@@ -25,6 +26,7 @@ import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-c
         IslandTagComponentModule,
 
         PlayerStorageComponentModule,
+        PlayerMemoryStorageComponentModule,
         NormalIslandStorageComponentModule,
         DesertedIslandStorageComponentModule,
     ],

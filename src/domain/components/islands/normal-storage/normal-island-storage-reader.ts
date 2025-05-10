@@ -8,12 +8,12 @@ export class NormalIslandStorageReader {
         private readonly normalIslandStorage: NormalIslandStorage,
     ) {}
 
-    readOne(islandId: string) {
-        return this.normalIslandStorage.getIsland(islandId);
+    async readOne(islandId: string) {
+        return await this.normalIslandStorage.getIsland(islandId);
     }
 
-    readIslands(page: number, limit = 20, tag?: string | null) {
-        let allIslands = this.normalIslandStorage.getAllIsland();
+    async readIslands(page: number, limit = 20, tag?: string | null) {
+        let allIslands = await this.normalIslandStorage.getAllIsland();
 
         if (tag) {
             allIslands = allIslands.filter((island) =>
@@ -45,20 +45,16 @@ export class NormalIslandStorageReader {
         };
     }
 
-    countPlayerByIsland(islandId: string) {
-        return this.normalIslandStorage.countPlayer(islandId);
+    async countPlayer(islandId: string) {
+        return await this.normalIslandStorage.countPlayer(islandId);
     }
 
-    addPlayer(islandId: string, playerId: string) {
-        this.normalIslandStorage.addPlayerToIsland(islandId, playerId);
-    }
-
-    getAllPlayer(islandId: string) {
-        return this.normalIslandStorage.getPlayerIdsByIslandId(islandId);
+    async getAllPlayer(islandId: string) {
+        return await this.normalIslandStorage.getPlayerIdsByIslandId(islandId);
     }
 
     // logging
-    getStore() {
-        return this.normalIslandStorage.getIslandStore();
-    }
+    // getStore() {
+    //     return this.normalIslandStorage.getIslandStore();
+    // }
 }
