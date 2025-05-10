@@ -20,4 +20,8 @@ export class DesertedIslandStorageWriter {
     async removePlayer(islandId: string, playerId: string) {
         await this.desertedIslandStorage.removePlayer(islandId, playerId);
     }
+
+    async remove(id: string) {
+        await this.desertedIslandStorage.delete(id);
+    }
 }

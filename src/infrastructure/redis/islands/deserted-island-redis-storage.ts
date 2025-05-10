@@ -8,7 +8,6 @@ import { LiveDesertedIsland } from 'src/domain/types/game.types';
 import {
     DESERTED_ISLAND_KEY,
     ISLAND_PLAYERS_KEY,
-    ISLAND_TAGS_KEY,
 } from 'src/infrastructure/redis/key';
 import { RedisClient } from 'src/infrastructure/redis/redis.module';
 
@@ -93,7 +92,6 @@ export class DesertedIslandRedisStorage implements DesertedIslandStorage {
     async delete(islandId: string): Promise<void> {
         await this.redis.del(
             DESERTED_ISLAND_KEY(islandId),
-            ISLAND_TAGS_KEY(islandId),
             ISLAND_PLAYERS_KEY(islandId),
         );
     }

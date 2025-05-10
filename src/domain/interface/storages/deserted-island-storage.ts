@@ -9,6 +9,7 @@ export interface DesertedIslandStorage {
     removePlayer(islandId: string, playerId: string): Promise<void>;
     // getIslandStore(): Record<string, LiveDesertedIsland>;
     getPlayerIdsByIslandId(islandId: string): Promise<string[]>;
+    delete(islandId: string): Promise<void>;
 }
 
 export const DesertedIslandStorage = Symbol('DesertedIslandStorage');

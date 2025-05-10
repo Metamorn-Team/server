@@ -6,6 +6,7 @@ export interface PlayerStorage {
     addPlayer(playerId: string, player: Player): Promise<void>;
     deletePlayer(playerId: string): Promise<void>;
     getAllPlayers(): Promise<Player[]>;
+    updateLastActivity(playerId: string): Promise<void>;
     // getPlayerStore(): Record<string, Player>;
 }
 

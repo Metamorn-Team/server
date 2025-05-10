@@ -45,7 +45,7 @@ export class NormalIslandStorageReader {
         };
     }
 
-    async countPlayerByIsland(islandId: string) {
+    async countPlayer(islandId: string) {
         return await this.normalIslandStorage.countPlayer(islandId);
     }
 

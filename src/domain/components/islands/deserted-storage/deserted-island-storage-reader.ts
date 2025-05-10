@@ -22,6 +22,10 @@ export class DesertedIslandStorageReader {
         );
     }
 
+    async countPlayer(id: string) {
+        return await this.desertedIslandStorage.countPlayer(id);
+    }
+
     // logging
     // getStore() {
     //     return this.desertedIslandStorage.getIslandStore();
