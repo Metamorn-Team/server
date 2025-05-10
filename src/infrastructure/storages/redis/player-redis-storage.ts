@@ -11,6 +11,23 @@ import { RedisClientService } from 'src/infrastructure/redis/redis-client.servic
 export class PlayerRedisStorage implements PlayerStorage {
     constructor(private readonly redis: RedisClientService) {}
 
+    private parsePlayer(data: Record<string, string>): Player {
+        return {
+            id: data.id,
+            clientId: data.clientId,
+            tag: data.tag,
+            nickname: data.nickname,
+            avatarKey: data.avatarKey,
+            roomId: data.roomId,
+            isFacingRight: data.isFacingRight === 'true',
+            islandType: Number(data.islandType),
+            lastActivity: Number(data.lastActivity),
+            lastMoved: Number(data.lastMoved),
+            x: Number(data.x),
+            y: Number(data.y),
+        };
+    }
+
     async addPlayer(playerId: string, player: Player): Promise<void> {
         const key = PLAYER_KEY(playerId);
         await this.redis.getClient().hset(key, player);
@@ -18,9 +35,9 @@ export class PlayerRedisStorage implements PlayerStorage {
 
     async getPlayer(playerId: string): Promise<Player> {
         const key = PLAYER_KEY(playerId);
+        const data = await this.redis.getClient().hgetall(key);
 
-        const player = await this.redis.getClient().hgetall(key);
-        if (Object.keys(player).length === 0) {
+        if (Object.keys(data).length === 0) {
             throw new DomainException(
                 DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE,
                 HttpStatus.NOT_FOUND,
@@ -28,17 +45,16 @@ export class PlayerRedisStorage implements PlayerStorage {
             );
         }
 
-        return player as unknown as Promise<Player>;
+        return this.parsePlayer(data);
     }
 
     async getPlayerByClientId(clientId: string): Promise<Player> {
         const keys = await this.redis.getClient().keys(PLAYER_KEY('*'));
 
         for (const key of keys) {
-            const player = await this.redis.getClient().hgetall(key);
-
-            if (player.clientId === clientId) {
-                return player as unknown as Promise<Player>;
+            const data = await this.redis.getClient().hgetall(key);
+            if (data.clientId === clientId) {
+                return this.parsePlayer(data);
             }
         }
 
@@ -51,17 +67,16 @@ export class PlayerRedisStorage implements PlayerStorage {
 
     async getPlayersByIslandId(islandId: string): Promise<Player[]> {
         const keys = await this.redis.getClient().keys(PLAYER_KEY('*'));
-        const activePlayers: Player[] = [];
+        const players: Player[] = [];
 
         for (const key of keys) {
-            const player = await this.redis.getClient().hgetall(key);
-
-            if (player.islandId === islandId) {
-                activePlayers.push(player as unknown as Player);
+            const data = await this.redis.getClient().hgetall(key);
+            if (data.roomId === islandId) {
+                players.push(this.parsePlayer(data));
             }
         }
 
-        return activePlayers;
+        return players;
     }
 
     async deletePlayer(playerId: string): Promise<void> {
@@ -73,19 +88,28 @@ export class PlayerRedisStorage implements PlayerStorage {
         const keys = await this.redis.getClient().keys(PLAYER_KEY('*'));
         const pipeline = this.redis.getClient().pipeline();
 
-        for (const key of keys) {
-            pipeline.hgetall(key);
-        }
-
+        keys.forEach((key) => pipeline.hgetall(key));
         const results = await pipeline.exec();
-        if (!results) throw new Error();
 
-        const players: Player[] = results
-            .map(([err, data]) => {
-                if (err || !data || Object.keys(data).length === 0) return null;
-                return data as Player;
-            })
-            .filter((p): p is Player => p !== null) as unknown as Player[];
+        if (!results) throw new Error('Redis pipeline failed');
+
+        const players: Player[] = [];
+
+        for (const result of results) {
+            const [err, data] = result;
+
+            if (err) {
+                continue;
+            }
+
+            if (
+                data &&
+                typeof data === 'object' &&
+                Object.keys(data).length > 0
+            ) {
+                players.push(this.parsePlayer(data as Record<string, string>));
+            }
+        }
 
         return players;
     }
@@ -95,6 +119,6 @@ export class PlayerRedisStorage implements PlayerStorage {
         now = Date.now(),
     ): Promise<void> {
         const key = PLAYER_KEY(playerId);
-        await this.redis.getClient().hset(key, 'lastActivity', now);
+        await this.redis.getClient().hset(key, 'lastActivity', now.toString());
     }
 }
