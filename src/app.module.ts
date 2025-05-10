@@ -17,6 +17,7 @@ import { clsOptions } from 'src/configs/cls/cls-config';
 import { PurchaseModule } from 'src/modules/purchases/purchase.module';
 import { FileModule } from 'src/modules/files/file.module';
 import { TagModule } from 'src/modules/tags/tag.module';
+import { LoaderModule } from 'src/modules/loaders/Loader.module';
 
 @Module({
     imports: [
@@ -35,6 +36,8 @@ import { TagModule } from 'src/modules/tags/tag.module';
         PurchaseModule,
         FileModule,
         TagModule,
+
+        LoaderModule,
     ],
     controllers: [AppController],
     providers: [AppService],
