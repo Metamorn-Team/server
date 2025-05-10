@@ -31,27 +31,6 @@ export class Player {
         public lastActivity: number,
     ) {}
 
-    update<K extends keyof Omit<Player, 'id' | 'clientId'>>(
-        key: K,
-        value: Player[K],
-    ) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        (this as any)[key] = value;
-        this.lastActivity = Date.now();
-    }
-
-    setPosition(x: number, y: number) {
-        this.x = x;
-        this.y = y;
-
-        this.lastMoved = Date.now();
-        this.updateLastActivity();
-    }
-
-    updateLastActivity() {
-        this.lastActivity = Date.now();
-    }
-
     static create(proto: PlayerPrototype) {
         const now = Date.now();
 

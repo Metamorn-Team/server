@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { v4 } from 'uuid';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
@@ -11,7 +12,6 @@ import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player } from 'src/domain/models/game/player';
-import { v4 } from 'uuid';
 
 @Injectable()
 export class NormalIslandManager implements IslandManager {
@@ -30,10 +30,9 @@ export class NormalIslandManager implements IslandManager {
         const countParticipants =
             await this.normalIslandStorageReader.countPlayer(islandId);
         if (island.max <= countParticipants) {
-            // 임시 예외 코드
             throw new DomainException(
                 DomainExceptionType.ISLAND_FULL,
-                1000,
+                HttpStatus.UNPROCESSABLE_ENTITY,
                 ISLAND_FULL,
             );
         }

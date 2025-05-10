@@ -35,7 +35,9 @@ export class GameService {
         player.isFacingRight =
             player.x < x ? true : player.x > x ? false : player.isFacingRight;
 
-        player.setPosition(x, y);
+        player.x = x;
+        player.y = y;
+
         return player;
     }
 
@@ -74,7 +76,7 @@ export class GameService {
             .filter((player) => player !== null)
             .filter((player) => player.id !== attacker.id)
             .filter((player) => this.isInAttackBox(player, attackBox));
-        attacker.updateLastActivity();
+        attacker.lastActivity = Date.now();
 
         return {
             attacker,
