@@ -17,7 +17,7 @@ import { clsOptions } from 'src/configs/cls/cls-config';
 import { PurchaseModule } from 'src/modules/purchases/purchase.module';
 import { FileModule } from 'src/modules/files/file.module';
 import { TagModule } from 'src/modules/tags/tag.module';
-import { LoaderModule } from 'src/modules/loaders/Loader.module';
+import { LoaderModule } from 'src/modules/loaders/loader.module';
 import { RedisModule } from 'src/infrastructure/redis/redis.module';
 import { validationSchema } from 'src/env-validation';
 

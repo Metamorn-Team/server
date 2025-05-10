@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { InitialPlayerLoader } from 'src/domain/loaders/InitialPlayerLoader';
+import { InitialPlayerLoader } from 'src/domain/loaders/Initial-player-loader';
 import { PlayerStorageModule } from 'src/modules/game/player-storage.module';
 import { PlayerMemoryStorageModule } from 'src/modules/users/player-memory-storage.module';
 

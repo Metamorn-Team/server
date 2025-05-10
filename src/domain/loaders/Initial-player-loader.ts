@@ -11,6 +11,7 @@ export class InitialPlayerLoader implements OnModuleInit {
     ) {}
 
     async onModuleInit() {
+        if (process.env.NODE_ENV === 'test') return;
         const players = await this.playerStorage.getAllPlayers();
 
         players.forEach((player) => this.playerMemoryStorage.addPlayer(player));
