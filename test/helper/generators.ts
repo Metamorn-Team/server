@@ -54,7 +54,7 @@ export const generateIsland = (
     return new IslandEntity(
         partial?.id || v4(),
         partial?.maxMembers || 5,
-        partial?.type || IslandTypeEnum.DESERTED,
+        partial?.type ?? IslandTypeEnum.DESERTED,
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
         partial?.ownerId,
