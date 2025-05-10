@@ -1,5 +1,4 @@
-import { HttpStatus, Inject } from '@nestjs/common';
-import Redis from 'ioredis';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
@@ -10,13 +9,11 @@ import {
     ISLAND_PLAYERS_KEY,
     ISLAND_TAGS_KEY,
 } from 'src/infrastructure/redis/key';
-import { RedisClient } from 'src/infrastructure/redis/redis.module';
+import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 
+@Injectable()
 export class NormalIslandRedisStorage implements NormalIslandStorage {
-    constructor(
-        @Inject(RedisClient)
-        private readonly redis: Redis,
-    ) {}
+    constructor(private readonly redis: RedisClientService) {}
 
     async createIsland(islandId: string, island: LiveNormalIsland) {
         const { players: _, tags, createdAt, ...islandInfo } = island;
@@ -24,11 +21,11 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
         const tagsKey = ISLAND_TAGS_KEY(islandInfo.id);
 
         await Promise.all([
-            this.redis.hset(key, {
+            this.redis.getClient().hset(key, {
                 ...islandInfo,
                 createdAt: createdAt.getTime(),
             }),
-            this.redis.sadd(tagsKey, ...tags),
+            this.redis.getClient().sadd(tagsKey, ...tags),
         ]);
     }
 
@@ -38,9 +35,9 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
         const playersKey = ISLAND_PLAYERS_KEY(islandId);
 
         const [islandInfo, tags, players] = await Promise.all([
-            this.redis.hgetall(islandKey),
-            this.redis.smembers(tagsKey),
-            this.redis.smembers(playersKey),
+            this.redis.getClient().hgetall(islandKey),
+            this.redis.getClient().smembers(tagsKey),
+            this.redis.getClient().smembers(playersKey),
         ]);
 
         if (!islandInfo || Object.keys(islandInfo).length === 0) {
@@ -65,7 +62,7 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
     }
 
     async getAllIsland(): Promise<LiveNormalIsland[]> {
-        const keys = await this.redis.keys(NORMAL_ISLAND_KEY('*'));
+        const keys = await this.redis.getClient().keys(NORMAL_ISLAND_KEY('*'));
         const islandKeys = keys.filter(
             (key) => !key.includes(':tags') && !key.includes(':players'),
         );
@@ -81,34 +78,38 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
     }
 
     async countPlayer(islandId: string): Promise<number> {
-        return await this.redis.scard(ISLAND_PLAYERS_KEY(islandId));
+        return await this.redis.getClient().scard(ISLAND_PLAYERS_KEY(islandId));
     }
 
     async addPlayerToIsland(islandId: string, playerId: string): Promise<void> {
         const key = ISLAND_PLAYERS_KEY(islandId);
-        const players = await this.redis.smembers(key);
+        const players = await this.redis.getClient().smembers(key);
 
         if (players.length === 0) {
-            await this.redis.sadd(key, playerId);
+            await this.redis.getClient().sadd(key, playerId);
             return;
         }
-        await this.redis.sadd(key, playerId);
+        await this.redis.getClient().sadd(key, playerId);
     }
 
     async removePlayer(islandId: string, playerId: string): Promise<void> {
         const key = ISLAND_PLAYERS_KEY(islandId);
-        await this.redis.srem(key, playerId);
+        await this.redis.getClient().srem(key, playerId);
     }
 
     async getPlayerIdsByIslandId(islandId: string): Promise<string[]> {
-        return await this.redis.smembers(ISLAND_PLAYERS_KEY(islandId));
+        return await this.redis
+            .getClient()
+            .smembers(ISLAND_PLAYERS_KEY(islandId));
     }
 
     async delete(islandId: string): Promise<void> {
-        await this.redis.del(
-            NORMAL_ISLAND_KEY(islandId),
-            ISLAND_TAGS_KEY(islandId),
-            ISLAND_PLAYERS_KEY(islandId),
-        );
+        await this.redis
+            .getClient()
+            .del(
+                NORMAL_ISLAND_KEY(islandId),
+                ISLAND_TAGS_KEY(islandId),
+                ISLAND_PLAYERS_KEY(islandId),
+            );
     }
 }

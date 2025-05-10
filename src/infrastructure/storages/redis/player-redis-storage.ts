@@ -1,28 +1,25 @@
-import { HttpStatus, Inject } from '@nestjs/common';
-import Redis from 'ioredis';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { PLAYER_NOT_FOUND_IN_STORAGE } from 'src/domain/exceptions/message';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { Player } from 'src/domain/models/game/player';
 import { PLAYER_KEY } from 'src/infrastructure/redis/key';
-import { RedisClient } from 'src/infrastructure/redis/redis.module';
+import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 
+@Injectable()
 export class PlayerRedisStorage implements PlayerStorage {
-    constructor(
-        @Inject(RedisClient)
-        private readonly redis: Redis,
-    ) {}
+    constructor(private readonly redis: RedisClientService) {}
 
     async addPlayer(playerId: string, player: Player): Promise<void> {
         const key = PLAYER_KEY(playerId);
-        await this.redis.hset(key, player);
+        await this.redis.getClient().hset(key, player);
     }
 
     async getPlayer(playerId: string): Promise<Player> {
         const key = PLAYER_KEY(playerId);
 
-        const player = await this.redis.hgetall(key);
+        const player = await this.redis.getClient().hgetall(key);
         if (Object.keys(player).length === 0) {
             throw new DomainException(
                 DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE,
@@ -35,10 +32,10 @@ export class PlayerRedisStorage implements PlayerStorage {
     }
 
     async getPlayerByClientId(clientId: string): Promise<Player> {
-        const keys = await this.redis.keys(PLAYER_KEY('*'));
+        const keys = await this.redis.getClient().keys(PLAYER_KEY('*'));
 
         for (const key of keys) {
-            const player = await this.redis.hgetall(key);
+            const player = await this.redis.getClient().hgetall(key);
 
             if (player.clientId === clientId) {
                 return player as unknown as Promise<Player>;
@@ -53,11 +50,11 @@ export class PlayerRedisStorage implements PlayerStorage {
     }
 
     async getPlayersByIslandId(islandId: string): Promise<Player[]> {
-        const keys = await this.redis.keys(PLAYER_KEY('*'));
+        const keys = await this.redis.getClient().keys(PLAYER_KEY('*'));
         const activePlayers: Player[] = [];
 
         for (const key of keys) {
-            const player = await this.redis.hgetall(key);
+            const player = await this.redis.getClient().hgetall(key);
 
             if (player.islandId === islandId) {
                 activePlayers.push(player as unknown as Player);
@@ -69,12 +66,12 @@ export class PlayerRedisStorage implements PlayerStorage {
 
     async deletePlayer(playerId: string): Promise<void> {
         const key = PLAYER_KEY(playerId);
-        await this.redis.del(key);
+        await this.redis.getClient().del(key);
     }
 
     async getAllPlayers(): Promise<Player[]> {
-        const keys = await this.redis.keys(PLAYER_KEY('*'));
-        const pipeline = this.redis.pipeline();
+        const keys = await this.redis.getClient().keys(PLAYER_KEY('*'));
+        const pipeline = this.redis.getClient().pipeline();
 
         for (const key of keys) {
             pipeline.hgetall(key);
@@ -98,6 +95,6 @@ export class PlayerRedisStorage implements PlayerStorage {
         now = Date.now(),
     ): Promise<void> {
         const key = PLAYER_KEY(playerId);
-        await this.redis.hset(key, 'lastActivity', now);
+        await this.redis.getClient().hset(key, 'lastActivity', now);
     }
 }
