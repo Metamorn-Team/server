@@ -2,6 +2,7 @@ version: '3.9'
 
 volumes:
     mmornDev: {}
+    redisData: {}
 
 services:
     db:
