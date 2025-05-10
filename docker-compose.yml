@@ -10,7 +10,7 @@ services:
         restart: always
         shm_size: 128mb
         ports:
-            - 5400:5432
+            - 5100:5432
         volumes:
             - mmornDev:/var/lib/postgresql/data
         environment:
