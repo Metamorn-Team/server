@@ -264,11 +264,26 @@ export class GameIslandService {
         return activeUsers;
     }
 
-    async kickPlayerById(playerId: string, type: IslandTypeEnum) {
+    async kickPlayerById(playerId: string) {
         try {
             const player = await this.playerStorageReader.readOne(playerId);
+            const { roomId: islandId } = player;
 
-            await this.leaveRoom(player.roomId, playerId, type);
+            await this.playerStorageWriter.remove(playerId);
+
+            if (player.islandType === IslandTypeEnum.NORMAL) {
+                await this.normalIslandStorageWriter.removePlayer(
+                    islandId,
+                    playerId,
+                );
+            } else {
+                await this.desertedIslandStorageWriter.removePlayer(
+                    islandId,
+                    playerId,
+                );
+            }
+            await this.islandJoinWriter.left(islandId, player.id);
+
             return player;
         } catch (e) {
             if (
