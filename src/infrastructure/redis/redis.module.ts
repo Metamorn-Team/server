@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
 export const RedisClient = Symbol('REDIS_CLIENT');
@@ -7,7 +8,12 @@ export const RedisClient = Symbol('REDIS_CLIENT');
     providers: [
         {
             provide: RedisClient,
-            useFactory: () => new Redis(6379),
+            useFactory: (config: ConfigService) =>
+                new Redis(
+                    Number(config.get<string>('REDIS_PORT')),
+                    String(config.get<string>('REDIS_PORT')),
+                ),
+            inject: [ConfigService],
         },
     ],
     exports: [RedisClient],
