@@ -65,7 +65,7 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
     }
 
     async getAllIsland(): Promise<LiveNormalIsland[]> {
-        const keys = await this.redis.keys('island:*');
+        const keys = await this.redis.keys(NORMAL_ISLAND_KEY('*'));
         const islandKeys = keys.filter(
             (key) => !key.includes(':tags') && !key.includes(':players'),
         );

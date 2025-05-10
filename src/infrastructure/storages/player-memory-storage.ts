@@ -7,8 +7,8 @@ import { SocketClientId } from 'src/domain/types/game.types';
 export class PlayerMemoryStorage {
     private players = new Map<SocketClientId, Player>();
 
-    addPlayer(playerId: string, player: Player): void {
-        this.players.set(playerId, player);
+    addPlayer(player: Player): void {
+        this.players.set(player.id, player);
     }
 
     getPlayer(playerId: string): Player {

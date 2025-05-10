@@ -12,4 +12,8 @@ export class PlayerMemoryStorageManager {
     readOneByClientId(clientId: string) {
         return this.playerMemoryStorage.getPlayerByClientId(clientId);
     }
+
+    remove(id: string) {
+        this.playerMemoryStorage.deletePlayer(id);
+    }
 }

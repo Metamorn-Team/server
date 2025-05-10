@@ -5,6 +5,7 @@ export interface PlayerStorage {
     getPlayerByClientId(clientId: string): Promise<Player>;
     addPlayer(playerId: string, player: Player): Promise<void>;
     deletePlayer(playerId: string): Promise<void>;
+    getAllPlayers(): Promise<Player[]>;
     // getPlayerStore(): Record<string, Player>;
 }
 

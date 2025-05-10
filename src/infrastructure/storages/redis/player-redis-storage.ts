@@ -5,6 +5,7 @@ import { DomainException } from 'src/domain/exceptions/exceptions';
 import { PLAYER_NOT_FOUND_IN_STORAGE } from 'src/domain/exceptions/message';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { Player } from 'src/domain/models/game/player';
+import { PLAYER_KEY } from 'src/infrastructure/redis/key';
 import { RedisClient } from 'src/infrastructure/redis/redis.module';
 
 export class PlayerRedisStorage implements PlayerStorage {
@@ -14,12 +15,12 @@ export class PlayerRedisStorage implements PlayerStorage {
     ) {}
 
     async addPlayer(playerId: string, player: Player): Promise<void> {
-        const key = `player:${playerId}`;
+        const key = PLAYER_KEY(playerId);
         await this.redis.hset(key, player);
     }
 
     async getPlayer(playerId: string): Promise<Player> {
-        const key = `player:${playerId}`;
+        const key = PLAYER_KEY(playerId);
 
         const player = await this.redis.hgetall(key);
         if (Object.keys(player).length === 0) {
@@ -34,7 +35,7 @@ export class PlayerRedisStorage implements PlayerStorage {
     }
 
     async getPlayerByClientId(clientId: string): Promise<Player> {
-        const keys = await this.redis.keys('player:*');
+        const keys = await this.redis.keys(PLAYER_KEY('*'));
 
         for (const key of keys) {
             const player = await this.redis.hgetall(key);
@@ -52,7 +53,7 @@ export class PlayerRedisStorage implements PlayerStorage {
     }
 
     async getPlayersByIslandId(islandId: string): Promise<Player[]> {
-        const keys = await this.redis.keys('player:*');
+        const keys = await this.redis.keys(PLAYER_KEY('*'));
         const activePlayers: Player[] = [];
 
         for (const key of keys) {
@@ -67,7 +68,28 @@ export class PlayerRedisStorage implements PlayerStorage {
     }
 
     async deletePlayer(playerId: string): Promise<void> {
-        const key = `player:${playerId}`;
+        const key = PLAYER_KEY(playerId);
         await this.redis.del(key);
+    }
+
+    async getAllPlayers(): Promise<Player[]> {
+        const keys = await this.redis.keys(PLAYER_KEY('*'));
+        const pipeline = this.redis.pipeline();
+
+        for (const key of keys) {
+            pipeline.hgetall(key);
+        }
+
+        const results = await pipeline.exec();
+        if (!results) throw new Error();
+
+        const players: Player[] = results
+            .map(([err, data]) => {
+                if (err || !data || Object.keys(data).length === 0) return null;
+                return data as Player;
+            })
+            .filter((p): p is Player => p !== null) as unknown as Player[];
+
+        return players;
     }
 }

@@ -13,7 +13,7 @@ export class PlayerStorageWriter {
 
     async create(player: Player) {
         await this.playerStorage.addPlayer(player.id, player);
-        this.playerMemoryStorage.addPlayer(player.id, player);
+        this.playerMemoryStorage.addPlayer(player);
     }
 
     async remove(id: string) {

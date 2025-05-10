@@ -15,7 +15,7 @@ export class PlayerStorageReader {
             return this.playerMemoryStorage.getPlayer(id);
         } catch (_) {
             const player = await this.playerStorage.getPlayer(id);
-            this.playerMemoryStorage.addPlayer(player.id, player);
+            this.playerMemoryStorage.addPlayer(player);
 
             return player;
         }
@@ -27,7 +27,7 @@ export class PlayerStorageReader {
         } catch (_) {
             const player =
                 await this.playerStorage.getPlayerByClientId(clientId);
-            this.playerMemoryStorage.addPlayer(player.id, player);
+            this.playerMemoryStorage.addPlayer(player);
 
             return player;
         }
