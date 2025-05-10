@@ -93,10 +93,11 @@ export class PlayerRedisStorage implements PlayerStorage {
         return players;
     }
 
-    async updateLastActivity(playerId: string): Promise<void> {
-        const key = PLAYER_KEY(PLAYER_KEY(playerId));
-        const timestamp = new Date().toISOString();
-
-        await this.redis.hset(key, 'lastActivity', timestamp);
+    async updateLastActivity(
+        playerId: string,
+        now = Date.now(),
+    ): Promise<void> {
+        const key = PLAYER_KEY(playerId);
+        await this.redis.hset(key, 'lastActivity', now);
     }
 }
