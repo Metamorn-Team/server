@@ -3,10 +3,14 @@ import { FriendsComponentModule } from './friends-component.module';
 import { FriendsController } from 'src/presentation/controller/friends/friends.controller';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import { UserComponentModule } from '../users/users-component.module';
-import { PlayerStorageModule } from 'src/modules/game/player-storage.module';
+import { PlayerMemoryStorageComponentModule } from 'src/modules/users/player-memory-storage-component.module';
 
 @Module({
-    imports: [FriendsComponentModule, UserComponentModule, PlayerStorageModule],
+    imports: [
+        FriendsComponentModule,
+        UserComponentModule,
+        PlayerMemoryStorageComponentModule,
+    ],
     controllers: [FriendsController],
     providers: [FriendsService],
     exports: [FriendsService],

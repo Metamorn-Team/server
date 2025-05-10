@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { FriendWriter } from 'src/domain/components/friends/friend-writer';
 import { FriendChecker } from 'src/domain/components/friends/friend-checker';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
@@ -11,15 +11,14 @@ import { v4 } from 'uuid';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { GetFriendRequestsResponse } from 'src/presentation/dto/friends/response/get-friend-request-list.response';
 import { GetFriendsResponse } from 'src/presentation/dto';
-import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
 
 @Injectable()
 export class FriendsService {
     constructor(
-        @Inject(PlayerStorage)
-        private readonly gameStorage: PlayerStorage,
+        private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
         private readonly friendReader: FriendReader,
         private readonly friendWriter: FriendWriter,
         private readonly friendChecker: FriendChecker,
@@ -38,7 +37,7 @@ export class FriendsService {
             let isOnline: boolean;
 
             try {
-                isOnline = !!this.gameStorage.getPlayer(
+                isOnline = !!this.playerMemoryStorageManager.readOne(
                     friendRelation.friend.id,
                 );
             } catch (e: unknown) {
