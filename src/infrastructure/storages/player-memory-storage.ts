@@ -44,4 +44,8 @@ export class PlayerMemoryStorage {
     getPlayerStore(): Record<string, Player> {
         return Object.fromEntries(this.players.entries());
     }
+
+    updateLastActivity(id: string, time = Date.now()) {
+        this.getPlayer(id).lastActivity = time;
+    }
 }

@@ -20,4 +20,9 @@ export class PlayerStorageWriter {
         await this.playerStorage.deletePlayer(id);
         this.playerMemoryStorage.deletePlayer(id);
     }
+
+    async updateLastActivity(id: string, time = Date.now()) {
+        await this.playerStorage.updateLastActivity(id, time);
+        this.playerMemoryStorage.updateLastActivity(id, time);
+    }
 }
