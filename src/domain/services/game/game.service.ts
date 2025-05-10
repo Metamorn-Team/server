@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { MOVING_THRESHOLD } from 'src/constants/threshold';

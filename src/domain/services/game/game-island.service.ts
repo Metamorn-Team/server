@@ -61,14 +61,13 @@ export class GameIslandService {
         x: number,
         y: number,
     ): Promise<JoinedIslandInfo> {
-        // 1. 회원 및 섬 존재 여부 디비에서 확인
-        const now = new Date().toISOString();
-        console.log(`[${now}] joinNormalIsland called for player ${playerId}`);
+        // const now = new Date().toISOString();
+        // console.log(`[${now}] joinNormalIsland called for player ${playerId}`);
         const user = await this.userReader.readProfile(playerId);
         const island = await this.islandReader.readOne(islandId);
 
         const countParticipants =
-            await this.normalIslandStorageReader.countPlayerByIsland(islandId);
+            await this.normalIslandStorageReader.countPlayer(islandId);
         if (island.maxMembers <= countParticipants) {
             // 임시 예외 코드
             throw new DomainException(
@@ -102,7 +101,6 @@ export class GameIslandService {
         const allPlayers = await this.getActiveUsers(island.type, islandId);
         const activePlayers =
             allPlayers.filter((player) => player.id !== playerId) || [];
-        // 여기까지
 
         return {
             activePlayers,
@@ -120,7 +118,6 @@ export class GameIslandService {
         const user = await this.userReader.readProfile(playerId);
         const availableIsland = await this.getAvailableDesertedIsland();
 
-        // 여기부터 동시성 제어 필요.
         const { id: islandId } = availableIsland;
         const player = Player.create({
             id: user.id,
@@ -143,7 +140,6 @@ export class GameIslandService {
         );
         const activePlayers =
             allPlayers.filter((player) => player.id !== playerId) || [];
-        // 여기까지
 
         const islandJoin = IslandJoinEntity.create(
             { islandId, userId: player.id },
@@ -186,61 +182,45 @@ export class GameIslandService {
     }
 
     async leftPlayer(playerId: string) {
+        let playerCount: number;
         const player = await this.playerStorageReader.readOne(playerId);
 
-        const { roomId } = player;
-
-        const island =
-            player.islandType === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.readOne(roomId)
-                : await this.desertedIslandStorageReader.readOne(roomId);
-
-        await this.islandJoinWriter.left(roomId, player.id);
-
-        await this.playerStorageWriter.remove(playerId);
-
-        if (player.islandType === IslandTypeEnum.NORMAL) {
-            await this.normalIslandStorageWriter.removePlayer(
-                island.id,
-                playerId,
-            );
-        } else {
-            await this.desertedIslandStorageWriter.removePlayer(
-                island.id,
-                playerId,
-            );
-        }
-
-        if (island.players.size === 0) {
-            await this.normalIslandStorageWriter.remove(island.id);
-            await this.islandWriter.remove(island.id);
-        }
-
-        return player;
-    }
-
-    // NOTE 지우기
-    async leaveRoom(islandId: string, playerId: string, type: IslandTypeEnum) {
-        const player = await this.playerStorageReader.readOne(playerId);
-        const island =
-            type === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.readOne(islandId)
-                : await this.desertedIslandStorageReader.readOne(islandId);
+        const { roomId: islandId, islandType } = player;
 
         await this.islandJoinWriter.left(islandId, player.id);
-
         await this.playerStorageWriter.remove(playerId);
 
-        if (player.islandType === IslandTypeEnum.NORMAL) {
+        if (islandType === IslandTypeEnum.NORMAL) {
             await this.normalIslandStorageWriter.removePlayer(
-                island.id,
+                islandId,
                 playerId,
             );
+            await this.normalIslandStorageWriter.removePlayer(
+                islandId,
+                playerId,
+            );
+            playerCount =
+                await this.normalIslandStorageReader.countPlayer(islandId);
         } else {
             await this.desertedIslandStorageWriter.removePlayer(
-                island.id,
+                islandId,
                 playerId,
             );
+            await this.desertedIslandStorageWriter.removePlayer(
+                islandId,
+                playerId,
+            );
+            playerCount =
+                await this.desertedIslandStorageReader.countPlayer(islandId);
+        }
+
+        if (playerCount === 0) {
+            if (islandType === IslandTypeEnum.NORMAL) {
+                await this.normalIslandStorageWriter.remove(islandId);
+            } else {
+                await this.desertedIslandStorageWriter.remove(islandId);
+            }
+            await this.islandWriter.remove(islandId);
         }
 
         return player;

@@ -101,7 +101,6 @@ export class IslandGateway
 
         this.logger.log(`joined player : ${userId}`);
 
-        // type이 NORMAL이면 islandId로 참여
         const { activePlayers, joinedIslandId, joinedPlayer } =
             await this.gameIslandService.joinNormalIsland(
                 userId,
@@ -115,8 +114,6 @@ export class IslandGateway
         client.emit('playerJoinSuccess', { x, y });
         client.emit('activePlayers', activePlayers);
         client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
-
-        // this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerLeft')
@@ -213,11 +210,7 @@ export class IslandGateway
             if (player.clientId !== client.id) return;
             const { roomId } = player;
             await client.leave(roomId);
-            await this.gameIslandService.leaveRoom(
-                roomId,
-                player.id,
-                player.islandType,
-            );
+            await this.gameIslandService.leftPlayer(player.id);
             client.to(roomId).emit('playerLeft', { id: player.id });
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
@@ -231,8 +224,6 @@ export class IslandGateway
             ) {
                 return;
             }
-
-            throw e;
         }
     }
 }
