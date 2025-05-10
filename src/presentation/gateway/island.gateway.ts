@@ -22,7 +22,6 @@ import { GameIslandService } from 'src/domain/services/game/game-island.service'
 import { JoinDesertedIslandReqeust } from 'src/presentation/dto/game/request/join-deserted-island.request';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 
 type TypedSocket = Socket<ClientToIsland, IslandToClient>;
@@ -49,20 +48,13 @@ export class IslandGateway
         private readonly gameIslandService: GameIslandService,
     ) {}
 
-    async kick(
-        userId: string,
-        client: TypedSocket,
-        islandType: IslandTypeEnum,
-    ) {
-        const kickedPlayer = await this.gameIslandService.kickPlayerById(
-            userId,
-            islandType,
-        );
+    async kick(userId: string, client: TypedSocket) {
+        const kickedPlayer =
+            await this.gameIslandService.kickPlayerById(userId);
         if (kickedPlayer) {
             const { clientId, roomId, id } = kickedPlayer;
-            const kickedClient = this.wss.sockets.get(clientId);
 
-            await this.gameIslandService.leaveRoom(roomId, id, islandType);
+            const kickedClient = this.wss.sockets.get(clientId);
             await kickedClient?.leave(roomId);
 
             client.to(roomId).emit('playerLeft', { id });
@@ -76,8 +68,7 @@ export class IslandGateway
         @MessageBody() data: JoinDesertedIslandReqeust,
         @CurrentUserFromSocket() userId: string,
     ) {
-        await this.kick(userId, client, IslandTypeEnum.DESERTED);
-
+        await this.kick(userId, client);
         const { x, y } = data;
 
         this.logger.log(`joined player : ${userId}`);
@@ -104,7 +95,7 @@ export class IslandGateway
         @MessageBody() data: PlayerJoinRequest,
         @CurrentUserFromSocket() userId: string,
     ) {
-        await this.kick(userId, client, IslandTypeEnum.DESERTED);
+        await this.kick(userId, client);
 
         const { x, y, islandId } = data;
 
