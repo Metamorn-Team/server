@@ -15,6 +15,7 @@ import { TagComponentModule } from 'src/modules/tags/tag-component.module';
 import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-component.module';
 import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
 import { PlayerMemoryStorageComponentModule } from 'src/modules/users/player-memory-storage-component.module';
+import { IslandManagerFactoryModule } from 'src/modules/islands/island-manager-factory.module';
 
 @Module({
     imports: [
@@ -29,6 +30,8 @@ import { PlayerMemoryStorageComponentModule } from 'src/modules/users/player-mem
         PlayerMemoryStorageComponentModule,
         NormalIslandStorageComponentModule,
         DesertedIslandStorageComponentModule,
+
+        IslandManagerFactoryModule,
     ],
     providers: [
         LobyGateway,

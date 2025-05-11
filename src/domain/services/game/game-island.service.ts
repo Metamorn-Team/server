@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { UNINHABITED_MAX_MEMBERS } from 'src/common/constants';
-import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandReader } from 'src/domain/components/islands/island-reader';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { UserReader } from 'src/domain/components/users/user-reader';
-import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
@@ -13,28 +11,24 @@ import { Player } from 'src/domain/models/game/player';
 import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
-import { NormalIslandStorageWriter } from 'src/domain/components/islands/normal-storage/normal-island-storage-writer';
-import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-writer';
 import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
-import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
+import { IslandManagerFactory } from 'src/domain/components/islands/factory/island-manager-factory';
 
 @Injectable()
 export class GameIslandService {
     constructor(
         private readonly islandWriter: IslandWriter,
         private readonly islandReader: IslandReader,
-        private readonly islandJoinWriter: IslandJoinWriter,
         private readonly userReader: UserReader,
 
         private readonly playerStorageReader: PlayerStorageReader,
-        private readonly playerStorageWriter: PlayerStorageWriter,
-        private readonly normalIslandStorageWriter: NormalIslandStorageWriter,
-        private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
+
+        private readonly islandManagerFactory: IslandManagerFactory,
     ) {}
 
     async getAvailableDesertedIsland() {
@@ -48,6 +42,19 @@ export class GameIslandService {
         }
 
         return await this.createIsland();
+    }
+
+    async createIsland() {
+        const islandEntity = IslandEntity.create(
+            {
+                type: IslandTypeEnum.DESERTED,
+                maxMembers: UNINHABITED_MAX_MEMBERS,
+            },
+            v4,
+        );
+        await this.islandWriter.create(islandEntity);
+
+        return this.createLiveIsland(islandEntity.id);
     }
 
     getIsland(islandId: string) {
@@ -65,18 +72,9 @@ export class GameIslandService {
         // console.log(`[${now}] joinNormalIsland called for player ${playerId}`);
         const user = await this.userReader.readProfile(playerId);
         const island = await this.islandReader.readOne(islandId);
+        const manager = this.islandManagerFactory.get(IslandTypeEnum.NORMAL);
 
-        const countParticipants =
-            await this.normalIslandStorageReader.countPlayer(islandId);
-        if (island.maxMembers <= countParticipants) {
-            // 임시 예외 코드
-            throw new DomainException(
-                DomainExceptionType.ISLAND_FULL,
-                1000,
-                ISLAND_FULL,
-            );
-        }
-
+        await manager.canJoin(islandId);
         const player = Player.create({
             id: user.id,
             avatarKey: user.avatarKey,
@@ -89,18 +87,8 @@ export class GameIslandService {
             y,
         });
 
-        await this.playerStorageWriter.create(player);
-        await this.normalIslandStorageWriter.addPlayer(islandId, playerId);
-
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: playerId },
-            v4,
-        );
-        await this.islandJoinWriter.create(islandJoin);
-
-        const allPlayers = await this.getActiveUsers(island.type, islandId);
-        const activePlayers =
-            allPlayers.filter((player) => player.id !== playerId) || [];
+        await manager.join(player);
+        const activePlayers = await manager.getActiveUsers(islandId, playerId);
 
         return {
             activePlayers,
@@ -117,6 +105,7 @@ export class GameIslandService {
     ) {
         const user = await this.userReader.readProfile(playerId);
         const availableIsland = await this.getAvailableDesertedIsland();
+        const manager = this.islandManagerFactory.get(IslandTypeEnum.DESERTED);
 
         const { id: islandId } = availableIsland;
         const player = Player.create({
@@ -131,42 +120,14 @@ export class GameIslandService {
             y,
         });
 
-        await this.playerStorageWriter.create(player);
-        await this.desertedIslandStorageWriter.addPlayer(islandId, playerId);
-
-        const allPlayers = await this.getActiveUsers(
-            availableIsland.type,
-            availableIsland.id,
-        );
-        const activePlayers =
-            allPlayers.filter((player) => player.id !== playerId) || [];
-
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: player.id },
-            v4,
-        );
-        await this.islandJoinWriter.create(islandJoin);
+        await manager.join(player);
+        const activePlayers = await manager.getActiveUsers(islandId, playerId);
 
         return {
             activePlayers,
             joinedIslandId: availableIsland.id,
             joinedPlayer: player,
         };
-    }
-
-    async createIsland() {
-        // DB
-        const islandEntity = IslandEntity.create(
-            {
-                type: IslandTypeEnum.DESERTED,
-                maxMembers: UNINHABITED_MAX_MEMBERS,
-            },
-            v4,
-        );
-        await this.islandWriter.create(islandEntity);
-
-        // Memory
-        return this.createLiveIsland(islandEntity.id);
     }
 
     async createLiveIsland(islandId: string) {
@@ -182,87 +143,24 @@ export class GameIslandService {
     }
 
     async leftPlayer(playerId: string) {
-        let playerCount: number;
         const player = await this.playerStorageReader.readOne(playerId);
 
         const { roomId: islandId, islandType } = player;
+        const manager = this.islandManagerFactory.get(islandType);
 
-        await this.islandJoinWriter.left(islandId, player.id);
-        await this.playerStorageWriter.remove(playerId);
-
-        if (islandType === IslandTypeEnum.NORMAL) {
-            await this.normalIslandStorageWriter.removePlayer(
-                islandId,
-                playerId,
-            );
-            await this.normalIslandStorageWriter.removePlayer(
-                islandId,
-                playerId,
-            );
-            playerCount =
-                await this.normalIslandStorageReader.countPlayer(islandId);
-        } else {
-            await this.desertedIslandStorageWriter.removePlayer(
-                islandId,
-                playerId,
-            );
-            await this.desertedIslandStorageWriter.removePlayer(
-                islandId,
-                playerId,
-            );
-            playerCount =
-                await this.desertedIslandStorageReader.countPlayer(islandId);
-        }
-
-        if (playerCount === 0) {
-            if (islandType === IslandTypeEnum.NORMAL) {
-                await this.normalIslandStorageWriter.remove(islandId);
-            } else {
-                await this.desertedIslandStorageWriter.remove(islandId);
-            }
-            await this.islandWriter.remove(islandId);
-        }
+        await manager.left(islandId, playerId);
+        await manager.removeEmpty(islandId);
 
         return player;
-    }
-
-    async getActiveUsers(type: IslandTypeEnum, islandId: string) {
-        const island =
-            type === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.readOne(islandId)
-                : await this.desertedIslandStorageReader.readOne(islandId);
-
-        const activeUsers: Player[] = [];
-
-        for (const playerId of island.players) {
-            const player = await this.playerStorageReader.readOne(playerId);
-            if (player) {
-                activeUsers.push(player);
-            }
-        }
-
-        return activeUsers;
     }
 
     async kickPlayerById(playerId: string) {
         try {
             const player = await this.playerStorageReader.readOne(playerId);
-            const { roomId: islandId } = player;
+            const { roomId: islandId, islandType } = player;
 
-            await this.playerStorageWriter.remove(playerId);
-
-            if (player.islandType === IslandTypeEnum.NORMAL) {
-                await this.normalIslandStorageWriter.removePlayer(
-                    islandId,
-                    playerId,
-                );
-            } else {
-                await this.desertedIslandStorageWriter.removePlayer(
-                    islandId,
-                    playerId,
-                );
-            }
-            await this.islandJoinWriter.left(islandId, player.id);
+            const manager = this.islandManagerFactory.get(islandType);
+            await manager.left(islandId, playerId);
 
             return player;
         } catch (e) {
@@ -282,27 +180,25 @@ export class GameIslandService {
         reason?: string;
     }> {
         try {
-            const island =
-                await this.normalIslandStorageReader.readOne(islandId);
+            await this.islandManagerFactory
+                .get(IslandTypeEnum.NORMAL)
+                .canJoin(islandId);
 
-            const isFull = island.max <= island.players.size;
-            if (isFull) {
-                return {
-                    canJoin: false,
-                    reason: ISLAND_FULL,
-                };
-            }
-
-            return { islandId: island.id, canJoin: true };
+            return { islandId, canJoin: true };
         } catch (e: unknown) {
-            if (
-                e instanceof DomainException &&
-                e.errorType === DomainExceptionType.ISLAND_NOT_FOUND
-            ) {
-                return {
-                    canJoin: false,
-                    reason: ISLAND_NOT_FOUND_MESSAGE,
-                };
+            if (e instanceof DomainException) {
+                if (e.errorType === DomainExceptionType.ISLAND_FULL) {
+                    return {
+                        canJoin: false,
+                        reason: ISLAND_FULL,
+                    };
+                }
+                if (e.errorType === DomainExceptionType.ISLAND_NOT_FOUND) {
+                    return {
+                        canJoin: false,
+                        reason: ISLAND_NOT_FOUND_MESSAGE,
+                    };
+                }
             }
             throw e;
         }
