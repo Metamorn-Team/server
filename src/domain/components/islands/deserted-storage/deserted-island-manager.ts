@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-writer';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
-import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
@@ -17,7 +16,6 @@ export class DesertedIslandManager implements IslandManager {
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly playerStorageWriter: PlayerStorageWriter,
-        private readonly islandWriter: IslandWriter,
     ) {}
 
     async canJoin(islandId: string) {
@@ -67,7 +65,6 @@ export class DesertedIslandManager implements IslandManager {
 
         if (playerCount < 1) {
             await this.desertedIslandStorageWriter.remove(islandId);
-            await this.islandWriter.remove(islandId);
         }
     }
 }
