@@ -187,8 +187,17 @@ export class GameIslandService {
         const { roomId: islandId, islandType } = player;
         const manager = this.islandManagerFactory.get(islandType);
 
-        await manager.left(islandId, playerId);
-        await manager.removeEmpty(islandId);
+        const key = ISLAND_LOCK_KEY(islandId);
+        await this.lockManager.transaction(key, [
+            {
+                execute: () => manager.left(islandId, playerId),
+                rollback: () => manager.join(player),
+            },
+            {
+                execute: () => manager.removeEmpty(islandId),
+                rollback: () => this.createLiveIsland(islandId),
+            },
+        ]);
         await this.islandJoinWriter.left(islandId, playerId);
 
         return player;
