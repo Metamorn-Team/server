@@ -41,7 +41,7 @@ export class GameIslandService {
         const islands = await this.desertedIslandStorageReader.readAll();
 
         if (islands.length === 0) {
-            return await this.createLiveIsland(v4());
+            return await this.createIsland();
         }
 
         const joinableIslands = islands.filter(
@@ -154,14 +154,11 @@ export class GameIslandService {
             },
         ]);
 
-        const stdDate = new Date();
-        await this.islandWriter.create({
-            id: islandId,
-            type: IslandTypeEnum.DESERTED,
-            maxMembers: DESERTED_MAX_MEMBERS,
-            createdAt: stdDate,
-            updatedAt: stdDate,
-        });
+        const islandJoin = IslandJoinEntity.create(
+            { islandId, userId: playerId },
+            v4,
+        );
+        await this.islandJoinWriter.create(islandJoin);
 
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
 
