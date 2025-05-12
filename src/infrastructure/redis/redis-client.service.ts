@@ -12,6 +12,7 @@ export class RedisClientService implements OnModuleDestroy {
             host: String(config.get<string>('REDIS_HOST')),
             port: Number(config.get<string>('REDIS_PORT')),
             connectTimeout: 10000,
+            tls: {},
         });
     }
 
