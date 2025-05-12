@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class RedisClientService implements OnModuleDestroy {
@@ -15,6 +16,16 @@ export class RedisClientService implements OnModuleDestroy {
 
     getClient(): Redis {
         return this.client;
+    }
+
+    async acquireLock(key: string, ttl = 2000) {
+        const id = v4();
+        const result = await this.client.set(key, id, 'PX', ttl, 'NX');
+        return result === 'OK' ? id : null;
+    }
+
+    async releaseLock(key: string) {
+        await this.client.del(key);
     }
 
     async onModuleDestroy() {

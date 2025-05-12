@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { v4 } from 'uuid';
-import { UNINHABITED_MAX_MEMBERS } from 'src/common/constants';
+import { DESERTED_MAX_MEMBERS } from 'src/common/constants';
 import { IslandReader } from 'src/domain/components/islands/island-reader';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { UserReader } from 'src/domain/components/users/user-reader';
@@ -16,12 +16,17 @@ import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deser
 import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { IslandManagerFactory } from 'src/domain/components/islands/factory/island-manager-factory';
+import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
+import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
+import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
+import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
 
 @Injectable()
 export class GameIslandService {
     constructor(
         private readonly islandWriter: IslandWriter,
         private readonly islandReader: IslandReader,
+        private readonly islandJoinWriter: IslandJoinWriter,
         private readonly userReader: UserReader,
 
         private readonly playerStorageReader: PlayerStorageReader,
@@ -29,26 +34,30 @@ export class GameIslandService {
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
 
         private readonly islandManagerFactory: IslandManagerFactory,
+        private readonly lockManager: RedisTransactionManager,
     ) {}
 
     async getAvailableDesertedIsland() {
         const islands = await this.desertedIslandStorageReader.readAll();
-        if (islands.length !== 0) {
-            for (const island of islands) {
-                if (island && island.players.size < island.max) {
-                    return island;
-                }
-            }
+
+        if (islands.length === 0) {
+            return await this.createIsland();
         }
 
-        return await this.createIsland();
+        const joinableIslands = islands.filter(
+            (island) => island.players.size < island.max,
+        );
+
+        return joinableIslands[
+            Math.floor(Math.random() * joinableIslands.length)
+        ];
     }
 
     async createIsland() {
         const islandEntity = IslandEntity.create(
             {
                 type: IslandTypeEnum.DESERTED,
-                maxMembers: UNINHABITED_MAX_MEMBERS,
+                maxMembers: DESERTED_MAX_MEMBERS,
             },
             v4,
         );
@@ -68,13 +77,10 @@ export class GameIslandService {
         x: number,
         y: number,
     ): Promise<JoinedIslandInfo> {
-        // const now = new Date().toISOString();
-        // console.log(`[${now}] joinNormalIsland called for player ${playerId}`);
         const user = await this.userReader.readProfile(playerId);
         const island = await this.islandReader.readOne(islandId);
         const manager = this.islandManagerFactory.get(IslandTypeEnum.NORMAL);
 
-        await manager.canJoin(islandId);
         const player = Player.create({
             id: user.id,
             avatarKey: user.avatarKey,
@@ -87,8 +93,24 @@ export class GameIslandService {
             y,
         });
 
-        await manager.join(player);
+        const key = ISLAND_LOCK_KEY(islandId);
+        await this.lockManager.transaction(key, [
+            {
+                execute: () => manager.canJoin(islandId),
+            },
+            {
+                execute: () => manager.join(player),
+                rollback: () => manager.left(islandId, playerId),
+            },
+        ]);
+
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
+
+        const islandJoin = IslandJoinEntity.create(
+            { islandId, userId: playerId },
+            v4,
+        );
+        await this.islandJoinWriter.create(islandJoin);
 
         return {
             activePlayers,
@@ -104,28 +126,45 @@ export class GameIslandService {
         y: number,
     ) {
         const user = await this.userReader.readProfile(playerId);
-        const availableIsland = await this.getAvailableDesertedIsland();
         const manager = this.islandManagerFactory.get(IslandTypeEnum.DESERTED);
 
-        const { id: islandId } = availableIsland;
+        const joinableIsland = await this.getAvailableDesertedIsland();
+
+        const { id: islandId, type } = joinableIsland;
         const player = Player.create({
             id: user.id,
             clientId,
             nickname: user.nickname,
             avatarKey: user.avatarKey,
-            islandType: availableIsland.type,
+            islandType: type,
             tag: user.tag,
             roomId: islandId,
             x,
             y,
         });
 
-        await manager.join(player);
+        const key = ISLAND_LOCK_KEY(islandId);
+        await this.lockManager.transaction(key, [
+            {
+                execute: () => manager.canJoin(islandId),
+            },
+            {
+                execute: () => manager.join(player),
+                rollback: () => manager.left(islandId, playerId),
+            },
+        ]);
+
+        const islandJoin = IslandJoinEntity.create(
+            { islandId, userId: playerId },
+            v4,
+        );
+        await this.islandJoinWriter.create(islandJoin);
+
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
 
         return {
             activePlayers,
-            joinedIslandId: availableIsland.id,
+            joinedIslandId: islandId,
             joinedPlayer: player,
         };
     }
@@ -133,7 +172,7 @@ export class GameIslandService {
     async createLiveIsland(islandId: string) {
         const island = {
             id: islandId,
-            max: UNINHABITED_MAX_MEMBERS,
+            max: DESERTED_MAX_MEMBERS,
             players: new Set<SocketClientId>(),
             type: IslandTypeEnum.DESERTED,
         };
@@ -148,8 +187,18 @@ export class GameIslandService {
         const { roomId: islandId, islandType } = player;
         const manager = this.islandManagerFactory.get(islandType);
 
-        await manager.left(islandId, playerId);
-        await manager.removeEmpty(islandId);
+        const key = ISLAND_LOCK_KEY(islandId);
+        await this.lockManager.transaction(key, [
+            {
+                execute: () => manager.left(islandId, playerId),
+                rollback: () => manager.join(player),
+            },
+            {
+                execute: () => manager.removeEmpty(islandId),
+                rollback: () => this.createLiveIsland(islandId),
+            },
+        ]);
+        await this.islandJoinWriter.left(islandId, playerId);
 
         return player;
     }

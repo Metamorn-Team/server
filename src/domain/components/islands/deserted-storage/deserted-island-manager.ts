@@ -1,17 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-writer';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
-import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
-import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player } from 'src/domain/models/game/player';
-import { v4 } from 'uuid';
 
 @Injectable()
 export class DesertedIslandManager implements IslandManager {
@@ -20,8 +16,6 @@ export class DesertedIslandManager implements IslandManager {
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly playerStorageWriter: PlayerStorageWriter,
-        private readonly islandJoinWriter: IslandJoinWriter,
-        private readonly islandWriter: IslandWriter,
     ) {}
 
     async canJoin(islandId: string) {
@@ -30,10 +24,9 @@ export class DesertedIslandManager implements IslandManager {
         const countParticipants =
             await this.desertedIslandStorageReader.countPlayer(islandId);
         if (island.max <= countParticipants) {
-            // 임시 예외 코드
             throw new DomainException(
                 DomainExceptionType.ISLAND_FULL,
-                1000,
+                HttpStatus.UNPROCESSABLE_ENTITY,
                 ISLAND_FULL,
             );
         }
@@ -44,12 +37,6 @@ export class DesertedIslandManager implements IslandManager {
 
         await this.playerStorageWriter.create(player);
         await this.desertedIslandStorageWriter.addPlayer(islandId, playerId);
-
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: playerId },
-            v4,
-        );
-        await this.islandJoinWriter.create(islandJoin);
     }
 
     async getActiveUsers(islandId: string, myPlayerId: string) {
@@ -70,7 +57,6 @@ export class DesertedIslandManager implements IslandManager {
     async left(islandId: string, playerId: string) {
         await this.desertedIslandStorageWriter.removePlayer(islandId, playerId);
         await this.playerStorageWriter.remove(playerId);
-        await this.islandJoinWriter.left(islandId, playerId);
     }
 
     async removeEmpty(islandId: string): Promise<void> {
@@ -79,7 +65,6 @@ export class DesertedIslandManager implements IslandManager {
 
         if (playerCount < 1) {
             await this.desertedIslandStorageWriter.remove(islandId);
-            await this.islandWriter.remove(islandId);
         }
     }
 }

@@ -16,6 +16,7 @@ import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-com
 import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
 import { PlayerMemoryStorageComponentModule } from 'src/modules/users/player-memory-storage-component.module';
 import { IslandManagerFactoryModule } from 'src/modules/islands/island-manager-factory.module';
+import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-transaction-manger.module';
 
 @Module({
     imports: [
@@ -32,6 +33,7 @@ import { IslandManagerFactoryModule } from 'src/modules/islands/island-manager-f
         DesertedIslandStorageComponentModule,
 
         IslandManagerFactoryModule,
+        RedisTransactionManagerModule,
     ],
     providers: [
         LobyGateway,

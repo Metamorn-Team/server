@@ -1,13 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { v4 } from 'uuid';
-import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { NormalIslandStorageWriter } from 'src/domain/components/islands/normal-storage/normal-island-storage-writer';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
-import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
@@ -20,7 +17,6 @@ export class NormalIslandManager implements IslandManager {
         private readonly normalIslandStorageWriter: NormalIslandStorageWriter,
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly playerStorageWriter: PlayerStorageWriter,
-        private readonly islandJoinWriter: IslandJoinWriter,
         private readonly islandWriter: IslandWriter,
     ) {}
 
@@ -43,12 +39,6 @@ export class NormalIslandManager implements IslandManager {
 
         await this.playerStorageWriter.create(player);
         await this.normalIslandStorageWriter.addPlayer(islandId, playerId);
-
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: playerId },
-            v4,
-        );
-        await this.islandJoinWriter.create(islandJoin);
     }
 
     async getActiveUsers(islandId: string, myPlayerId: string) {
@@ -69,7 +59,6 @@ export class NormalIslandManager implements IslandManager {
     async left(islandId: string, playerId: string) {
         await this.normalIslandStorageWriter.removePlayer(islandId, playerId);
         await this.playerStorageWriter.remove(playerId);
-        await this.islandJoinWriter.left(islandId, playerId);
     }
 
     async removeEmpty(islandId: string): Promise<void> {

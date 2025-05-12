@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
 import { Socket } from 'socket.io';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import {
     WsExceptions,
@@ -24,6 +25,8 @@ export class WsExceptionFilter implements ExceptionFilter {
             this.logger.error(exception);
             this.log(res);
         }
+
+        // TODO 수신한 이벤트로 에러 데이터 송신하도록 변경.
         client.emit('wsError', res);
     }
 
@@ -48,6 +51,11 @@ export class WsExceptionFilter implements ExceptionFilter {
 
     private getMessageFromException(exception: Error): string {
         if (exception instanceof DomainException) {
+            if (
+                exception.errorType === DomainExceptionType.LOCK_ACQUIRED_FAILED
+            ) {
+                return '이미 처리 중인 작업이에요.';
+            }
             return exception.message;
         }
         return exception.message;
