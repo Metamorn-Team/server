@@ -124,6 +124,7 @@ export class IslandGateway
         const player = await this.gameIslandService.leftPlayer(userId);
         if (player) {
             await client.leave(player.roomId);
+            client.emit('playerLeftSuccess');
             client.to(player.roomId).emit('playerLeft', { id: player.id });
 
             this.logger.log(`Leave cilent: ${client.id}`);

@@ -55,6 +55,7 @@ export type IslandToClient = {
     playerJoinSuccess: (data: PlayerJoinSuccessResponse) => void;
     playerKicked: () => void;
     playerLeft: (data: PlayerLeftResponse) => void;
+    playerLeftSuccess: () => void;
     playerMoved: (data: PlayerMovedResponse) => void;
     activePlayers: (data: ActivePlayerResponse) => void;
     attacked: (data: AttackedResponse) => void;
