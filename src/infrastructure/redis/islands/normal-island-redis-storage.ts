@@ -42,7 +42,7 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
 
         if (!islandInfo || Object.keys(islandInfo).length === 0) {
             throw new DomainException(
-                DomainExceptionType.ISLAND_NOT_FOUND,
+                DomainExceptionType.ISLAND_NOT_FOUND_IN_STORAGE,
                 HttpStatus.NOT_FOUND,
                 ISLAND_NOT_FOUND_MESSAGE,
             );
