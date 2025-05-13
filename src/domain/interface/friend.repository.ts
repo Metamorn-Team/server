@@ -34,6 +34,7 @@ export interface FriendRepository {
         stats: FriendStatus,
     ): Promise<FriendData | null>;
     deleteById(id: string): Promise<void>;
+    countUnread(userId: string): Promise<number>;
 }
 
 export const FriendRepository = Symbol('FriendRepository');

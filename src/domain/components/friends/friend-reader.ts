@@ -84,4 +84,8 @@ export class FriendReader {
                   cursor,
               );
     }
+
+    async getUnreadCount(userId: string) {
+        return this.friendRepository.countUnread(userId);
+    }
 }
