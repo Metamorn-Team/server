@@ -186,4 +186,15 @@ export class FriendsController {
         const count = await this.friendReader.getUnreadCount(userId);
         return { count };
     }
+
+    @ApiOperation({ summary: '모든 친구 요청 확인 처리' })
+    @ApiResponse({
+        status: 201,
+        description: '확인 처리 완료',
+        type: GetUnreadRequestResponse,
+    })
+    @Patch('read')
+    async markAllAsRead(@CurrentUser() userId: string) {
+        await this.friendsService.markAllRequestAsRead(userId);
+    }
 }

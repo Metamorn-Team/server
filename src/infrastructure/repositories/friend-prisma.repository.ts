@@ -253,6 +253,17 @@ export class FriendPrismaRepository implements FriendRepository {
             where: {
                 receiverId: userId,
                 isRead: false,
+                deletedAt: null,
+            },
+        });
+    }
+
+    async updateIsRead(userId: string, isRead = true): Promise<void> {
+        await this.prisma.friendRequest.updateMany({
+            data: { isRead },
+            where: {
+                isRead: false,
+                deletedAt: null,
             },
         });
     }

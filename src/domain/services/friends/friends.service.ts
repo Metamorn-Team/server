@@ -154,4 +154,8 @@ export class FriendsService {
             throw e;
         }
     }
+
+    async markAllRequestAsRead(userId: string) {
+        await this.friendWriter.updateIsReadAll(userId);
+    }
 }
