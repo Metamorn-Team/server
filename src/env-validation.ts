@@ -7,6 +7,7 @@ export const validationSchema = Joi.object({
     // Redis
     REDIS_PORT: Joi.string().required(),
     REDIS_HOST: Joi.string().required(),
+    REDIS_TLS: Joi.string().required(),
 
     // JWT
     JWT_SECRET_KEY: Joi.string().required(),
