@@ -7,7 +7,11 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
-import { ClientToFriend, FriendToClient, SendFriendRequest } from 'types';
+import {
+    ClientToFriend,
+    FriendToClient,
+} from 'src/presentation/dto/game/socket/type';
+import { SendFriendRequest } from 'src/presentation/dto/friends';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
