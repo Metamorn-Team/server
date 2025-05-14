@@ -1,7 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { DomainException } from 'src/domain/exceptions/exceptions';
-import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
+import { Injectable } from '@nestjs/common';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 import { LiveDesertedIsland } from 'src/domain/types/game.types';
 import {
@@ -21,7 +18,7 @@ export class DesertedIslandRedisStorage implements DesertedIslandStorage {
         await this.redis.getClient().hset(key, { ...islandInfo });
     }
 
-    async getIsland(islandId: string): Promise<LiveDesertedIsland> {
+    async getIsland(islandId: string): Promise<LiveDesertedIsland | null> {
         const islandKey = DESERTED_ISLAND_KEY(islandId);
         const playersKey = ISLAND_PLAYERS_KEY(islandId);
 
@@ -31,11 +28,7 @@ export class DesertedIslandRedisStorage implements DesertedIslandStorage {
         ]);
 
         if (!islandInfo || Object.keys(islandInfo).length === 0) {
-            throw new DomainException(
-                DomainExceptionType.ISLAND_NOT_FOUND_IN_STORAGE,
-                HttpStatus.NOT_FOUND,
-                ISLAND_NOT_FOUND_MESSAGE,
-            );
+            return null;
         }
 
         return {
@@ -61,7 +54,7 @@ export class DesertedIslandRedisStorage implements DesertedIslandStorage {
             }),
         );
 
-        return islands;
+        return islands.filter((island) => island !== null);
     }
 
     async countPlayer(islandId: string): Promise<number> {
