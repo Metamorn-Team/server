@@ -253,6 +253,7 @@ export class FriendPrismaRepository implements FriendRepository {
             where: {
                 receiverId: userId,
                 isRead: false,
+                status: 'PENDING',
                 deletedAt: null,
             },
         });
