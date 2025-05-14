@@ -181,16 +181,14 @@ export class GameIslandService {
         return island;
     }
 
-    async leftPlayer(playerId: string) {
-        const player = await this.playerStorageReader.readOne(playerId);
-
+    async handleLeave(player: Player) {
         const { roomId: islandId, islandType } = player;
         const manager = this.islandManagerFactory.get(islandType);
 
         const key = ISLAND_LOCK_KEY(islandId);
         await this.lockManager.transaction(key, [
             {
-                execute: () => manager.left(islandId, playerId),
+                execute: () => manager.left(islandId, player.id),
                 rollback: () => manager.join(player),
             },
             {
@@ -198,9 +196,20 @@ export class GameIslandService {
                 rollback: () => this.createLiveIsland(islandId),
             },
         ]);
-        await this.islandJoinWriter.left(islandId, playerId);
+        await this.islandJoinWriter.left(islandId, player.id);
 
         return player;
+    }
+
+    async leave(playerId: string) {
+        const player = await this.playerStorageReader.readOne(playerId);
+        return await this.handleLeave(player);
+    }
+
+    async leaveByDisconnect(clientId: string) {
+        const player =
+            await this.playerStorageReader.readOneByClientId(clientId);
+        return await this.handleLeave(player);
     }
 
     async kickPlayerById(playerId: string) {
