@@ -146,7 +146,6 @@ export class IslandGateway
                 x: movedPlayer.x,
                 y: movedPlayer.y,
             });
-            this.logger.debug(`위치 전송 x: ${data.x}, y: ${data.y}`);
         }
     }
 
@@ -161,11 +160,6 @@ export class IslandGateway
                 attackerId: attacker.id,
                 attackedPlayerIds: attackedPlayers.map((player) => player.id),
             });
-
-            this.logger.debug(
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                `공격 성공: ${attackedPlayers.map((player) => player.nickname)}`,
-            );
         } catch (e) {
             this.logger.error(`공격 실패: ${e as string}`);
         }
