@@ -17,6 +17,7 @@ import {
     GetFriendRequestListRequest,
     GetFriendRequestsResponse,
     GetFriendsResponse,
+    GetUnreadRequestResponse,
 } from 'src/presentation/dto/friends';
 import {
     FriendRequest as FriendRequestPrisma,
@@ -772,6 +773,97 @@ describe('FriendController (e2e)', () => {
 
             expect(status).toBe(HttpStatus.OK);
             expect(body.status).toEqual('NONE');
+        });
+    });
+
+    describe('GET /friends/unread-count - 확인하지 않은 친구 요청 수 조회', () => {
+        it('요청 수 조회 정상 동작', async () => {
+            const { accessToken, userId } = await login(app);
+
+            const users = Array.from({ length: 5 }, (_, i) =>
+                generateUserEntityV2({
+                    email: `test${i}@test.com`,
+                    tag: `tag${i}`,
+                }),
+            );
+            await prisma.user.createMany({ data: users });
+            const requests = Array.from({ length: 5 }, (_, i) =>
+                generateFriendship(users[i].id, userId, { status: 'PENDING' }),
+            );
+            await prisma.friendRequest.createMany({ data: requests });
+
+            const response = (await request(app.getHttpServer())
+                .get('/friends/unread-count')
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<GetUnreadRequestResponse>;
+            const { status, body } = response;
+
+            expect(status).toEqual(200);
+            expect(body.count).toEqual(requests.length);
+        });
+    });
+
+    describe('GET /friends/unread-count - 확인하지 않은 친구 요청 수 조회', () => {
+        it('요청 수 조회 정상 동작', async () => {
+            const { accessToken, userId } = await login(app);
+
+            const users = Array.from({ length: 5 }, (_, i) =>
+                generateUserEntityV2({
+                    email: `test${i}@test.com`,
+                    tag: `tag${i}`,
+                }),
+            );
+            await prisma.user.createMany({ data: users });
+            const requests = Array.from({ length: 5 }, (_, i) =>
+                generateFriendship(users[i].id, userId, { status: 'PENDING' }),
+            );
+            await prisma.friendRequest.createMany({ data: requests });
+
+            const response = (await request(app.getHttpServer())
+                .get('/friends/unread-count')
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<GetUnreadRequestResponse>;
+            const { status, body } = response;
+
+            expect(status).toEqual(200);
+            expect(body.count).toEqual(requests.length);
+        });
+    });
+
+    describe('PATCH /friends/read - 모든 친구 요청 읽음 처리', () => {
+        it('요청 읽음 처리 정상 동작', async () => {
+            const { accessToken, userId } = await login(app);
+
+            const users = Array.from({ length: 5 }, (_, i) =>
+                generateUserEntityV2({
+                    email: `test${i}@test.com`,
+                    tag: `tag${i}`,
+                }),
+            );
+            await prisma.user.createMany({ data: users });
+            const requests = Array.from({ length: 5 }, (_, i) =>
+                generateFriendship(users[i].id, userId, { status: 'PENDING' }),
+            );
+            await prisma.friendRequest.createMany({ data: requests });
+
+            const response = await request(app.getHttpServer())
+                .patch('/friends/read')
+                .set('Authorization', accessToken);
+            const { status } = response;
+
+            const count = await prisma.friendRequest.count({
+                where: {
+                    receiverId: userId,
+                    isRead: false,
+                },
+            });
+
+            expect(status).toEqual(200);
+            expect(count).toEqual(0);
         });
     });
 });

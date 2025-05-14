@@ -23,6 +23,7 @@ import {
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
 import { AuthGuard } from 'src/common/guard/auth.guard';
+import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import {
     GetFriendRequestListRequest,
@@ -32,6 +33,7 @@ import {
 } from 'src/presentation/dto/friends';
 import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-friend.request';
 import { CheckFriendshipResponse } from 'src/presentation/dto/friends/response/check-friendship.response';
+import { GetUnreadRequestResponse } from 'src/presentation/dto/friends/response/get-unread-request.response';
 
 @ApiTags('friends')
 @ApiResponse({ status: 400, description: '잘못된 요청' })
@@ -41,7 +43,10 @@ import { CheckFriendshipResponse } from 'src/presentation/dto/friends/response/c
 @UseGuards(AuthGuard)
 @Controller('friends')
 export class FriendsController {
-    constructor(private readonly friendsService: FriendsService) {}
+    constructor(
+        private readonly friendsService: FriendsService,
+        private readonly friendReader: FriendReader,
+    ) {}
 
     @ApiOperation({ summary: '친구 요청 전송' })
     @ApiResponse({ status: 204, description: '요청 성공' })
@@ -166,5 +171,30 @@ export class FriendsController {
         const cursor = query.cursor;
 
         return await this.friendsService.getFriendsList(userId, limit, cursor);
+    }
+
+    @ApiOperation({ summary: '확인하지 않은 친구 요청 개수 조회' })
+    @ApiResponse({
+        status: 200,
+        description: '정상 조회',
+        type: GetUnreadRequestResponse,
+    })
+    @Get('unread-count')
+    async getUnreadCount(
+        @CurrentUser() userId: string,
+    ): Promise<GetUnreadRequestResponse> {
+        const count = await this.friendReader.getUnreadCount(userId);
+        return { count };
+    }
+
+    @ApiOperation({ summary: '모든 친구 요청 확인 처리' })
+    @ApiResponse({
+        status: 201,
+        description: '확인 처리 완료',
+        type: GetUnreadRequestResponse,
+    })
+    @Patch('read')
+    async markAllAsRead(@CurrentUser() userId: string) {
+        await this.friendsService.markAllRequestAsRead(userId);
     }
 }

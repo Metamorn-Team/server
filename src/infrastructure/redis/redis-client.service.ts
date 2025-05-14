@@ -9,10 +9,12 @@ export class RedisClientService implements OnModuleDestroy {
 
     constructor(config: ConfigService) {
         this.client = new Redis({
-            host: String(config.get<string>('REDIS_HOST')),
+            host: config.get<string>('REDIS_HOST'),
             port: Number(config.get<string>('REDIS_PORT')),
             connectTimeout: 10000,
-            tls: {},
+            ...(config.get<string>('REDIS_TLS') === 'true' && {
+                tls: {},
+            }),
         });
     }
 

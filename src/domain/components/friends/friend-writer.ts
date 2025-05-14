@@ -21,6 +21,10 @@ export class FriendWriter {
         await this.friendsRepository.updateStatus(requestId, status);
     }
 
+    async updateIsReadAll(userId: string) {
+        await this.friendsRepository.updateIsRead(userId);
+    }
+
     async deleteFriendship(friendshipId: string): Promise<void> {
         await this.friendsRepository.deleteById(friendshipId);
     }

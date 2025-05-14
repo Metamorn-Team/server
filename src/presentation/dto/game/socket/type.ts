@@ -18,6 +18,7 @@ import { GetLiveIslandListReqeust } from '../../island/request/get-live-island-l
 import { GetLiveIslandListResponse } from '../../island/response/get-live-island-list.response';
 import { JoinDesertedIslandReqeust } from '../request/join-deserted-island.request';
 import { WsErrorBody } from './known-exception';
+import { SendFriendRequest } from '../../friends/request/send-friend.request';
 
 export type ClientToLoby = {
     createIsland: (data: CreateIslandRequest) => void;
@@ -54,6 +55,7 @@ export type IslandToClient = {
     playerJoinSuccess: (data: PlayerJoinSuccessResponse) => void;
     playerKicked: () => void;
     playerLeft: (data: PlayerLeftResponse) => void;
+    playerLeftSuccess: () => void;
     playerMoved: (data: PlayerMovedResponse) => void;
     activePlayers: (data: ActivePlayerResponse) => void;
     attacked: (data: AttackedResponse) => void;
@@ -61,12 +63,25 @@ export type IslandToClient = {
     jump: (userId: string) => void;
 };
 
+export type ClientToFriend = {
+    sendFriendRequest: (data: SendFriendRequest) => void;
+};
+
+export type FriendToClient = {
+    receiveFriendRequest: () => void;
+    sendFriendRequestSuccess: () => void;
+};
+
 export type ErrorToClient = {
     wsError: (error: WsErrorBody) => void;
 };
 
-export type ClientToServer = ClientToIsland & ClientToLoby & ClientToChat;
+export type ClientToServer = ClientToIsland &
+    ClientToLoby &
+    ClientToChat &
+    ClientToFriend;
 export type ServerToClient = IslandToClient &
     LobyToClient &
     ChatToClient &
+    FriendToClient &
     ErrorToClient;

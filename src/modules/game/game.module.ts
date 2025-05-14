@@ -17,6 +17,8 @@ import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-c
 import { PlayerMemoryStorageComponentModule } from 'src/modules/users/player-memory-storage-component.module';
 import { IslandManagerFactoryModule } from 'src/modules/islands/island-manager-factory.module';
 import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-transaction-manger.module';
+import { FriendGateway } from 'src/presentation/gateway/friend.gateway';
+import { FriendsModule } from 'src/modules/friends/friends.module';
 
 @Module({
     imports: [
@@ -26,6 +28,7 @@ import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-tr
         ChatMessageModule,
         TagComponentModule,
         IslandTagComponentModule,
+        FriendsModule,
 
         PlayerStorageComponentModule,
         PlayerMemoryStorageComponentModule,
@@ -42,6 +45,7 @@ import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-tr
         GameService,
         GameIslandService,
         GameIslandCreateService,
+        FriendGateway,
     ],
 })
 export class GameModule {}

@@ -28,12 +28,14 @@ export interface FriendRepository {
         cursor?: string,
     ): Promise<PaginatedFriendRequests>;
     updateStatus(friendshipId: string, status: FriendStatus): Promise<void>;
+    updateIsRead(userId: string, isRead?: boolean): Promise<void>;
     findOneByIdAndStatus(
         userId: string,
         requestId: string,
         stats: FriendStatus,
     ): Promise<FriendData | null>;
     deleteById(id: string): Promise<void>;
+    countUnread(userId: string): Promise<number>;
 }
 
 export const FriendRepository = Symbol('FriendRepository');

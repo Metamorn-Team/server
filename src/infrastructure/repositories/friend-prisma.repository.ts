@@ -247,4 +247,25 @@ export class FriendPrismaRepository implements FriendRepository {
             },
         });
     }
+
+    async countUnread(userId: string): Promise<number> {
+        return await this.prisma.friendRequest.count({
+            where: {
+                receiverId: userId,
+                isRead: false,
+                deletedAt: null,
+            },
+        });
+    }
+
+    async updateIsRead(userId: string, isRead = true): Promise<void> {
+        await this.prisma.friendRequest.updateMany({
+            data: { isRead },
+            where: {
+                receiverId: userId,
+                isRead: false,
+                deletedAt: null,
+            },
+        });
+    }
 }

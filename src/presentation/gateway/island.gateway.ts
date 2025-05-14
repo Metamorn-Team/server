@@ -121,9 +121,10 @@ export class IslandGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const player = await this.gameIslandService.leftPlayer(userId);
+        const player = await this.gameIslandService.leave(userId);
         if (player) {
             await client.leave(player.roomId);
+            client.emit('playerLeftSuccess');
             client.to(player.roomId).emit('playerLeft', { id: player.id });
 
             this.logger.log(`Leave cilent: ${client.id}`);
@@ -201,22 +202,17 @@ export class IslandGateway
 
     async handleDisconnect(client: TypedSocket & { userId: string }) {
         try {
-            const userId = client.userId;
-            const player = this.gameService.getPlayer(userId);
-            this.logger.debug(
-                `call disconnect id from Island:${client.userId} disconnected`,
+            const player = await this.gameIslandService.leaveByDisconnect(
+                client.id,
             );
+            const { roomId: islandId } = player;
 
-            if (player.clientId !== client.id) return;
-            const { roomId } = player;
-            await client.leave(roomId);
-            await this.gameIslandService.leftPlayer(player.id);
-            client.to(roomId).emit('playerLeft', { id: player.id });
+            await client.leave(islandId);
+            await this.gameIslandService.leave(player.id);
+            client.to(islandId).emit('playerLeft', { id: player.id });
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
             );
-
-            // this.gameService.loggingStore(this.logger);
         } catch (e) {
             if (
                 e instanceof DomainException &&
