@@ -1,4 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { PLAYER_NOT_FOUND_IN_STORAGE } from 'src/domain/exceptions/message';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { PlayerMemoryStorage } from 'src/infrastructure/storages/player-memory-storage';
 
@@ -11,14 +14,20 @@ export class PlayerStorageReader {
     ) {}
 
     async readOne(id: string) {
-        try {
-            return this.playerMemoryStorage.getPlayer(id);
-        } catch (_) {
-            const player = await this.playerStorage.getPlayer(id);
-            this.playerMemoryStorage.addPlayer(player);
+        const memoryPlayer = this.playerMemoryStorage.getPlayer(id);
+        if (memoryPlayer) return memoryPlayer;
 
-            return player;
-        }
+        const player = await this.playerStorage.getPlayer(id);
+        if (!player)
+            throw new DomainException(
+                DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE,
+                HttpStatus.NOT_FOUND,
+                PLAYER_NOT_FOUND_IN_STORAGE,
+            );
+
+        this.playerMemoryStorage.addPlayer(player);
+
+        return player;
     }
 
     async readOneByClientId(clientId: string) {
