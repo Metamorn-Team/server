@@ -202,7 +202,6 @@ export class IslandGateway
             const { roomId: islandId } = player;
 
             await client.leave(islandId);
-            await this.gameIslandService.leave(player.id);
             client.to(islandId).emit('playerLeft', { id: player.id });
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
