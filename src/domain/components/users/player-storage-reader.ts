@@ -31,15 +31,21 @@ export class PlayerStorageReader {
     }
 
     async readOneByClientId(clientId: string) {
-        try {
-            return await this.playerStorage.getPlayerByClientId(clientId);
-        } catch (_) {
-            const player =
-                await this.playerStorage.getPlayerByClientId(clientId);
-            this.playerMemoryStorage.addPlayer(player);
+        const memoryPlayer =
+            this.playerMemoryStorage.getPlayerByClientId(clientId);
+        if (memoryPlayer) return memoryPlayer;
 
-            return player;
-        }
+        const player = await this.playerStorage.getPlayerByClientId(clientId);
+        if (!player)
+            throw new DomainException(
+                DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE,
+                HttpStatus.NOT_FOUND,
+                PLAYER_NOT_FOUND_IN_STORAGE,
+            );
+
+        this.playerMemoryStorage.addPlayer(player);
+
+        return player;
     }
 
     // getStore() {

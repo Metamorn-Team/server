@@ -1,7 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { DomainException } from 'src/domain/exceptions/exceptions';
-import { PLAYER_NOT_FOUND_IN_STORAGE } from 'src/domain/exceptions/message';
+import { Injectable } from '@nestjs/common';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { Player } from 'src/domain/models/game/player';
 import { PLAYER_KEY } from 'src/infrastructure/redis/key';
@@ -33,22 +30,14 @@ export class PlayerRedisStorage implements PlayerStorage {
         await this.redis.getClient().hset(key, player);
     }
 
-    async getPlayer(playerId: string): Promise<Player> {
+    async getPlayer(playerId: string): Promise<Player | null> {
         const key = PLAYER_KEY(playerId);
         const data = await this.redis.getClient().hgetall(key);
 
-        if (Object.keys(data).length === 0) {
-            throw new DomainException(
-                DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE,
-                HttpStatus.NOT_FOUND,
-                PLAYER_NOT_FOUND_IN_STORAGE,
-            );
-        }
-
-        return this.parsePlayer(data);
+        return Object.keys(data).length === 0 ? null : this.parsePlayer(data);
     }
 
-    async getPlayerByClientId(clientId: string): Promise<Player> {
+    async getPlayerByClientId(clientId: string): Promise<Player | null> {
         const keys = await this.redis.getClient().keys(PLAYER_KEY('*'));
 
         for (const key of keys) {
@@ -58,11 +47,7 @@ export class PlayerRedisStorage implements PlayerStorage {
             }
         }
 
-        throw new DomainException(
-            DomainExceptionType.PLAYER_NOT_FOUND_IN_STORAGE,
-            HttpStatus.NOT_FOUND,
-            PLAYER_NOT_FOUND_IN_STORAGE,
-        );
+        return null;
     }
 
     async getPlayersByIslandId(islandId: string): Promise<Player[]> {
