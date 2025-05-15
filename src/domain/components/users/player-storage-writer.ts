@@ -23,6 +23,5 @@ export class PlayerStorageWriter {
 
     async updateLastActivity(id: string, time = Date.now()) {
         await this.playerStorage.updateLastActivity(id, time);
-        this.playerMemoryStorage.updateLastActivity(id, time);
     }
 }
