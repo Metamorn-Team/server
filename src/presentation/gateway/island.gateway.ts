@@ -24,6 +24,7 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-authenticator';
 import { WsExceptions } from 'src/presentation/dto/game/socket/known-exception';
+import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 
 type TypedSocket = Socket<ClientToIsland, IslandToClient>;
 
@@ -45,6 +46,7 @@ export class IslandGateway
 
     constructor(
         private readonly wsConnectionAuthenticator: WsConnectionAuthenticator,
+        private readonly playerStorageReader: PlayerStorageReader,
         private readonly gameService: GameService,
         private readonly gameIslandService: GameIslandService,
     ) {}
@@ -163,11 +165,11 @@ export class IslandGateway
     }
 
     @SubscribeMessage('jump')
-    jump(
+    async jump(
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const { roomId } = this.gameService.getPlayer(userId);
+        const { roomId } = await this.playerStorageReader.readOne(userId);
         client.to(roomId).emit('jump', userId);
     }
 
