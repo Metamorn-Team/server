@@ -7,6 +7,8 @@ import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
 import { GamePlayerManager } from 'src/domain/components/game/game-player-manager';
+import { Position, Rectangle } from 'src/domain/types/game.types';
+import { isCircleInRect } from 'src/utils/game/collision';
 
 @Injectable()
 export class GameService {
@@ -76,36 +78,12 @@ export class GameService {
         };
     }
 
-    isInAttackBox(
-        player: Player,
-        box: { x: number; y: number; width: number; height: number },
-    ) {
-        // 캐릭터 추가되면 상수로 관리
-        const playerRadius = PLAYER_HIT_BOX.PAWN.RADIUS;
+    isInAttackBox(targetPosition: Position, box: Rectangle) {
+        // TODO 캐릭터 추가되면 상수로 관리
+        const radius = PLAYER_HIT_BOX.PAWN.RADIUS;
+        const isHit = isCircleInRect({ ...targetPosition, radius }, box);
 
-        const boxLeft = box.x - box.width / 2;
-        const boxRight = box.x + box.width / 2;
-        const boxTop = box.y - box.height / 2;
-        const boxBottom = box.y + box.height / 2;
-
-        if (
-            player.x >= boxLeft &&
-            player.x <= boxRight &&
-            player.y >= boxTop &&
-            player.y <= boxBottom
-        ) {
-            return true;
-        }
-
-        const closestX = Math.max(boxLeft, Math.min(player.x, boxRight));
-        const closestY = Math.max(boxTop, Math.min(player.y, boxBottom));
-
-        const distanceX = player.x - closestX;
-        const distanceY = player.y - closestY;
-
-        const distanceSquared = distanceX * distanceX + distanceY * distanceY;
-
-        return distanceSquared < playerRadius * playerRadius;
+        return isHit;
     }
 
     async hearbeatFromIsland(
