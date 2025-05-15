@@ -27,10 +27,10 @@ export class GamePlayerManager {
     }
 
     async updateLastActivity(player: Player, now = Date.now()) {
-        if (player.lastActivity + 1000 * 60 < now) {
+        if (player.lastActivity + 1000 * 20 < now) {
             this.playerMemoryStorageManager.updateLastActivity(player.id);
         }
-        if (player.lastActivity + 1000 * 60 * 5 < now) {
+        if (player.lastActivity + 1000 * 60 * 3 < now) {
             await this.playerStorageWriter.updateLastActivity(player.id);
         }
     }
