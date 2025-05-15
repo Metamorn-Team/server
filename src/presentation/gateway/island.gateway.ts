@@ -133,12 +133,12 @@ export class IslandGateway
     }
 
     @SubscribeMessage('playerMoved')
-    handlePlayerMoved(
+    async handlePlayerMoved(
         @MessageBody() data: { x: number; y: number },
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const movedPlayer = this.gameService.move(userId, data.x, data.y);
+        const movedPlayer = await this.gameService.move(userId, data.x, data.y);
         if (movedPlayer) {
             client.to(movedPlayer.roomId).emit('playerMoved', {
                 id: movedPlayer.id,

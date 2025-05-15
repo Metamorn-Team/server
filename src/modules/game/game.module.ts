@@ -20,9 +20,11 @@ import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-tr
 import { FriendGateway } from 'src/presentation/gateway/friend.gateway';
 import { FriendsModule } from 'src/modules/friends/friends.module';
 import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-authenticator';
+import { GameComponentModule } from 'src/modules/game/game-component.module';
 
 @Module({
     imports: [
+        GameComponentModule,
         UserComponentModule,
         IslandComponentModule,
         IslandJoinComponentModule,

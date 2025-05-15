@@ -1,0 +1,37 @@
+import { Injectable } from '@nestjs/common';
+import { MOVING_THRESHOLD } from 'src/constants/threshold';
+import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
+import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
+import { Player } from 'src/domain/models/game/player';
+
+@Injectable()
+export class GamePlayerManager {
+    constructor(
+        private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
+        private readonly playerStorageWriter: PlayerStorageWriter,
+    ) {}
+
+    canMove(player: Player, x: number, y: number, now = Date.now()) {
+        return player.lastMoved + MOVING_THRESHOLD > now ||
+            (player.x === x && player.y === y)
+            ? false
+            : true;
+    }
+
+    changePosition(player: Player, x: number, y: number) {
+        player.isFacingRight =
+            player.x < x ? true : player.x > x ? false : player.isFacingRight;
+
+        player.x = x;
+        player.y = y;
+    }
+
+    async updateLastActivity(player: Player, now = Date.now()) {
+        if (player.lastActivity + 1000 * 60 < now) {
+            this.playerMemoryStorageManager.updateLastActivity(player.id);
+        }
+        if (player.lastActivity + 1000 * 60 * 5 < now) {
+            await this.playerStorageWriter.updateLastActivity(player.id);
+        }
+    }
+}

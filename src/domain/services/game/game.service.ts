@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
-import { MOVING_THRESHOLD } from 'src/constants/threshold';
 import { Player } from 'src/domain/models/game/player';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
+import { GamePlayerManager } from 'src/domain/components/game/game-player-manager';
 
 @Injectable()
 export class GameService {
     constructor(
+        private readonly gamePlayerManager: GamePlayerManager,
         private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
@@ -20,25 +21,15 @@ export class GameService {
         return this.playerMemoryStorageManager.readOneByClientId(clientId);
     }
 
-    move(playerId: string, x: number, y: number): Player | null {
+    async move(playerId: string, x: number, y: number): Promise<Player | null> {
         const player = this.playerMemoryStorageManager.readOne(playerId);
 
         const now = Date.now();
-        if (
-            player.lastMoved + MOVING_THRESHOLD > now ||
-            (player.x === x && player.y === y)
-        )
-            return null;
+        const canMove = this.gamePlayerManager.canMove(player, x, y);
+        if (!canMove) return null;
 
-        if (player.lastActivity + 60000 < now) {
-            this.playerMemoryStorageManager.updateLastActivity(playerId);
-        }
-
-        player.isFacingRight =
-            player.x < x ? true : player.x > x ? false : player.isFacingRight;
-
-        player.x = x;
-        player.y = y;
+        await this.gamePlayerManager.updateLastActivity(player, now);
+        this.gamePlayerManager.changePosition(player, x, y);
 
         return player;
     }
