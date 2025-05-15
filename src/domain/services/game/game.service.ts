@@ -45,15 +45,12 @@ export class GameService {
 
     async attack(attackerId: string) {
         const attacker = this.playerMemoryStorageManager.readOne(attackerId);
-        if (!attacker) throw new Error('없는 회원');
+        const { roomId: islandId, islandType } = attacker;
 
         const island =
-            attacker.islandType === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.readOne(attacker.roomId)
-                : await this.desertedIslandStorageReader.readOne(
-                      attacker.roomId,
-                  );
-        if (!island) throw new Error('없는 섬');
+            islandType === IslandTypeEnum.NORMAL
+                ? await this.normalIslandStorageReader.readOne(islandId)
+                : await this.desertedIslandStorageReader.readOne(islandId);
 
         if (island.players.size === 0) {
             return {
@@ -124,15 +121,12 @@ export class GameService {
         playerId: string,
     ): Promise<{ id: string; lastActivity: number }[]> {
         const player = this.playerMemoryStorageManager.readOne(playerId);
+        const { islandType, roomId: islandId } = player;
 
         const playerIds =
-            player.islandType === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.getAllPlayer(
-                      player.roomId,
-                  )
-                : await this.desertedIslandStorageReader.getAllPlayer(
-                      player.roomId,
-                  );
+            islandType === IslandTypeEnum.NORMAL
+                ? await this.normalIslandStorageReader.getAllPlayer(islandId)
+                : await this.desertedIslandStorageReader.getAllPlayer(islandId);
 
         const players = playerIds
             .map((playerId) => {
