@@ -19,6 +19,7 @@ import { IslandManagerFactoryModule } from 'src/modules/islands/island-manager-f
 import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-transaction-manger.module';
 import { FriendGateway } from 'src/presentation/gateway/friend.gateway';
 import { FriendsModule } from 'src/modules/friends/friends.module';
+import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-authenticator';
 
 @Module({
     imports: [
@@ -46,6 +47,7 @@ import { FriendsModule } from 'src/modules/friends/friends.module';
         GameIslandService,
         GameIslandCreateService,
         FriendGateway,
+        WsConnectionAuthenticator,
     ],
 })
 export class GameModule {}

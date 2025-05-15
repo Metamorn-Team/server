@@ -1,4 +1,4 @@
-import { Logger, UseFilters, UseGuards } from '@nestjs/common';
+import { Logger, UseFilters } from '@nestjs/common';
 import { Namespace, Socket } from 'socket.io';
 import {
     ConnectedSocket,
@@ -11,7 +11,6 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
-import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { GameService } from 'src/domain/services/game/game.service';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import {
@@ -23,11 +22,12 @@ import { JoinDesertedIslandReqeust } from 'src/presentation/dto/game/request/joi
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
+import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-authenticator';
+import { WsExceptions } from 'src/presentation/dto/game/socket/known-exception';
 
 type TypedSocket = Socket<ClientToIsland, IslandToClient>;
 
 @UseFilters(WsExceptionFilter)
-@UseGuards(WsAuthGuard)
 @WebSocketGateway({
     path: '/game',
     namespace: 'island',
@@ -44,6 +44,7 @@ export class IslandGateway
     private readonly logger = new Logger(IslandGateway.name);
 
     constructor(
+        private readonly wsConnectionAuthenticator: WsConnectionAuthenticator,
         private readonly gameService: GameService,
         private readonly gameIslandService: GameIslandService,
     ) {}
@@ -85,8 +86,6 @@ export class IslandGateway
         client.emit('playerJoinSuccess', { x, y });
         client.emit('activePlayers', activePlayers);
         client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
-
-        // this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('joinNormalIsland')
@@ -129,8 +128,6 @@ export class IslandGateway
 
             this.logger.log(`Leave cilent: ${client.id}`);
         }
-
-        // this.gameService.loggingStore(this.logger);
     }
 
     @SubscribeMessage('playerMoved')
@@ -190,8 +187,17 @@ export class IslandGateway
         this.logger.debug('GameGateway Initialized!!');
     }
 
-    handleConnection(client: TypedSocket) {
-        this.logger.log(`Connected new client to Island: ${client.id}`);
+    async handleConnection(client: TypedSocket) {
+        try {
+            await this.wsConnectionAuthenticator.authenticate(client);
+            this.logger.log(`Connected new client to Island: ${client.id}`);
+        } catch (e) {
+            client.emit('wsError', {
+                name: WsExceptions.INVALID_TOKEN,
+                message: WsExceptions.INVALID_TOKEN,
+            });
+            client.disconnect(true);
+        }
     }
 
     async handleDisconnect(client: TypedSocket & { userId: string }) {

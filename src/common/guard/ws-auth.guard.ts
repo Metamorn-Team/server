@@ -42,7 +42,9 @@ export class WsAuthGuard implements CanActivate {
     }
 
     private extractAccessTokenFromClient(client: Socket) {
-        const authorization = client.handshake.auth.authorization;
+        const authorization = client.handshake.auth.authorization as
+            | string
+            | undefined;
         if (
             !authorization ||
             typeof authorization !== 'string' ||
