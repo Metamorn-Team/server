@@ -1,5 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
+import { LiveNormalIsland } from 'src/domain/types/game.types';
 
 @Injectable()
 export class NormalIslandStorageReader {
@@ -8,8 +12,16 @@ export class NormalIslandStorageReader {
         private readonly normalIslandStorage: NormalIslandStorage,
     ) {}
 
-    async readOne(islandId: string) {
-        return await this.normalIslandStorage.getIsland(islandId);
+    async readOne(id: string): Promise<LiveNormalIsland> {
+        const island = await this.normalIslandStorage.getIsland(id);
+        if (!island)
+            throw new DomainException(
+                DomainExceptionType.ISLAND_NOT_FOUND_IN_STORAGE,
+                HttpStatus.NOT_FOUND,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+
+        return island;
     }
 
     async readIslands(page: number, limit = 20, tag?: string | null) {

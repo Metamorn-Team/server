@@ -1,7 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { DomainException } from 'src/domain/exceptions/exceptions';
-import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
+import { Injectable } from '@nestjs/common';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { LiveNormalIsland } from 'src/domain/types/game.types';
 import {
@@ -29,7 +26,7 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
         ]);
     }
 
-    async getIsland(islandId: string): Promise<LiveNormalIsland> {
+    async getIsland(islandId: string): Promise<LiveNormalIsland | null> {
         const islandKey = NORMAL_ISLAND_KEY(islandId);
         const tagsKey = ISLAND_TAGS_KEY(islandId);
         const playersKey = ISLAND_PLAYERS_KEY(islandId);
@@ -41,11 +38,7 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
         ]);
 
         if (!islandInfo || Object.keys(islandInfo).length === 0) {
-            throw new DomainException(
-                DomainExceptionType.ISLAND_NOT_FOUND_IN_STORAGE,
-                HttpStatus.NOT_FOUND,
-                ISLAND_NOT_FOUND_MESSAGE,
-            );
+            return null;
         }
 
         return {
@@ -74,7 +67,7 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
             }),
         );
 
-        return islands;
+        return islands.filter((island) => island !== null);
     }
 
     async countPlayer(islandId: string): Promise<number> {

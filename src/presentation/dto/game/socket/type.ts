@@ -61,7 +61,7 @@ export type IslandToClient = {
     attacked: (data: AttackedResponse) => void;
     islandHearbeat: (data: IslandHeartbeatResponse) => void;
     jump: (userId: string) => void;
-};
+} & ErrorToClient;
 
 export type ClientToFriend = {
     sendFriendRequest: (data: SendFriendRequest) => void;

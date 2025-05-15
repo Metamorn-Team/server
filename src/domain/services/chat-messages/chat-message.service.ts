@@ -1,21 +1,20 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ChatMessageWriter } from 'src/domain/components/chat-message/chat-message-writer';
+import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
 import { ChatMessageEntity } from 'src/domain/entities/chat-messages/chat-message.entity';
-import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { v4 } from 'uuid';
 
 @Injectable()
 export class ChatMessageService {
     constructor(
-        @Inject(PlayerStorage)
-        private readonly gameStorage: PlayerStorage,
+        private readonly playerReader: PlayerStorageReader,
         private readonly chatMessageWriter: ChatMessageWriter,
         private readonly playerStorageWriter: PlayerStorageWriter,
     ) {}
 
     async sendMessage(senderId: string, message: string) {
-        const player = await this.gameStorage.getPlayer(senderId);
+        const player = await this.playerReader.readOne(senderId);
 
         const { roomId } = player;
         await this.create(senderId, roomId, message, 'island');

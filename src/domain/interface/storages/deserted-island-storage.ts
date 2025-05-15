@@ -2,7 +2,7 @@ import { LiveDesertedIsland } from 'src/domain/types/game.types';
 
 export interface DesertedIslandStorage {
     createIsland(islandId: string, island: LiveDesertedIsland): Promise<void>;
-    getIsland(islandId: string): Promise<LiveDesertedIsland>;
+    getIsland(islandId: string): Promise<LiveDesertedIsland | null>;
     getAllIsland(): Promise<LiveDesertedIsland[]>;
     countPlayer(islandId: string): Promise<number>;
     addPlayerToIsland(islandId: string, playerId: string): Promise<void>;

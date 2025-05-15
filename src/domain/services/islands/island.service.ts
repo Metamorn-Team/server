@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import {
@@ -6,7 +6,6 @@ import {
     IslandPrototype,
 } from 'src/domain/entities/islands/island.entity';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { IslandTagEntity } from 'src/domain/entities/tag/island-tag.entity';
@@ -18,12 +17,14 @@ import {
     ISLAND_FULL,
     ISLAND_NOT_FOUND_MESSAGE,
 } from 'src/domain/exceptions/client-use-messag';
+import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
+import { NormalIslandStorageWriter } from 'src/domain/components/islands/normal-storage/normal-island-storage-writer';
 
 @Injectable()
 export class IslandService {
     constructor(
-        @Inject(NormalIslandStorage)
-        private readonly islandStorage: NormalIslandStorage,
+        private readonly normalIslandReader: NormalIslandStorageReader,
+        private readonly normalIslandWriter: NormalIslandStorageWriter,
         private readonly islandWriter: IslandWriter,
         private readonly tagReader: TagReader,
         private readonly islandTagWriter: IslandTagWriter,
@@ -46,7 +47,7 @@ export class IslandService {
 
         await this.createTransaction(island, islandTags);
 
-        await this.islandStorage.createIsland(island.id, {
+        await this.normalIslandWriter.create({
             id: island.id,
             max: island.maxMembers,
             players: new Set(),
@@ -58,9 +59,6 @@ export class IslandService {
             tags: tagNames,
         });
 
-        console.log(
-            `전체 섬: ${JSON.stringify(this.islandStorage.getAllIsland(), null, 2)}`,
-        );
         return island.id;
     }
 
@@ -79,7 +77,7 @@ export class IslandService {
         reason?: string;
     }> {
         try {
-            const island = await this.islandStorage.getIsland(islandId);
+            const island = await this.normalIslandReader.readOne(islandId);
 
             const isFull = island.max <= island.players.size;
             if (isFull) {
