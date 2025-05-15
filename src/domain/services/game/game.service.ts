@@ -6,31 +6,33 @@ import { Player } from 'src/domain/models/game/player';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
-import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
 
 @Injectable()
 export class GameService {
     constructor(
-        private readonly playerStorageReader: PlayerStorageReader,
         private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
     ) {}
-
-    getPlayer(playerId: string) {
-        return this.playerMemoryStorageManager.readOne(playerId);
-    }
 
     getPlayerByClientId(clientId: string) {
         return this.playerMemoryStorageManager.readOneByClientId(clientId);
     }
 
     move(playerId: string, x: number, y: number): Player | null {
-        const player = this.getPlayer(playerId);
+        const player = this.playerMemoryStorageManager.readOne(playerId);
 
-        if (player.lastMoved + MOVING_THRESHOLD > Date.now()) return null;
-        if (player.x === x && player.y === y) return null;
+        const now = Date.now();
+        if (
+            player.lastMoved + MOVING_THRESHOLD > now ||
+            (player.x === x && player.y === y)
+        )
+            return null;
+
+        if (player.lastActivity + 60000 < now) {
+            this.playerMemoryStorageManager.updateLastActivity(playerId);
+        }
 
         player.isFacingRight =
             player.x < x ? true : player.x > x ? false : player.isFacingRight;
@@ -42,7 +44,7 @@ export class GameService {
     }
 
     async attack(attackerId: string) {
-        const attacker = this.getPlayer(attackerId);
+        const attacker = this.playerMemoryStorageManager.readOne(attackerId);
         if (!attacker) throw new Error('없는 회원');
 
         const island =
@@ -72,7 +74,9 @@ export class GameService {
         };
 
         const attackedPlayers = Array.from(island.players)
-            .map((playerId) => this.getPlayer(playerId))
+            .map((playerId) =>
+                this.playerMemoryStorageManager.readOne(playerId),
+            )
             .filter((player) => player !== null)
             .filter((player) => player.id !== attacker.id)
             .filter((player) => this.isInAttackBox(player, attackBox));
@@ -119,7 +123,7 @@ export class GameService {
     async hearbeatFromIsland(
         playerId: string,
     ): Promise<{ id: string; lastActivity: number }[]> {
-        const player = this.getPlayer(playerId);
+        const player = this.playerMemoryStorageManager.readOne(playerId);
 
         const playerIds =
             player.islandType === IslandTypeEnum.NORMAL
@@ -132,7 +136,8 @@ export class GameService {
 
         const players = playerIds
             .map((playerId) => {
-                const player = this.getPlayer(playerId);
+                const player =
+                    this.playerMemoryStorageManager.readOne(playerId);
                 if (player) {
                     return {
                         id: player.id,
@@ -147,10 +152,4 @@ export class GameService {
             lastActivity: player.lastActivity,
         }));
     }
-
-    // loggingStore(logger: Logger) {
-    //     logger.debug('전체 회원', this.playerStorageReader.getStore());
-    //     logger.debug('무인도', this.desertedIslandStorageReader.getStore());
-    //     logger.debug('일반 섬', this.normalIslandStorageReader.getStore());
-    // }
 }
