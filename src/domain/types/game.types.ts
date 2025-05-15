@@ -3,18 +3,16 @@ import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 export type SocketClientId = string;
 
-export interface LiveDesertedIsland {
+export interface LiveIsland {
     id: string;
     players: Set<string>;
     type: IslandTypeEnum;
     max: number;
 }
 
-export interface LiveNormalIsland {
-    id: string;
-    players: Set<string>;
-    type: IslandTypeEnum;
-    max: number;
+export type LiveDesertedIsland = LiveIsland;
+
+export interface LiveNormalIsland extends LiveIsland {
     name: string;
     description: string;
     coverImage: string;
