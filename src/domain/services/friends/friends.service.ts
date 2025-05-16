@@ -158,4 +158,48 @@ export class FriendsService {
     async markAllRequestAsRead(userId: string) {
         await this.friendWriter.updateIsReadAll(userId);
     }
+
+    async getFriendStatusesUsers(
+        currentUserId: string,
+        targetUserIds: string[],
+    ): Promise<Map<string, FriendRequestStatus>> {
+        const statues = new Map<string, FriendRequestStatus>();
+
+        for (const targetId of targetUserIds) {
+            statues.set(targetId, 'NONE');
+        }
+
+        const friendships = await this.friendReader.readFriendshipWithTargets(
+            currentUserId,
+            targetUserIds,
+        );
+        if (!friendships || friendships.length === 0) {
+            return statues;
+        }
+
+        for (const friendship of friendships) {
+            const targetId =
+                friendship.senderId === currentUserId
+                    ? friendship.receiverId
+                    : friendship.senderId;
+
+            if (friendship.status === 'ACCEPTED') {
+                statues.set(targetId, 'ACCEPTED');
+            }
+            if (
+                friendship.status === 'PENDING' &&
+                targetId === friendship.senderId
+            ) {
+                statues.set(targetId, 'SENT');
+            }
+            if (
+                friendship.status === 'PENDING' &&
+                targetId === friendship.receiverId
+            ) {
+                statues.set(targetId, 'RECEIVED');
+            }
+        }
+
+        return statues;
+    }
 }
