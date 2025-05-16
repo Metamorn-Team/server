@@ -262,7 +262,11 @@ describe('UserController (e2e)', () => {
             const { accessToken } = await login(app);
 
             const user = await prisma.user.create({
-                data: generateUserEntity('test@email.com', 'test', '11111'),
+                data: generateUserEntity(
+                    'test@email.com',
+                    'test',
+                    'tag_example',
+                ),
             });
 
             const dto: ChangeTagRequest = {
