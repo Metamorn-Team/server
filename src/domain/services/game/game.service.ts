@@ -1,82 +1,51 @@
 import { Injectable } from '@nestjs/common';
-import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
-import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
-import { MOVING_THRESHOLD } from 'src/constants/threshold';
 import { Player } from 'src/domain/models/game/player';
-import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
-import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
-import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
+import { GamePlayerManager } from 'src/domain/components/game/game-player-manager';
+import { GameAttackManager } from 'src/domain/components/game/game-attack-manager';
+import { LiveIsland } from 'src/domain/types/game.types';
+import { IslandStorageReaderFactory } from 'src/domain/components/islands/factory/island-storage-reader-factory';
 
 @Injectable()
 export class GameService {
     constructor(
-        private readonly playerStorageReader: PlayerStorageReader,
+        private readonly gamePlayerManager: GamePlayerManager,
+        private readonly gameAttackManager: GameAttackManager,
         private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
-        private readonly normalIslandStorageReader: NormalIslandStorageReader,
-        private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
+        private readonly islandStorageReaderFactory: IslandStorageReaderFactory,
     ) {}
 
-    getPlayer(playerId: string) {
-        return this.playerMemoryStorageManager.readOne(playerId);
-    }
+    async move(playerId: string, x: number, y: number): Promise<Player | null> {
+        const player = this.playerMemoryStorageManager.readOne(playerId);
 
-    getPlayerByClientId(clientId: string) {
-        return this.playerMemoryStorageManager.readOneByClientId(clientId);
-    }
+        const now = Date.now();
+        const canMove = this.gamePlayerManager.canMove(player, x, y);
+        if (!canMove) return null;
 
-    move(playerId: string, x: number, y: number): Player | null {
-        const player = this.getPlayer(playerId);
-
-        if (player.lastMoved + MOVING_THRESHOLD > Date.now()) return null;
-        if (player.x === x && player.y === y) return null;
-
-        player.isFacingRight =
-            player.x < x ? true : player.x > x ? false : player.isFacingRight;
-
-        player.x = x;
-        player.y = y;
+        await this.gamePlayerManager.updateLastActivity(player, now);
+        this.gamePlayerManager.changePosition(player, x, y);
 
         return player;
     }
 
     async attack(attackerId: string) {
-        const attacker = this.getPlayer(attackerId);
-        if (!attacker) throw new Error('없는 회원');
+        const attacker = this.playerMemoryStorageManager.readOne(attackerId);
+        const { roomId: islandId, islandType } = attacker;
 
-        const island =
-            attacker.islandType === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.readOne(attacker.roomId)
-                : await this.desertedIslandStorageReader.readOne(
-                      attacker.roomId,
-                  );
-        if (!island) throw new Error('없는 섬');
+        const reader = this.islandStorageReaderFactory.get(islandType);
+        const island = await reader.readOne(islandId);
 
-        if (island.players.size === 0) {
-            return {
-                attacker,
-                attackedPlayers: [],
-            };
+        if (this.isIslandEmpty(island)) {
+            return { attacker, attackedPlayers: [] };
         }
 
-        // 아바타 추가되면 avatarKey에 따라 분기
-        const boxSize = ATTACK_BOX_SIZE.PAWN;
-        const attackBox = {
-            x: attacker.isFacingRight
-                ? attacker.x + boxSize.width / 2
-                : attacker.x - boxSize.width / 2,
-            y: attacker.y,
-            width: boxSize.width,
-            height: boxSize.height,
-        };
-
-        const attackedPlayers = Array.from(island.players)
-            .map((playerId) => this.getPlayer(playerId))
-            .filter((player) => player !== null)
-            .filter((player) => player.id !== attacker.id)
-            .filter((player) => this.isInAttackBox(player, attackBox));
-        attacker.lastActivity = Date.now();
+        const attackBox = this.gameAttackManager.calcAttackRangeBox(attacker);
+        const attackedPlayers = this.gameAttackManager.findTargetsInBox(
+            Array.from(island.players),
+            attackerId,
+            attackBox,
+        );
+        await this.gamePlayerManager.updateLastActivity(attacker);
 
         return {
             attacker,
@@ -84,55 +53,23 @@ export class GameService {
         };
     }
 
-    isInAttackBox(
-        player: Player,
-        box: { x: number; y: number; width: number; height: number },
-    ) {
-        // 캐릭터 추가되면 상수로 관리
-        const playerRadius = PLAYER_HIT_BOX.PAWN.RADIUS;
-
-        const boxLeft = box.x - box.width / 2;
-        const boxRight = box.x + box.width / 2;
-        const boxTop = box.y - box.height / 2;
-        const boxBottom = box.y + box.height / 2;
-
-        if (
-            player.x >= boxLeft &&
-            player.x <= boxRight &&
-            player.y >= boxTop &&
-            player.y <= boxBottom
-        ) {
-            return true;
-        }
-
-        const closestX = Math.max(boxLeft, Math.min(player.x, boxRight));
-        const closestY = Math.max(boxTop, Math.min(player.y, boxBottom));
-
-        const distanceX = player.x - closestX;
-        const distanceY = player.y - closestY;
-
-        const distanceSquared = distanceX * distanceX + distanceY * distanceY;
-
-        return distanceSquared < playerRadius * playerRadius;
+    private isIslandEmpty(island: LiveIsland): boolean {
+        return island.players.size === 0;
     }
 
     async hearbeatFromIsland(
         playerId: string,
     ): Promise<{ id: string; lastActivity: number }[]> {
-        const player = this.getPlayer(playerId);
+        const player = this.playerMemoryStorageManager.readOne(playerId);
+        const { islandType, roomId: islandId } = player;
 
-        const playerIds =
-            player.islandType === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.getAllPlayer(
-                      player.roomId,
-                  )
-                : await this.desertedIslandStorageReader.getAllPlayer(
-                      player.roomId,
-                  );
+        const reader = this.islandStorageReaderFactory.get(islandType);
+        const playerIds = await reader.getAllPlayer(islandId);
 
         const players = playerIds
             .map((playerId) => {
-                const player = this.getPlayer(playerId);
+                const player =
+                    this.playerMemoryStorageManager.readOne(playerId);
                 if (player) {
                     return {
                         id: player.id,
@@ -147,10 +84,4 @@ export class GameService {
             lastActivity: player.lastActivity,
         }));
     }
-
-    // loggingStore(logger: Logger) {
-    //     logger.debug('전체 회원', this.playerStorageReader.getStore());
-    //     logger.debug('무인도', this.desertedIslandStorageReader.getStore());
-    //     logger.debug('일반 섬', this.normalIslandStorageReader.getStore());
-    // }
 }
