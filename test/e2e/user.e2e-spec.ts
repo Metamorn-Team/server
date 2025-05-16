@@ -376,6 +376,7 @@ describe('UserController (e2e)', () => {
         const totalUsers = 20;
 
         beforeEach(async () => {
+            await prisma.friendRequest.deleteMany();
             await prisma.user.deleteMany();
 
             const usersToCreate: UserEntity[] = Array.from(
@@ -628,6 +629,132 @@ describe('UserController (e2e)', () => {
             expect(foundCurrentUser).toBeUndefined();
 
             expect(currentUserNickname.startsWith(searchTerm)).toBe(true);
+        });
+
+        it('검색 결과에 friendStatus가 "ACCEPTED"로 포함되어야 한다', async () => {
+            const { userId: currentUserId, accessToken } = await login(app);
+
+            const targetUser = await prisma.user.findFirst({
+                where: { nickname: 'searchTargetUser01' },
+            });
+            if (!targetUser)
+                throw new Error('Test setup failed: Target user not found');
+
+            await prisma.friendRequest.create({
+                data: generateFriendship(currentUserId, targetUser.id, {
+                    status: 'ACCEPTED',
+                }),
+            });
+
+            const query: SearchUsersRequest = {
+                search: 'searchTargetUser01',
+                varient: 'NICKNAME',
+                limit: 1,
+            };
+            const response = (await request(app.getHttpServer())
+                .get('/users/search')
+                .query(query)
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<SearchUserResponse>;
+
+            expect(response.status).toEqual(HttpStatus.OK);
+            expect(response.body.data).toHaveLength(1);
+            expect(response.body.data[0].friendStatus).toEqual('ACCEPTED');
+        });
+
+        it('검색 결과에 friendStatus가 "SENT"로 포함되어야 한다', async () => {
+            const { userId: currentUserId, accessToken } = await login(app);
+
+            const targetUser = await prisma.user.findFirst({
+                where: { nickname: 'searchTargetUser02' },
+            });
+            if (!targetUser)
+                throw new Error('Test setup failed: Target user not found');
+
+            await prisma.friendRequest.create({
+                data: generateFriendship(currentUserId, targetUser.id, {
+                    status: 'PENDING',
+                }),
+            });
+
+            const query: SearchUsersRequest = {
+                search: 'searchTargetUser02',
+                varient: 'NICKNAME',
+                limit: 1,
+            };
+            const response = (await request(app.getHttpServer())
+                .get('/users/search')
+                .query(query)
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<SearchUserResponse>;
+
+            expect(response.status).toEqual(HttpStatus.OK);
+            expect(response.body.data).toHaveLength(1);
+            expect(response.body.data[0].friendStatus).toEqual('SENT');
+        });
+
+        it('검색 결과에 friendStatus가 "RECEIVED"로 포함되어야 한다', async () => {
+            const { userId: currentUserId, accessToken } = await login(app);
+
+            const targetUser = await prisma.user.findFirst({
+                where: { nickname: 'searchTargetUser03' },
+            });
+            if (!targetUser)
+                throw new Error('Test setup failed: Target user not found');
+
+            await prisma.friendRequest.create({
+                data: generateFriendship(targetUser.id, currentUserId, {
+                    status: 'PENDING',
+                }),
+            });
+
+            const query: SearchUsersRequest = {
+                search: 'searchTargetUser03',
+                varient: 'NICKNAME',
+                limit: 1,
+            };
+            const response = (await request(app.getHttpServer())
+                .get('/users/search')
+                .query(query)
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<SearchUserResponse>;
+
+            expect(response.status).toEqual(HttpStatus.OK);
+            expect(response.body.data).toHaveLength(1);
+            expect(response.body.data[0].friendStatus).toEqual('RECEIVED');
+        });
+
+        it('검색 결과에 friendStatus가 "NONE"으로 포함되어야 한다', async () => {
+            const { accessToken } = await login(app);
+
+            const targetUser = await prisma.user.findFirst({
+                where: { nickname: 'searchTargetUser04' },
+            });
+            if (!targetUser)
+                throw new Error('Test setup failed: Target user not found');
+
+            const query: SearchUsersRequest = {
+                search: 'searchTargetUser04',
+                varient: 'NICKNAME',
+                limit: 1,
+            };
+            const response = (await request(app.getHttpServer())
+                .get('/users/search')
+                .query(query)
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<SearchUserResponse>;
+
+            expect(response.status).toEqual(HttpStatus.OK);
+            expect(response.body.data).toHaveLength(1);
+            expect(response.body.data[0].friendStatus).toEqual('NONE');
         });
     });
 });

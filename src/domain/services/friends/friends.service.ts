@@ -190,13 +190,13 @@ export class FriendsService {
                 friendship.status === 'PENDING' &&
                 targetId === friendship.senderId
             ) {
-                statues.set(targetId, 'SENT');
+                statues.set(targetId, 'RECEIVED');
             }
             if (
                 friendship.status === 'PENDING' &&
                 targetId === friendship.receiverId
             ) {
-                statues.set(targetId, 'RECEIVED');
+                statues.set(targetId, 'SENT');
             }
         }
 
