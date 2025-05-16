@@ -4,6 +4,7 @@ import { DomainException } from 'src/domain/exceptions/exceptions';
 import { FRIEND_REQUEST_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { FriendRepository } from 'src/domain/interface/friend.repository';
 import {
+    FriendData,
     FriendRequestDirection,
     FriendStatus,
     PaginatedFriends,
@@ -83,6 +84,16 @@ export class FriendReader {
                   limit,
                   cursor,
               );
+    }
+
+    async readFriendshipWithTargets(
+        userId: string,
+        targetIds: string[],
+    ): Promise<FriendData[]> {
+        return await this.friendRepository.findFriendshipsWithTargets(
+            userId,
+            targetIds,
+        );
     }
 
     async getUnreadCount(userId: string) {

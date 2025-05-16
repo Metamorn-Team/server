@@ -228,6 +228,34 @@ export class FriendPrismaRepository implements FriendRepository {
         });
     }
 
+    async findFriendshipsWithTargets(
+        userId: string,
+        targetIds: string[],
+    ): Promise<FriendData[]> {
+        if (targetIds.length === 0 || !targetIds) {
+            return [];
+        }
+
+        const friendships = await this.prisma.friendRequest.findMany({
+            where: {
+                status: { not: 'REJECTED' },
+                deletedAt: null,
+                OR: targetIds.flatMap((targetId) => [
+                    { senderId: userId, receiverId: targetId },
+                    { senderId: targetId, receiverId: userId },
+                ]),
+            },
+            select: {
+                id: true,
+                senderId: true,
+                receiverId: true,
+                status: true,
+            },
+        });
+
+        return friendships;
+    }
+
     async updateStatus(
         friendshipId: string,
         status: FriendStatus,

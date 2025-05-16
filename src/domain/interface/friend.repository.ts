@@ -34,6 +34,10 @@ export interface FriendRepository {
         requestId: string,
         stats: FriendStatus,
     ): Promise<FriendData | null>;
+    findFriendshipsWithTargets(
+        userId: string,
+        targetIds: string[],
+    ): Promise<FriendData[]>;
     deleteById(id: string): Promise<void>;
     countUnread(userId: string): Promise<number>;
 }
