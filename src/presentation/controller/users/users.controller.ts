@@ -23,6 +23,7 @@ import { AuthGuard } from 'src/common/guard/auth.guard';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import { UserService } from 'src/domain/services/users/users.service';
+import { FriendRequestStatus } from 'src/domain/types/friend.types';
 import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-avatar.request';
 import { ChangeBioRequest } from 'src/presentation/dto/users/request/change-bio.request';
 import { ChangeNicknameRequest } from 'src/presentation/dto/users/request/change-nickname.request';
@@ -64,13 +65,35 @@ export class UserController {
     ): Promise<SearchUserResponse> {
         const { search, varient, cursor, limit = 10 } = query;
 
-        return await this.userReader.search(
+        const paginatedUsers = await this.userReader.search(
             userId,
             search,
             varient,
             limit,
             cursor,
         );
+
+        if (!paginatedUsers.data || paginatedUsers.data.length === 0) {
+            return { data: [], nextCursor: null };
+        }
+
+        const targetUserIds = paginatedUsers.data.map((user) => user.id);
+
+        const firendStatusesMap: Map<string, FriendRequestStatus> =
+            await this.friendService.getFriendStatusesUsers(
+                userId,
+                targetUserIds,
+            );
+
+        const usersWithFriendStatus = paginatedUsers.data.map((user) => {
+            const friendStatus = firendStatusesMap.get(user.id) || 'NONE';
+            return { ...user, friendStatus };
+        });
+
+        return {
+            data: usersWithFriendStatus,
+            nextCursor: paginatedUsers.nextCursor,
+        };
     }
 
     @ApiOperation({

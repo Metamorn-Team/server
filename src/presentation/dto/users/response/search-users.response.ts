@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GetUserResponse } from './get-user.response';
-import { Provider } from '../../shared';
+import { FriendRequestStatus, Provider } from '../../shared';
 
 export class User {
     @ApiProperty({
@@ -26,6 +26,13 @@ export class User {
 
     @ApiProperty({ description: '사용자 아바타 키' })
     readonly avatarKey: string;
+
+    @ApiProperty({
+        description:
+            '요청자와 타겟 유저간의 친구 요청 상태 ACCEPTED | SENT | RECEIVED | NONE',
+        example: 'ACCEPTED',
+    })
+    readonly friendStatus: FriendRequestStatus;
 }
 
 export class SearchUserResponse {
