@@ -35,4 +35,8 @@ export class PlayerMemoryStorageManager {
     remove(id: string) {
         this.playerMemoryStorage.deletePlayer(id);
     }
+
+    updateLastActivity(id: string, time = Date.now()) {
+        this.playerMemoryStorage.updateLastActivity(id, time);
+    }
 }
