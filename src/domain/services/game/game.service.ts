@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Player } from 'src/domain/models/game/player';
-import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
-import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
 import { GamePlayerManager } from 'src/domain/components/game/game-player-manager';
 import { GameAttackManager } from 'src/domain/components/game/game-attack-manager';
 import { LiveIsland } from 'src/domain/types/game.types';
+import { IslandStorageReaderFactory } from 'src/domain/components/islands/factory/island-storage-reader-factory';
 
 @Injectable()
 export class GameService {
@@ -14,8 +12,7 @@ export class GameService {
         private readonly gamePlayerManager: GamePlayerManager,
         private readonly gameAttackManager: GameAttackManager,
         private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
-        private readonly normalIslandStorageReader: NormalIslandStorageReader,
-        private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
+        private readonly islandStorageReaderFactory: IslandStorageReaderFactory,
     ) {}
 
     async move(playerId: string, x: number, y: number): Promise<Player | null> {
@@ -35,10 +32,8 @@ export class GameService {
         const attacker = this.playerMemoryStorageManager.readOne(attackerId);
         const { roomId: islandId, islandType } = attacker;
 
-        const island =
-            islandType === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.readOne(islandId)
-                : await this.desertedIslandStorageReader.readOne(islandId);
+        const reader = this.islandStorageReaderFactory.get(islandType);
+        const island = await reader.readOne(islandId);
 
         if (this.isIslandEmpty(island)) {
             return { attacker, attackedPlayers: [] };
@@ -68,10 +63,8 @@ export class GameService {
         const player = this.playerMemoryStorageManager.readOne(playerId);
         const { islandType, roomId: islandId } = player;
 
-        const playerIds =
-            islandType === IslandTypeEnum.NORMAL
-                ? await this.normalIslandStorageReader.getAllPlayer(islandId)
-                : await this.desertedIslandStorageReader.getAllPlayer(islandId);
+        const reader = this.islandStorageReaderFactory.get(islandType);
+        const playerIds = await reader.getAllPlayer(islandId);
 
         const players = playerIds
             .map((playerId) => {
