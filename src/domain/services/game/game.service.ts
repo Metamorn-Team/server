@@ -15,11 +15,15 @@ export class GameService {
         private readonly islandStorageReaderFactory: IslandStorageReaderFactory,
     ) {}
 
-    async move(playerId: string, x: number, y: number): Promise<Player | null> {
+    async move(
+        playerId: string,
+        x: number,
+        y: number,
+        now = Date.now(),
+    ): Promise<Player | null> {
         const player = this.playerMemoryStorageManager.readOne(playerId);
 
-        const now = Date.now();
-        const canMove = this.gamePlayerManager.canMove(player, x, y);
+        const canMove = this.gamePlayerManager.canMove(player, x, y, now);
         if (!canMove) return null;
 
         await this.gamePlayerManager.updateLastActivity(player, now);
