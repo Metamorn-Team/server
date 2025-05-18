@@ -11,7 +11,7 @@ import { RedisClientService } from 'src/infrastructure/redis/redis-client.servic
 export class DesertedIslandRedisStorage implements DesertedIslandStorage {
     constructor(private readonly redis: RedisClientService) {}
 
-    async createIsland(islandId: string, island: LiveDesertedIsland) {
+    async createIsland(island: LiveDesertedIsland) {
         const { players: _, ...islandInfo } = island;
         const key = DESERTED_ISLAND_KEY(islandInfo.id);
 

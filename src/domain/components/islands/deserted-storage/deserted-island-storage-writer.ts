@@ -10,7 +10,7 @@ export class DesertedIslandStorageWriter {
     ) {}
 
     async create(island: LiveDesertedIsland) {
-        await this.desertedIslandStorage.createIsland(island.id, island);
+        await this.desertedIslandStorage.createIsland(island);
     }
 
     async addPlayer(islandId: string, playerId: string) {
