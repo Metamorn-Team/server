@@ -14,6 +14,7 @@ export class GameAttackManager {
 
     calcAttackRangeBox(attacker: Player) {
         // TODO 아바타 추가되면 avatarKey에 따라 분기
+        // 공격 박스의 끝부분이 캐릭터 중심 좌표에 있음
         const boxSize = ATTACK_BOX_SIZE.PAWN;
         const attackBox = {
             x: attacker.isFacingRight

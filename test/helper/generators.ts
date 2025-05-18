@@ -7,6 +7,7 @@ import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
 import { TagEntity } from 'src/domain/entities/tag/tag.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { Player } from 'src/domain/models/game/player';
+import { LiveDesertedIsland } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ItemGradeEnum } from 'src/domain/types/item.types';
 import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
@@ -165,4 +166,15 @@ export const generatePlayerModel = (partial?: Partial<Player>) => {
         partial?.lastMoved || now,
         partial?.lastActivity || now,
     );
+};
+
+export const generateDesertedIslandModel = (
+    partial?: Partial<LiveDesertedIsland>,
+): LiveDesertedIsland => {
+    return {
+        id: partial?.id || 'deserted-id',
+        max: partial?.max || 4,
+        players: partial?.players || new Set(),
+        type: IslandTypeEnum.DESERTED,
+    };
 };
