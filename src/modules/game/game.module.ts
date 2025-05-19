@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
-import { GameService } from 'src/domain/services/game/game.service';
 import { ChatMessageModule } from 'src/modules/chat-messages/chat-message.module';
 import { IslandJoinComponentModule } from 'src/modules/island-joins/island-join-component.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
@@ -20,12 +19,11 @@ import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-tr
 import { FriendGateway } from 'src/presentation/gateway/friend.gateway';
 import { FriendsModule } from 'src/modules/friends/friends.module';
 import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-authenticator';
-import { GameComponentModule } from 'src/modules/game/game-component.module';
 import { IslandStorageReaderFactoryModule } from 'src/modules/islands/island-storage-reader-factory.module';
+import { GameServiceModule } from 'src/modules/game/game-service.module';
 
 @Module({
     imports: [
-        GameComponentModule,
         UserComponentModule,
         IslandComponentModule,
         IslandJoinComponentModule,
@@ -33,21 +31,20 @@ import { IslandStorageReaderFactoryModule } from 'src/modules/islands/island-sto
         TagComponentModule,
         IslandTagComponentModule,
         FriendsModule,
-
         PlayerStorageComponentModule,
         PlayerMemoryStorageComponentModule,
         NormalIslandStorageComponentModule,
         DesertedIslandStorageComponentModule,
-
         IslandStorageReaderFactoryModule,
         IslandManagerFactoryModule,
         RedisTransactionManagerModule,
+
+        GameServiceModule,
     ],
     providers: [
         LobyGateway,
         IslandGateway,
         ChatGateway,
-        GameService,
         GameIslandService,
         GameIslandCreateService,
         FriendGateway,

@@ -25,8 +25,8 @@ export class PlayerRedisStorage implements PlayerStorage {
         };
     }
 
-    async addPlayer(playerId: string, player: Player): Promise<void> {
-        const key = PLAYER_KEY(playerId);
+    async addPlayer(player: Player): Promise<void> {
+        const key = PLAYER_KEY(player.id);
         await this.redis.getClient().hset(key, player);
     }
 

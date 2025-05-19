@@ -26,6 +26,7 @@ export class GamePlayerManager {
         player.y = y;
     }
 
+    // TODO 이건 매번 검증 안 하고 따로 테스트하면 될듯
     async updateLastActivity(player: Player, now = Date.now()) {
         if (player.lastActivity + 1000 * 20 < now) {
             this.playerMemoryStorageManager.updateLastActivity(player.id);
