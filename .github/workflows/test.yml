@@ -1,34 +1,35 @@
 name: Test
 
 on:
-  pull_request:
-    branches: ['main', 'develop']
+    pull_request:
+        branches: ['main', 'develop']
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.2.2
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4.2.2
 
-      - name: Append Environment Variables File
-        run: |
-          echo "${{ secrets.ENV_TEST }}" > .env.test
+            - name: Append Environment Variables File
+              run: |
+                  echo "${{ secrets.ENV_TEST }}" > .env.test
 
-      - name: Install Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
+            - name: Install Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 20
+                  cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm install
+            - name: Install Dependencies
+              run: npm install
 
-      - name: Run Docker Containers
-        run: npm run docker:up
+            - name: Run Docker Containers
+              run: npm run docker:up
 
-      - name: Run Test
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          npm run test:e2e
+            - name: Run Test
+              env:
+                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+              run: |
+                  npm run test:e2e
+                  npm run test
