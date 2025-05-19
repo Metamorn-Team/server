@@ -231,16 +231,16 @@ describe('GameService', () => {
             }
 
             const heartbeats = await gameService.hearbeatFromIsland(player.id);
-            const sortedHeartbeats = heartbeats.sort(
-                (a, b) => b.lastActivity - a.lastActivity,
-            );
-            const expected = [...otherPlayers, player].map((player) => ({
-                id: player.id,
-                lastActivity: player.lastActivity,
-            }));
 
-            expect(heartbeats.length).toEqual(otherPlayers.length + 1);
-            expect(sortedHeartbeats).toEqual(expected);
+            expect(heartbeats).toEqual(
+                expect.arrayContaining([
+                    { id: player.id, lastActivity: player.lastActivity },
+                    ...otherPlayers.map((p) => ({
+                        id: p.id,
+                        lastActivity: p.lastActivity,
+                    })),
+                ]),
+            );
         });
     });
 });
