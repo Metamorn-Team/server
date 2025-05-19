@@ -1,6 +1,6 @@
 # compiled output
 /dist
-/node_modules
+node_modules
 
 # Logs
 logs
@@ -33,3 +33,14 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# env
+.env
+.env.*
+
+# 내 노트
+note.md
+
+# dto
+src/presentation/dto/package-lock.json
+src/presentation/dto/types

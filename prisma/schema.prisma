@@ -1,0 +1,244 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator markdown {
+  provider = "prisma-markdown"
+  output   = "./ERD.md"
+  title    = "Metamorn-ERD"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+enum OAuthProvider {
+  GOOGLE
+  KAKAO
+  NAVER
+}
+
+model User {
+  id        String        @id @db.Uuid
+  email     String        @db.VarChar(255)
+  provider  OAuthProvider
+  nickname  String
+  tag       String
+  bio       String?       @db.VarChar
+  avatarKey String
+  gold      Int           @default(0)
+  createdAt DateTime      @map("created_at")
+  updatedAt DateTime      @map("updated_at")
+  deletedAt DateTime?     @map("deleted_at")
+
+  islandJoins            IslandJoin[]
+  chatMessages           ChatMessage[]
+  friendRequestsSent     FriendRequest[]   @relation("Sender")
+  friendRequestsReceived FriendRequest[]   @relation("Receiver")
+  purchases              Purchase[]
+  goldTransactions       GoldTransaction[]
+  userOwnedItems         UserOwnedItem[]
+  islands                Island[]
+
+  @@unique([tag, deletedAt])
+  @@unique([email, deletedAt])
+  @@index([nickname, id])
+  @@index([tag, id])
+  @@map("user")
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model FriendRequest {
+  id         String              @id @db.Uuid
+  senderId   String              @db.Uuid
+  receiverId String              @db.Uuid
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @map("created_at")
+  updatedAt  DateTime            @map("updated_at")
+  deletedAt  DateTime?           @map("deleted_at")
+  isRead     Boolean?            @default(false) @map("is_read")
+
+  sender   User @relation("Sender", fields: [senderId], references: [id])
+  receiver User @relation("Receiver", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+  @@map("friend_request")
+}
+
+model Island {
+  id          String    @id @db.Uuid
+  ownerId     String?   @db.Uuid
+  name        String?   @db.VarChar(50)
+  description String?   @db.VarChar(200)
+  coverImage  String?   @map("cover_image")
+  tag         String?   @db.VarChar(50)
+  maxMembers  Int       @map("max_members") @db.SmallInt
+  type        Int       @default(0) @db.SmallInt
+  createdAt   DateTime  @map("created_at")
+  updatedAt   DateTime  @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  owner       User?        @relation(fields: [ownerId], references: [id])
+  islandJoins IslandJoin[]
+  islandTags  IslandTag[]
+
+  @@index([ownerId])
+  @@map("island")
+}
+
+model IslandTag {
+  islandId String @db.Uuid
+  tagId    String @db.Uuid
+
+  island Island @relation(fields: [islandId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([islandId, tagId])
+  @@index([tagId])
+  @@map("island_tag")
+}
+
+model Tag {
+  id        String   @id @db.Uuid
+  name      String   @unique @db.VarChar(50)
+  createdAt DateTime @map("created_at")
+
+  islandTags IslandTag[]
+
+  @@map("tag")
+}
+
+model IslandJoin {
+  id       String    @id @db.Uuid
+  islandId String    @map("island_id") @db.Uuid
+  userId   String    @map("user_id") @db.Uuid
+  joinedAt DateTime  @map("joined_at")
+  leftAt   DateTime? @map("left_at")
+
+  island Island @relation(fields: [islandId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([islandId])
+  @@index([userId])
+  @@map("island_join")
+}
+
+model ChatMessage {
+  id        String   @id @db.Uuid
+  senderId  String   @map("sender_id") @db.Uuid
+  type      String   @db.VarChar(20)
+  contextId String   @map("context_id") @db.Uuid
+  message   String
+  sentAt    DateTime @map("sent_at")
+
+  sender User @relation(fields: [senderId], references: [id])
+
+  @@index([senderId])
+  @@map("chat_message")
+}
+
+model Item {
+  id          String   @id @db.Uuid
+  name        String   @db.VarChar(50)
+  description String   @db.VarChar(200)
+  type        String   @db.VarChar(50)
+  key         String   @db.VarChar(50)
+  grade       Int      @default(0) @db.SmallInt
+  createdAt   DateTime @map("created_at")
+
+  products       Product[]
+  userOwnedItems UserOwnedItem[]
+
+  @@map("item")
+}
+
+model Product {
+  id          String    @id @db.Uuid
+  name        String    @db.VarChar(50)
+  description String    @db.VarChar(200)
+  price       Int
+  coverImage  String    @map("cover_image")
+  itemId      String    @map("item_id") @db.Uuid
+  createdAt   DateTime  @map("created_at")
+  updatedAt   DateTime  @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  purchases Purchase[]
+
+  item              Item    @relation(fields: [itemId], references: [id])
+  productCategoryId String? @db.Uuid
+
+  @@index([itemId])
+  @@map("product")
+}
+
+model ProductCategory {
+  id        String    @id @db.Uuid
+  name      String    @db.VarChar(50)
+  createdAt DateTime  @map("created_at")
+  updatedAt DateTime  @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("product_category")
+}
+
+model Purchase {
+  id          String    @id @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  goldAmount  Int
+  status      Int       @db.SmallInt
+  purchasedAt DateTime  @map("purchased_at")
+  refundedAt  DateTime? @map("refunded_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([userId])
+  @@index([productId])
+  @@map("purchase")
+}
+
+model GoldTransaction {
+  id           String   @id @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  type         Int      @db.SmallInt
+  amount       Int
+  balance      Int
+  referenceIds String[] @default([]) @map("reference_id") @db.Uuid
+  processedAt  DateTime @map("processed_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("gold_transaction")
+}
+
+model UserOwnedItem {
+  id         String   @id @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  itemId     String   @map("item_id") @db.Uuid
+  acquiredAt DateTime @map("acquired_at")
+
+  user User @relation(fields: [userId], references: [id])
+  item Item @relation(fields: [itemId], references: [id])
+
+  @@index([userId])
+  @@index([itemId])
+  @@map("user_owned_item")
+}
