@@ -154,7 +154,7 @@ export const generatePlayerModel = (partial?: Partial<Player>) => {
     const now = Date.now();
     return new Player(
         partial?.id || v4(),
-        partial?.clientId || 'client-id',
+        partial?.clientId || v4(),
         partial?.roomId || 'island-id',
         partial?.islandType ?? IslandTypeEnum.NORMAL,
         partial?.nickname || 'nick',
