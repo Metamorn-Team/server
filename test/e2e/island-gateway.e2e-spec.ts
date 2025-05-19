@@ -132,7 +132,7 @@ describe('IslandGateway (e2e)', () => {
                 players: new Set<string>(),
                 type: IslandTypeEnum.DESERTED,
             };
-            await desertedIslandStorage.createIsland(island.id, island);
+            await desertedIslandStorage.createIsland(island);
             await db.island.create({
                 data: generateIsland({
                     id: island.id,
