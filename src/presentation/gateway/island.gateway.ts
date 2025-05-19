@@ -25,6 +25,7 @@ import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-authenticator';
 import { WsExceptions } from 'src/presentation/dto/game/socket/known-exception';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
+import { checkAppVersion } from 'test/unit/utils/check-app-version';
 
 type TypedSocket = Socket<ClientToIsland, IslandToClient>;
 
@@ -178,6 +179,13 @@ export class IslandGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
+        const appVersion = client.handshake.auth['app-version'] as
+            | string
+            | undefined;
+        if (!checkAppVersion(appVersion)) client.emit('invalidVersion');
+
+        this.logger.debug(appVersion);
+
         const heartbeats = await this.gameService.hearbeatFromIsland(userId);
 
         client.emit('islandHearbeat', heartbeats);
