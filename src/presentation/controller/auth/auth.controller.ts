@@ -3,12 +3,11 @@ import {
     Controller,
     Param,
     Post,
-    Req,
     Res,
     UseFilters,
     UseGuards,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { AuthService } from 'src/domain/services/auth/auth.service';
 import { Provider } from 'src/shared/types';
 import { LoginRequest } from 'src/presentation/dto/auth/request/login.request';
@@ -128,7 +127,6 @@ export class AuthController {
     @UseGuards(RefreshTokenGuard)
     @Post('token')
     async refreshToken(
-        @Req() request: Request,
         @Res({ passthrough: true }) response: Response,
         @CurrentUser('userId') userId: string,
     ): Promise<RefreshTokenResponse> {
