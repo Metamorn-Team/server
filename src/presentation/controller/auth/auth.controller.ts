@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Delete,
     Param,
     Post,
     Res,
@@ -136,5 +137,23 @@ export class AuthController {
         response.cookie('refresh_token', refreshToken, cookieOptions());
 
         return { accessToken };
+    }
+
+    @ApiOperation({
+        summary: '로그아웃',
+        description: 'Refresh Token 삭제.',
+    })
+    @ApiResponse({
+        status: 204,
+        description: '로그인 성공',
+    })
+    @ApiResponse({ status: 404, description: '가입되지 않은 회원' })
+    @ApiResponse({
+        status: 409,
+        description: '다른 플랫폼으로 가입한 이력 존재',
+    })
+    @Delete('logout')
+    logout(@Res({ passthrough: true }) response: Response): void {
+        response.clearCookie('refresh_token', cookieOptions());
     }
 }
