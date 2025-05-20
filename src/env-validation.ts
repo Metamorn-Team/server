@@ -13,6 +13,7 @@ export const validationSchema = Joi.object({
     JWT_SECRET_KEY: Joi.string().required(),
     ACCESS_TOKEN_TIME: Joi.string().required(),
     REFRESH_TOKEN_TIME: Joi.string().required(),
+    REFRESH_COOKIE_TIME: Joi.number().required(),
 
     // AWS S3
     AWS_BUCKET_REGION: Joi.string().required(),

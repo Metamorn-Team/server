@@ -80,7 +80,7 @@ export class AuthController {
 
         const { refreshToken, ...responseWithoutRefresh } = loginResponse;
 
-        response.cookie('refresh_token', refreshToken, cookieOptions);
+        response.cookie('refresh_token', refreshToken, cookieOptions());
 
         return responseWithoutRefresh;
     }
@@ -106,7 +106,7 @@ export class AuthController {
 
         const { refreshToken, ...responseWithoutRefresh } = registerResponse;
 
-        response.cookie('refresh_token', refreshToken, cookieOptions);
+        response.cookie('refresh_token', refreshToken, cookieOptions());
 
         return responseWithoutRefresh;
     }
