@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Delete,
     Param,
     Post,
     Res,
@@ -15,8 +16,6 @@ import { LoginResponse } from 'src/presentation/dto/auth/response/login.response
 import { RegisterRequest } from 'src/presentation/dto/auth/request/register.request';
 import { RegisterResponse } from 'src/presentation/dto/auth/response/register.response';
 import { ConfigService } from '@nestjs/config';
-import { RefreshTokenGuard } from 'src/common/guard/refresh-token.guard';
-import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { RefreshTokenResponse } from 'src/presentation/dto/auth/response/refresh-token.response';
 import {
     ApiBody,
@@ -28,6 +27,8 @@ import {
 } from '@nestjs/swagger';
 import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
 import { cookieOptions } from 'src/configs/cookie-options';
+import { RefreshTokenGuard } from 'src/common/guard/refresh-token.guard';
+import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 
 @ApiTags('auth')
 @UseFilters(HttpExceptionFilter)
@@ -81,6 +82,7 @@ export class AuthController {
         const { refreshToken, ...responseWithoutRefresh } = loginResponse;
 
         response.cookie('refresh_token', refreshToken, cookieOptions());
+        console.log('꾸끼', cookieOptions());
 
         return responseWithoutRefresh;
     }
@@ -124,10 +126,34 @@ export class AuthController {
     })
     @ApiResponse({ status: 401, description: '유효하지 않은 Refresh Token' })
     @UseGuards(RefreshTokenGuard)
-    @Post('refresh')
+    @Post('token')
     async refreshToken(
-        @CurrentUser() userId: string,
+        @Res({ passthrough: true }) response: Response,
+        @CurrentUser('userId') userId: string,
     ): Promise<RefreshTokenResponse> {
-        return await this.authService.refresToken(userId);
+        const { accessToken, refreshToken } =
+            await this.authService.refresToken(userId);
+
+        response.cookie('refresh_token', refreshToken, cookieOptions());
+
+        return { accessToken };
+    }
+
+    @ApiOperation({
+        summary: '로그아웃',
+        description: 'Refresh Token 삭제.',
+    })
+    @ApiResponse({
+        status: 204,
+        description: '로그인 성공',
+    })
+    @ApiResponse({ status: 404, description: '가입되지 않은 회원' })
+    @ApiResponse({
+        status: 409,
+        description: '다른 플랫폼으로 가입한 이력 존재',
+    })
+    @Delete('logout')
+    logout(@Res({ passthrough: true }) response: Response): void {
+        response.clearCookie('refresh_token', cookieOptions());
     }
 }

@@ -118,6 +118,10 @@ export class AuthService {
                 userId,
                 this.accessTokenExpiration,
             ),
+            refreshToken: await this.generateToken(
+                userId,
+                this.refreshTokenExpiration,
+            ),
         };
     }
 
