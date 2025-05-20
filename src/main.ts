@@ -10,7 +10,7 @@ async function bootstrap() {
 
     const wsAdapter = new MessagePackIoAdapter(app);
 
-    app.enableCors({ origin: true });
+    app.enableCors({ origin: true, credentials: true });
     app.use(cookieParser());
     app.useWebSocketAdapter(wsAdapter);
     setupSwagger(app);
