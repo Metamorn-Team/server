@@ -127,7 +127,12 @@ export class AuthController {
     @Post('refresh')
     async refreshToken(
         @CurrentUser() userId: string,
+        @Res({ passthrough: true }) response: Response,
     ): Promise<RefreshTokenResponse> {
-        return await this.authService.refresToken(userId);
+        const { accessToken, refreshToken } =
+            await this.authService.refresToken(userId);
+        response.cookie('refresh_token', refreshToken, cookieOptions());
+
+        return { accessToken };
     }
 }
