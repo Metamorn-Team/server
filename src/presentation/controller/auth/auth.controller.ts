@@ -27,6 +27,7 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
+import { cookieOptions } from 'src/configs/cookie-options';
 
 @ApiTags('auth')
 @UseFilters(HttpExceptionFilter)
@@ -79,12 +80,7 @@ export class AuthController {
 
         const { refreshToken, ...responseWithoutRefresh } = loginResponse;
 
-        response.cookie('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: this.refreshCookieTime,
-        });
+        response.cookie('refresh_token', refreshToken, cookieOptions);
 
         return responseWithoutRefresh;
     }
@@ -110,12 +106,7 @@ export class AuthController {
 
         const { refreshToken, ...responseWithoutRefresh } = registerResponse;
 
-        response.cookie('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: this.refreshCookieTime,
-        });
+        response.cookie('refresh_token', refreshToken, cookieOptions);
 
         return responseWithoutRefresh;
     }
