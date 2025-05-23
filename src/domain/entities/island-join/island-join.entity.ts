@@ -1,3 +1,9 @@
+export interface IslandJoinPrototype {
+    islandId: string;
+    userId: string;
+    leftAt?: Date | null;
+}
+
 export class IslandJoinEntity {
     constructor(
         readonly id: string,
@@ -8,11 +14,7 @@ export class IslandJoinEntity {
     ) {}
 
     static create(
-        input: {
-            islandId: string;
-            userId: string;
-            leftAt?: Date | null;
-        },
+        input: IslandJoinPrototype,
         idGen: () => string,
         stdDate = new Date(),
     ): IslandJoinEntity {

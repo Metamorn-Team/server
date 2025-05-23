@@ -16,7 +16,6 @@ import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deser
 import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { IslandManagerFactory } from 'src/domain/components/islands/factory/island-manager-factory';
-import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
@@ -107,12 +106,10 @@ export class GameIslandService {
         ]);
 
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
-
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: playerId },
-            v4,
-        );
-        await this.islandJoinWriter.create(islandJoin);
+        await this.islandJoinWriter.create({
+            islandId: island.id,
+            userId: user.id,
+        });
 
         return {
             activePlayers,
@@ -157,13 +154,8 @@ export class GameIslandService {
             },
         ]);
 
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: playerId },
-            v4,
-        );
-        await this.islandJoinWriter.create(islandJoin);
-
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
+        await this.islandJoinWriter.create({ islandId, userId: playerId });
 
         return {
             activePlayers,
