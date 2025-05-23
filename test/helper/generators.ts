@@ -1,3 +1,4 @@
+import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
@@ -162,6 +163,7 @@ export const generatePlayerModel = (partial?: Partial<Player>) => {
         partial?.avatarKey || 'purple_pawn',
         partial?.x ?? 0,
         partial?.y ?? 0,
+        partial?.radius || PLAYER_HIT_BOX.PAWN.RADIUS,
         partial?.isFacingRight || true,
         partial?.lastMoved || now,
         partial?.lastActivity || now,

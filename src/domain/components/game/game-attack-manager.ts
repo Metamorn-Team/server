@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
-import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
 import { Player } from 'src/domain/models/game/player';
-import { Position, Rectangle } from 'src/domain/types/game.types';
+import { Circle, Rectangle } from 'src/domain/types/game.types';
 import { isCircleInRect } from 'src/utils/game/collision';
 
 @Injectable()
@@ -50,11 +49,8 @@ export class GameAttackManager {
         }, [] as Player[]);
     }
 
-    isInAttackBox(targetPosition: Position, box: Rectangle) {
-        // TODO 캐릭터 추가되면 상수로 관리
-        const radius = PLAYER_HIT_BOX.PAWN.RADIUS;
-        const isHit = isCircleInRect({ ...targetPosition, radius }, box);
-
+    isInAttackBox(target: Circle, box: Rectangle) {
+        const isHit = isCircleInRect(target, box);
         return isHit;
     }
 }

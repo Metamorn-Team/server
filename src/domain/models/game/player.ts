@@ -10,6 +10,7 @@ export interface PlayerPrototype {
     readonly islandType: IslandTypeEnum;
     readonly x: number;
     readonly y: number;
+    readonly radius: number;
     readonly isFacingRight?: boolean;
     readonly lastMoved?: number;
     readonly lastActivity?: number;
@@ -26,6 +27,7 @@ export class Player {
         public avatarKey: string,
         public x: number,
         public y: number,
+        public radius: number,
         public isFacingRight: boolean,
         public lastMoved: number,
         public lastActivity: number,
@@ -44,6 +46,7 @@ export class Player {
             proto.avatarKey,
             proto.x,
             proto.y,
+            proto.radius,
             proto.isFacingRight || true,
             proto.lastMoved || now,
             proto.lastActivity || now,

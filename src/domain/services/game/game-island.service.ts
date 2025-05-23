@@ -20,6 +20,7 @@ import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.en
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
+import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 
 @Injectable()
 export class GameIslandService {
@@ -91,6 +92,7 @@ export class GameIslandService {
             tag: user.tag,
             x,
             y,
+            radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
 
         const key = ISLAND_LOCK_KEY(islandId);
@@ -141,6 +143,7 @@ export class GameIslandService {
             roomId: islandId,
             x,
             y,
+            radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
 
         const key = ISLAND_LOCK_KEY(islandId);
