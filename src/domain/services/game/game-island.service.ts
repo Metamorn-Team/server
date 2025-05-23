@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { DESERTED_MAX_MEMBERS } from 'src/common/constants';
 import { IslandReader } from 'src/domain/components/islands/island-reader';
@@ -23,6 +23,8 @@ import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 
 @Injectable()
 export class GameIslandService {
+    private readonly logger = new Logger(GameIslandService.name);
+
     constructor(
         private readonly islandWriter: IslandWriter,
         private readonly islandReader: IslandReader,
@@ -78,7 +80,7 @@ export class GameIslandService {
         y: number,
     ): Promise<JoinedIslandInfo> {
         const user = await this.userReader.readProfile(playerId);
-        const island = await this.islandReader.readOne(islandId);
+        const island = await this.desertedIslandStorageReader.readOne(islandId);
         const manager = this.islandManagerFactory.get(IslandTypeEnum.NORMAL);
 
         const player = Player.create({
@@ -106,10 +108,7 @@ export class GameIslandService {
         ]);
 
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
-        await this.islandJoinWriter.create({
-            islandId: island.id,
-            userId: user.id,
-        });
+        void this.createIslandJoinData(islandId, playerId);
 
         return {
             activePlayers,
@@ -155,13 +154,22 @@ export class GameIslandService {
         ]);
 
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
-        await this.islandJoinWriter.create({ islandId, userId: playerId });
+        void this.islandJoinWriter.create({ islandId, userId: playerId });
 
         return {
             activePlayers,
             joinedIslandId: islandId,
             joinedPlayer: player,
         };
+    }
+
+    createIslandJoinData(islandId: string, userId: string) {
+        this.islandJoinWriter.create({ islandId, userId }).catch((e) => {
+            this.logger.error(
+                `섬 참여 데이터 저장 실패: ${islandId}, userId: ${userId}`,
+                e,
+            );
+        });
     }
 
     async createLiveIsland(islandId: string) {
