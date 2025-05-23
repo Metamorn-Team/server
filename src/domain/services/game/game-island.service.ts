@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { DESERTED_MAX_MEMBERS } from 'src/common/constants';
-import { IslandReader } from 'src/domain/components/islands/island-reader';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
@@ -20,6 +19,7 @@ import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
+import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 
 @Injectable()
 export class GameIslandService {
@@ -27,13 +27,13 @@ export class GameIslandService {
 
     constructor(
         private readonly islandWriter: IslandWriter,
-        private readonly islandReader: IslandReader,
         private readonly islandJoinWriter: IslandJoinWriter,
         private readonly userReader: UserReader,
 
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
+        private readonly normalIslandStorageReader: NormalIslandStorageReader,
 
         private readonly islandManagerFactory: IslandManagerFactory,
         private readonly lockManager: RedisTransactionManager,
@@ -80,7 +80,7 @@ export class GameIslandService {
         y: number,
     ): Promise<JoinedIslandInfo> {
         const user = await this.userReader.readProfile(playerId);
-        const island = await this.desertedIslandStorageReader.readOne(islandId);
+        const island = await this.normalIslandStorageReader.readOne(islandId);
         const manager = this.islandManagerFactory.get(IslandTypeEnum.NORMAL);
 
         const player = Player.create({
