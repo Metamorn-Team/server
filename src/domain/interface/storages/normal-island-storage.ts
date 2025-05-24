@@ -1,7 +1,7 @@
 import { LiveNormalIsland } from 'src/domain/types/game.types';
 
 export interface NormalIslandStorage {
-    createIsland(islandId: string, island: LiveNormalIsland): Promise<void>;
+    createIsland(island: LiveNormalIsland): Promise<void>;
     getIsland(islandId: string): Promise<LiveNormalIsland | null>;
     getAllIsland(): Promise<LiveNormalIsland[]>;
     countPlayer(islandId: string): Promise<number>;
