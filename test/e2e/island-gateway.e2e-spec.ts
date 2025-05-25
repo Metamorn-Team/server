@@ -69,18 +69,7 @@ describe('IslandGateway (e2e)', () => {
                 tags: ['자유'],
                 type: IslandTypeEnum.NORMAL,
             };
-            await normalIslandStorage.createIsland(island.id, island);
-            await db.island.create({
-                data: generateIsland({
-                    id: island.id,
-                    coverImage: island.coverImage,
-                    createdAt: island.createdAt,
-                    description: island.description,
-                    maxMembers: island.max,
-                    name: island.name,
-                    type: island.type,
-                }),
-            });
+            await normalIslandStorage.createIsland(island);
 
             const clients = await Promise.all(
                 Array.from({ length: 20 }).map(() =>
