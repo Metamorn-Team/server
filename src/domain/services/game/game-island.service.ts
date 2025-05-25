@@ -262,7 +262,10 @@ export class GameIslandService {
                         reason: ISLAND_FULL,
                     };
                 }
-                if (e.errorType === DomainExceptionType.ISLAND_NOT_FOUND) {
+                if (
+                    e.errorType ===
+                    DomainExceptionType.ISLAND_NOT_FOUND_IN_STORAGE
+                ) {
                     return {
                         canJoin: false,
                         reason: ISLAND_NOT_FOUND_MESSAGE,
