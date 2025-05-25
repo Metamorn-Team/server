@@ -12,10 +12,7 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { generateIsland } from 'test/helper/generators';
 import Redis from 'ioredis';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
-import {
-    createSocketConnection,
-    TypedSockect,
-} from 'test/helper/socket-connect';
+import { createSocketConnection, TypedSockect } from 'test/helper/socket';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 
 describe('IslandGateway (e2e)', () => {
@@ -47,6 +44,7 @@ describe('IslandGateway (e2e)', () => {
 
     afterEach(async () => {
         await redis.flushall();
+        await db.islandTag.deleteMany();
         await db.islandJoin.deleteMany();
         await db.island.deleteMany();
         await db.user.deleteMany();

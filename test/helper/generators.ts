@@ -189,7 +189,7 @@ export const generateNormalIslandModel = (
 ): LiveNormalIsland => {
     return {
         id: partial?.id || v4(),
-        max: partial?.max || 4,
+        max: partial?.max ?? 4,
         players: partial?.players || new Set(),
         type: IslandTypeEnum.NORMAL,
         coverImage: partial?.coverImage || 'https://example.com/cover.jpg',
