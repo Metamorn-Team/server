@@ -46,6 +46,7 @@ export type ClientToIsland = {
     playerKicked: () => void;
     playerMoved: (data: PlayerMovedRequest) => void;
     attack: () => void;
+    strongAttack: () => void;
     islandHearbeat: () => void;
     jump: () => void;
 };
@@ -59,6 +60,7 @@ export type IslandToClient = {
     playerMoved: (data: PlayerMovedResponse) => void;
     activePlayers: (data: ActivePlayerResponse) => void;
     attacked: (data: AttackedResponse) => void;
+    strongAttacked: (data: AttackedResponse) => void;
     islandHearbeat: (data: IslandHeartbeatResponse) => void;
     jump: (userId: string) => void;
     invalidVersion: () => void;
