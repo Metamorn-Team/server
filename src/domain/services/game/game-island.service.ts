@@ -223,7 +223,7 @@ export class GameIslandService {
         return await this.handleLeave(player);
     }
 
-    async kickPlayerById(playerId: string) {
+    async kick(playerId: string) {
         try {
             const player = await this.playerStorageReader.readOne(playerId);
             const { roomId: islandId, islandType } = player;
