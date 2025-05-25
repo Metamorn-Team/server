@@ -52,7 +52,7 @@ export class GameIslandCreateService {
             name: island.name || '알 수 없는 섬',
             tags: tagNames,
         };
-        this.normalIslandStorageWriter.create(normalIsland);
+        await this.normalIslandStorageWriter.create(normalIsland);
 
         return island.id;
     }

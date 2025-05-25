@@ -199,7 +199,15 @@ export class GameIslandService {
                 rollback: () => this.createLiveIsland(islandId),
             },
         ]);
-        await this.islandJoinWriter.left(islandId, player.id);
+
+        try {
+            await this.islandJoinWriter.left(islandId, player.id);
+        } catch (e) {
+            this.logger.error(
+                `섬 참여 데이터 삭제 실패: ${islandId}, playerId: ${player.id}`,
+                e,
+            );
+        }
 
         return player;
     }

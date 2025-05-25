@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
@@ -12,6 +12,8 @@ import { Player } from 'src/domain/models/game/player';
 
 @Injectable()
 export class NormalIslandManager implements IslandManager {
+    private readonly logger = new Logger(NormalIslandManager.name);
+
     constructor(
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly normalIslandStorageWriter: NormalIslandStorageWriter,
@@ -67,7 +69,12 @@ export class NormalIslandManager implements IslandManager {
 
         if (playerCount < 1) {
             await this.normalIslandStorageWriter.remove(islandId);
-            await this.islandWriter.remove(islandId);
+
+            try {
+                await this.islandWriter.remove(islandId);
+            } catch (e) {
+                this.logger.error(`빈 섬 제거 실패: ${islandId}`, e);
+            }
         }
     }
 }
