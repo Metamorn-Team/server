@@ -1,14 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { v4 } from 'uuid';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
-import {
-    IslandEntity,
-    IslandPrototype,
-} from 'src/domain/entities/islands/island.entity';
+import { IslandPrototype } from 'src/domain/entities/islands/island.entity';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { IslandTagEntity } from 'src/domain/entities/tag/island-tag.entity';
 import { TagReader } from 'src/domain/components/tags/tag-reader';
 import { TAG_AT_LEAST_ONE_MESSAGE } from 'src/domain/exceptions/message';
 import { Transactional } from '@nestjs-cls/transactional';
@@ -30,16 +25,15 @@ export class GameIslandCreateService {
         if (tags.length < 1) {
             throw new DomainException(
                 DomainExceptionType.TAG_AT_LEAST_ONE,
+                HttpStatus.BAD_REQUEST,
                 TAG_AT_LEAST_ONE_MESSAGE,
             );
         }
 
-        const island = IslandEntity.create(prototype, v4);
-        const islandTags = IslandTagEntity.createBulk(
-            tags.map((tag) => ({ tagId: tag.id, islandId: island.id })),
+        const { island } = await this.createTransaction(
+            prototype,
+            tags.map((tag) => tag.id),
         );
-
-        await this.createTransaction(island, islandTags);
 
         const normalIsland = {
             id: island.id,
@@ -58,11 +52,13 @@ export class GameIslandCreateService {
     }
 
     @Transactional()
-    async createTransaction(
-        island: IslandEntity,
-        islandTags: IslandTagEntity[],
-    ) {
-        await this.islandWriter.create(island);
-        await this.islandTagWriter.createMany(islandTags);
+    async createTransaction(prototype: IslandPrototype, tagIds: string[]) {
+        const island = await this.islandWriter.create(prototype);
+        const tags = await this.islandTagWriter.createMany(tagIds, island.id);
+
+        return {
+            island,
+            tags,
+        };
     }
 }

@@ -14,6 +14,7 @@ import { FriendsModule } from 'src/modules/friends/friends.module';
 import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-authenticator';
 import { GameServiceModule } from 'src/modules/game/game-service.module';
 import { GameIslandServiceModule } from 'src/modules/game/game-island.service.module';
+import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-create-service.module';
 
 @Module({
     imports: [
@@ -25,6 +26,7 @@ import { GameIslandServiceModule } from 'src/modules/game/game-island.service.mo
         PlayerStorageComponentModule,
         NormalIslandStorageComponentModule,
 
+        GameIslandCreateServiceModule,
         GameServiceModule,
         GameIslandServiceModule,
     ],
