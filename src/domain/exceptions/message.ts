@@ -1,3 +1,4 @@
+export const FORBIDDEN_MESSAGE = '권한이 없습니다.';
 export const USER_NOT_REGISTERED_MESSAGE = '가입되지 않은 회원입니다.';
 export const PROVIDER_CONFLICT = '다른 플랫폼으로 가입한 이력이 존재합니다.';
 export const USER_EMAIL_CONFLIC_MESSAGE = '이미 존재하는 이메일입니다.';
