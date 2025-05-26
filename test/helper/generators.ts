@@ -197,5 +197,6 @@ export const generateNormalIslandModel = (
         description: partial?.description || 'Island description',
         name: partial?.name || 'Island name',
         tags: partial?.tags || ['tag1', 'tag2'],
+        ownerId: partial?.ownerId || v4(),
     };
 };

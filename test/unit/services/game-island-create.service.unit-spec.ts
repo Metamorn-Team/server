@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import Redis from 'ioredis';
 import { ClsModule } from 'nestjs-cls';
 import { clsOptions } from 'src/configs/cls/cls-config';
-import { IslandPrototype } from 'src/domain/entities/islands/island.entity';
+import { NormalIslandPrototype } from 'src/domain/entities/islands/island.entity';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { TAG_AT_LEAST_ONE_MESSAGE } from 'src/domain/exceptions/message';
@@ -56,7 +56,7 @@ describe('GameIslandService', () => {
         const user = generateUserEntityV2();
         const tag = generateTag('자유');
 
-        const prototype: IslandPrototype = {
+        const prototype: NormalIslandPrototype = {
             maxMembers: 5,
             type: IslandTypeEnum.NORMAL,
             coverImage: 'https://example.com/cover.jpg',

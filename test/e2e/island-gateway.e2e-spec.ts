@@ -66,6 +66,7 @@ describe('IslandGateway (e2e)', () => {
                 players: new Set<string>(),
                 tags: ['자유'],
                 type: IslandTypeEnum.NORMAL,
+                ownerId: v4(),
             };
             await normalIslandStorage.createIsland(island);
 
