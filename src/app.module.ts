@@ -20,6 +20,7 @@ import { TagModule } from 'src/modules/tags/tag.module';
 import { LoaderModule } from 'src/modules/loaders/loader.module';
 import { RedisModule } from 'src/infrastructure/redis/redis.module';
 import { validationSchema } from 'src/env-validation';
+import { IslandModule } from 'src/modules/islands/island.module';
 
 @Module({
     imports: [
@@ -39,6 +40,7 @@ import { validationSchema } from 'src/env-validation';
         PurchaseModule,
         FileModule,
         TagModule,
+        IslandModule,
 
         LoaderModule,
     ],
