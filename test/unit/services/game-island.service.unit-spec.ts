@@ -1,6 +1,8 @@
 import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import Redis from 'ioredis';
+import { ClsModule } from 'nestjs-cls';
+import { clsOptions } from 'src/configs/cls/cls-config';
 import { NormalIslandManager } from 'src/domain/components/islands/normal-storage/normal-island-manager';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
@@ -35,7 +37,11 @@ describe('GameIslandService', () => {
 
     beforeAll(async () => {
         app = await Test.createTestingModule({
-            imports: [GameIslandServiceModule, PrismaModule],
+            imports: [
+                GameIslandServiceModule,
+                PrismaModule,
+                ClsModule.forRoot(clsOptions),
+            ],
         }).compile();
 
         db = app.get<PrismaService>(PrismaService);
