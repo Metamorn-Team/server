@@ -1,4 +1,5 @@
 import { LiveNormalIsland } from 'src/domain/types/game.types';
+import { NormalIslandUpdateInput } from 'src/domain/types/island.types';
 
 export interface NormalIslandStorage {
     createIsland(island: LiveNormalIsland): Promise<void>;
@@ -7,8 +8,8 @@ export interface NormalIslandStorage {
     countPlayer(islandId: string): Promise<number>;
     addPlayerToIsland(islandId: string, playerId: string): Promise<void>;
     removePlayer(islandId: string, playerId: string): Promise<void>;
-    // getIslandStore(): Record<string, LiveNormalIsland>;
     getPlayerIdsByIslandId(islandId: string): Promise<string[]>;
+    update(islandId: string, data: NormalIslandUpdateInput): Promise<void>;
     delete(islandId: string): Promise<void>;
 }
 
