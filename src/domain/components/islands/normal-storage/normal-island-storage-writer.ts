@@ -9,7 +9,7 @@ export class NormalIslandStorageWriter {
     ) {}
 
     async create(island: LiveNormalIsland) {
-        await this.normalIslandStorage.createIsland(island.id, island);
+        await this.normalIslandStorage.createIsland(island);
     }
 
     async addPlayer(islandId: string, playerId: string) {

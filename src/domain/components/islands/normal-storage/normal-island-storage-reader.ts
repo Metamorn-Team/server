@@ -1,4 +1,5 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { IslandReader } from 'src/domain/components/islands/interface/island-reader';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
@@ -6,7 +7,7 @@ import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island
 import { LiveNormalIsland } from 'src/domain/types/game.types';
 
 @Injectable()
-export class NormalIslandStorageReader {
+export class NormalIslandStorageReader implements IslandReader {
     constructor(
         @Inject(NormalIslandStorage)
         private readonly normalIslandStorage: NormalIslandStorage,

@@ -12,7 +12,7 @@ import { RedisClientService } from 'src/infrastructure/redis/redis-client.servic
 export class NormalIslandRedisStorage implements NormalIslandStorage {
     constructor(private readonly redis: RedisClientService) {}
 
-    async createIsland(islandId: string, island: LiveNormalIsland) {
+    async createIsland(island: LiveNormalIsland) {
         const { players: _, tags, createdAt, ...islandInfo } = island;
         const key = NORMAL_ISLAND_KEY(islandInfo.id);
         const tagsKey = ISLAND_TAGS_KEY(islandInfo.id);

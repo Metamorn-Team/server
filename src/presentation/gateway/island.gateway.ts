@@ -53,8 +53,7 @@ export class IslandGateway
     ) {}
 
     async kick(userId: string, client: TypedSocket) {
-        const kickedPlayer =
-            await this.gameIslandService.kickPlayerById(userId);
+        const kickedPlayer = await this.gameIslandService.kick(userId);
         if (kickedPlayer) {
             const { clientId, roomId, id } = kickedPlayer;
 

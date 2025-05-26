@@ -1,11 +1,12 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { IslandReader } from 'src/domain/components/islands/interface/island-reader';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 
 @Injectable()
-export class DesertedIslandStorageReader {
+export class DesertedIslandStorageReader implements IslandReader {
     constructor(
         @Inject(DesertedIslandStorage)
         private readonly desertedIslandStorage: DesertedIslandStorage,

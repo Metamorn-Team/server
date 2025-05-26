@@ -27,3 +27,14 @@ export const createSocketConnection = async (
         });
     });
 };
+
+export const waitForEvent = <T>(
+    socket: TypedSockect,
+    eventName: keyof ServerToClient,
+): Promise<T> => {
+    return new Promise((resolve) => {
+        socket.once(eventName, (data: any) => {
+            resolve(data as T);
+        });
+    });
+};
