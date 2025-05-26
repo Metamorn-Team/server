@@ -17,6 +17,7 @@ export interface LiveNormalIsland extends LiveIsland {
     description: string;
     coverImage: string;
     tags: string[];
+    ownerId: string;
     createdAt: Date;
 }
 

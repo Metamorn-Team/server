@@ -51,6 +51,7 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
             createdAt: new Date(Number(islandInfo.createdAt)),
             tags,
             players: new Set(players),
+            ownerId: islandInfo.ownerId,
         };
     }
 
