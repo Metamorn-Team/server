@@ -164,6 +164,22 @@ export class IslandGateway
         }
     }
 
+    @SubscribeMessage('strongAttack')
+    async handleStrongAttack(@CurrentUserFromSocket() userId: string) {
+        // TODO 오브젝트 추가되면 공격 대상에 추가
+        try {
+            const { attacker, attackedPlayers } =
+                await this.gameService.attack(userId);
+
+            this.wss.to(attacker.roomId).emit('strongAttacked', {
+                attackerId: attacker.id,
+                attackedPlayerIds: attackedPlayers.map((player) => player.id),
+            });
+        } catch (e) {
+            this.logger.error(`공격 실패: ${e as string}`);
+        }
+    }
+
     @SubscribeMessage('jump')
     async jump(
         @ConnectedSocket() client: TypedSocket,
