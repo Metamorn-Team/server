@@ -1,6 +1,16 @@
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 
-export class IslandPrototype {
+export interface NormalIslandPrototype {
+    readonly maxMembers: number;
+    readonly type: IslandTypeEnum;
+    readonly name: string;
+    readonly description: string;
+    readonly coverImage: string;
+    readonly ownerId: string;
+    readonly deletedAt?: Date;
+}
+
+export interface IslandPrototype {
     readonly maxMembers: number;
     readonly tag?: string;
     readonly type: IslandTypeEnum;

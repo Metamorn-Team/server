@@ -34,7 +34,6 @@ import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-crea
         LobyGateway,
         IslandGateway,
         ChatGateway,
-        GameIslandCreateService,
         FriendGateway,
         WsConnectionAuthenticator,
     ],
