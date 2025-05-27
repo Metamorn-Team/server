@@ -45,8 +45,23 @@ export class DesertedIslandManager implements IslandManager {
     async join(player: Player) {
         const { id: playerId, roomId: islandId } = player;
 
-        await this.playerStorageWriter.create(player);
-        await this.desertedIslandStorageWriter.addPlayer(islandId, playerId);
+        const key = ISLAND_LOCK_KEY(islandId);
+        await this.lockManager.transaction(key, [
+            {
+                execute: () => this.canJoin(islandId),
+            },
+            {
+                execute: () => this.playerStorageWriter.create(player),
+                rollback: () => this.playerStorageWriter.remove(playerId),
+            },
+            {
+                execute: () =>
+                    this.desertedIslandStorageWriter.addPlayer(
+                        islandId,
+                        playerId,
+                    ),
+            },
+        ]);
     }
 
     async getActiveUsers(islandId: string, myPlayerId: string) {
@@ -70,13 +85,26 @@ export class DesertedIslandManager implements IslandManager {
     }
 
     async handleLeave(player: Player) {
-        const { roomId: islandId } = player;
+        const { id: playerId, roomId: islandId } = player;
 
         const key = ISLAND_LOCK_KEY(islandId);
+
         await this.lockManager.transaction(key, [
             {
-                execute: () => this.left(islandId, player.id),
-                rollback: () => this.join(player),
+                execute: () =>
+                    this.desertedIslandStorageWriter.removePlayer(
+                        islandId,
+                        playerId,
+                    ),
+                rollback: () =>
+                    this.desertedIslandStorageWriter.addPlayer(
+                        islandId,
+                        playerId,
+                    ),
+            },
+            {
+                execute: () => this.playerStorageWriter.remove(playerId),
+                rollback: () => this.playerStorageWriter.create(player),
             },
             {
                 execute: () => this.removeEmpty(islandId),
