@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { LiveNormalIsland } from 'src/domain/types/game.types';
+import { NormalIslandUpdateInput } from 'src/domain/types/island.types';
 import {
     NORMAL_ISLAND_KEY,
     ISLAND_PLAYERS_KEY,
@@ -95,6 +96,17 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
         return await this.redis
             .getClient()
             .smembers(ISLAND_PLAYERS_KEY(islandId));
+    }
+
+    async update(
+        islandId: string,
+        data: NormalIslandUpdateInput,
+    ): Promise<void> {
+        const key = NORMAL_ISLAND_KEY(islandId);
+
+        await this.redis
+            .getClient()
+            .hset(key, { ...data, max: data.maxMembers });
     }
 
     async delete(islandId: string): Promise<void> {

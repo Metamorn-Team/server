@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/prefer-promise-reject-errors */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { AppModule } from '../../src/app.module';
+import { AppModule } from 'src/app.module';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
@@ -14,12 +14,12 @@ import {
     waitForEvent,
 } from 'test/helper/socket';
 import {
+    CreateIslandRequest,
     CanJoinIslandRequest,
     CanJoinIslandResponse,
     CreatedIslandResponse,
-    CreateIslandRequest,
     GetLiveIslandListResponse,
-} from 'types';
+} from 'src/presentation/dto';
 
 describe('LobyGateway (e2e)', () => {
     let app: INestApplication;

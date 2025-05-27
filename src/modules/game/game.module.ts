@@ -5,7 +5,6 @@ import { ChatGateway } from 'src/presentation/gateway/chat.gateway';
 import { IslandGateway } from 'src/presentation/gateway/island.gateway';
 import { LobyGateway } from 'src/presentation/gateway/loby.gateway';
 import { NormalIslandStorageComponentModule } from 'src/modules/islands/normal-island-storage-component.module';
-import { GameIslandCreateService } from 'src/domain/services/game/game-island-create.service';
 import { TagComponentModule } from 'src/modules/tags/tag-component.module';
 import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-component.module';
 import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
@@ -15,6 +14,8 @@ import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-auth
 import { GameServiceModule } from 'src/modules/game/game-service.module';
 import { GameIslandServiceModule } from 'src/modules/game/game-island.service.module';
 import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-create-service.module';
+import { IslandSettingsGateway } from 'src/presentation/gateway/island-settings.gateway';
+import { IslandServiceModule } from 'src/modules/islands/island-service.module';
 
 @Module({
     imports: [
@@ -26,6 +27,7 @@ import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-crea
         PlayerStorageComponentModule,
         NormalIslandStorageComponentModule,
 
+        IslandServiceModule,
         GameIslandCreateServiceModule,
         GameServiceModule,
         GameIslandServiceModule,
@@ -33,6 +35,7 @@ import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-crea
     providers: [
         LobyGateway,
         IslandGateway,
+        IslandSettingsGateway,
         ChatGateway,
         FriendGateway,
         WsConnectionAuthenticator,

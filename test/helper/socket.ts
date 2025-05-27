@@ -8,14 +8,15 @@ export type TypedSockect = Socket<ServerToClient, ClientToServer>;
 export const createSocketConnection = async (
     url: string,
     app: INestApplication,
+    accessToken?: string,
 ): Promise<TypedSockect> => {
-    const { accessToken } = await login(app);
+    const token = accessToken || (await login(app)).accessToken;
 
     return new Promise((res, rej) => {
         const socket: TypedSockect = io(url, {
             path: '/game',
             auth: {
-                authorization: accessToken.split(' ')[1],
+                authorization: token.split(' ')[1],
             },
         });
         socket.on('connect', () => {
