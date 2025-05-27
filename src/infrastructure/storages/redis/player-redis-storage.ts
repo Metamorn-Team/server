@@ -17,6 +17,7 @@ export class PlayerRedisStorage implements PlayerStorage {
             avatarKey: data.avatarKey,
             roomId: data.roomId,
             isFacingRight: data.isFacingRight === 'true',
+            radius: Number(data.radius),
             islandType: Number(data.islandType),
             lastActivity: Number(data.lastActivity),
             lastMoved: Number(data.lastMoved),

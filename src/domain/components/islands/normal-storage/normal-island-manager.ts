@@ -1,4 +1,6 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
@@ -9,15 +11,22 @@ import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player } from 'src/domain/models/game/player';
+import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
+import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 
 @Injectable()
 export class NormalIslandManager implements IslandManager {
+    private readonly logger = new Logger(NormalIslandManager.name);
+
     constructor(
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly normalIslandStorageWriter: NormalIslandStorageWriter,
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly playerStorageWriter: PlayerStorageWriter,
         private readonly islandWriter: IslandWriter,
+
+        private readonly islandJoinWriter: IslandJoinWriter,
+        private readonly lockManager: RedisTransactionManager,
     ) {}
 
     async canJoin(islandId: string) {
@@ -61,13 +70,93 @@ export class NormalIslandManager implements IslandManager {
         await this.playerStorageWriter.remove(playerId);
     }
 
+    async handleLeave(
+        player: Player,
+    ): Promise<{ player: Player; ownerChanged: boolean }> {
+        const { roomId: islandId } = player;
+        let ownerChanged = false;
+
+        const key = ISLAND_LOCK_KEY(islandId);
+        await this.lockManager.transaction(key, [
+            {
+                execute: () => this.left(islandId, player.id),
+                rollback: () => this.join(player),
+            },
+            {
+                execute: async () => {
+                    const changed = await this.transferOwnershipToFirstEntrant(
+                        islandId,
+                        player.id,
+                    );
+                    ownerChanged = changed;
+                },
+                rollback: () =>
+                    this.updateOwnerTransaction(islandId, player.id),
+            },
+            {
+                execute: () => this.removeEmpty(islandId),
+            },
+        ]);
+
+        try {
+            await this.islandJoinWriter.left(islandId, player.id);
+        } catch (e) {
+            this.logger.error(
+                `섬 참여 데이터 삭제 실패: ${islandId}, playerId: ${player.id}`,
+                e,
+            );
+        }
+
+        return {
+            player,
+            ownerChanged,
+        };
+    }
+
+    async transferOwnershipToFirstEntrant(
+        islandId: string,
+        playerId: string,
+    ): Promise<boolean> {
+        const island = await this.normalIslandStorageReader.readOne(islandId);
+
+        if (island.ownerId !== playerId) {
+            return false;
+        }
+
+        const nextOwnerId =
+            await this.normalIslandStorageReader.getFirstPlayerExceptSelf(
+                islandId,
+                playerId,
+            );
+
+        if (nextOwnerId) {
+            await this.updateOwnerTransaction(islandId, nextOwnerId);
+            return true;
+        }
+
+        return false;
+    }
+
+    @Transactional()
+    async updateOwnerTransaction(islandId: string, newOwnerId: string) {
+        const data = { ownerId: newOwnerId };
+
+        await this.islandWriter.update(islandId, data);
+        await this.normalIslandStorageWriter.update(islandId, data);
+    }
+
     async removeEmpty(islandId: string): Promise<void> {
         const playerCount =
             await this.normalIslandStorageReader.countPlayer(islandId);
 
         if (playerCount < 1) {
             await this.normalIslandStorageWriter.remove(islandId);
-            await this.islandWriter.remove(islandId);
+
+            try {
+                await this.islandWriter.remove(islandId);
+            } catch (e) {
+                this.logger.error(`빈 섬 제거 실패: ${islandId}`, e);
+            }
         }
     }
 }

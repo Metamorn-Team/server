@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
+import { IslandReader } from 'src/domain/components/islands/interface/island-reader';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-
-interface IslandReaderTypeMap {
-    [IslandTypeEnum.NORMAL]: NormalIslandStorageReader;
-    [IslandTypeEnum.DESERTED]: DesertedIslandStorageReader;
-}
 
 @Injectable()
 export class IslandStorageReaderFactory {
@@ -15,15 +11,14 @@ export class IslandStorageReaderFactory {
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
     ) {}
 
-    get<T extends IslandTypeEnum>(type: T): IslandReaderTypeMap[T] {
+    get(type: IslandTypeEnum): IslandReader {
         switch (type) {
             case IslandTypeEnum.NORMAL:
-                return this.normalIslandStorageReader as IslandReaderTypeMap[T];
+                return this.normalIslandStorageReader;
             case IslandTypeEnum.DESERTED:
-                return this
-                    .desertedIslandStorageReader as IslandReaderTypeMap[T];
+                return this.desertedIslandStorageReader;
             default:
-                throw new Error(`Unknown island type: ${type}`);
+                throw new Error(`Unknown island`);
         }
     }
 }

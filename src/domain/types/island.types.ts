@@ -17,3 +17,21 @@ export const convertNumberToIslandType = (type: number) => {
             return IslandTypeEnum.DESERTED;
     }
 };
+
+export interface NormalIslandUpdateInput {
+    coverImage?: string;
+    name?: string;
+    description?: string;
+    maxMembers?: number;
+    ownerId?: string;
+}
+
+export interface IslandSummary {
+    readonly id: string;
+    readonly name: string | null;
+    readonly coverImage: string | null;
+    readonly maxMembers: number;
+    readonly type: IslandTypeEnum;
+    readonly createdAt: Date;
+    readonly ownerId: string | null;
+}

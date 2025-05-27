@@ -9,7 +9,12 @@ export class IslandTagWriter {
         private readonly islandTagRepository: IslandTagRepository,
     ) {}
 
-    async createMany(islandTags: IslandTagEntity[]) {
+    async createMany(tagIds: string[], islandId: string) {
+        const islandTags = tagIds.map((tagId) =>
+            IslandTagEntity.create({ tagId, islandId }),
+        );
         await this.islandTagRepository.saveMany(islandTags);
+
+        return islandTags;
     }
 }

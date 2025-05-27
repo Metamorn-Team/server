@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { DESERTED_MAX_MEMBERS } from 'src/common/constants';
-import { IslandReader } from 'src/domain/components/islands/island-reader';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
@@ -16,22 +15,25 @@ import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deser
 import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { IslandManagerFactory } from 'src/domain/components/islands/factory/island-manager-factory';
-import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
+import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
+import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 
 @Injectable()
 export class GameIslandService {
+    private readonly logger = new Logger(GameIslandService.name);
+
     constructor(
         private readonly islandWriter: IslandWriter,
-        private readonly islandReader: IslandReader,
         private readonly islandJoinWriter: IslandJoinWriter,
         private readonly userReader: UserReader,
 
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
+        private readonly normalIslandStorageReader: NormalIslandStorageReader,
 
         private readonly islandManagerFactory: IslandManagerFactory,
         private readonly lockManager: RedisTransactionManager,
@@ -78,7 +80,7 @@ export class GameIslandService {
         y: number,
     ): Promise<JoinedIslandInfo> {
         const user = await this.userReader.readProfile(playerId);
-        const island = await this.islandReader.readOne(islandId);
+        const island = await this.normalIslandStorageReader.readOne(islandId);
         const manager = this.islandManagerFactory.get(IslandTypeEnum.NORMAL);
 
         const player = Player.create({
@@ -91,6 +93,7 @@ export class GameIslandService {
             tag: user.tag,
             x,
             y,
+            radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
 
         const key = ISLAND_LOCK_KEY(islandId);
@@ -105,12 +108,7 @@ export class GameIslandService {
         ]);
 
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
-
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: playerId },
-            v4,
-        );
-        await this.islandJoinWriter.create(islandJoin);
+        void this.createIslandJoinData(islandId, playerId);
 
         return {
             activePlayers,
@@ -141,6 +139,7 @@ export class GameIslandService {
             roomId: islandId,
             x,
             y,
+            radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
 
         const key = ISLAND_LOCK_KEY(islandId);
@@ -154,19 +153,23 @@ export class GameIslandService {
             },
         ]);
 
-        const islandJoin = IslandJoinEntity.create(
-            { islandId, userId: playerId },
-            v4,
-        );
-        await this.islandJoinWriter.create(islandJoin);
-
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
+        void this.islandJoinWriter.create({ islandId, userId: playerId });
 
         return {
             activePlayers,
             joinedIslandId: islandId,
             joinedPlayer: player,
         };
+    }
+
+    createIslandJoinData(islandId: string, userId: string) {
+        this.islandJoinWriter.create({ islandId, userId }).catch((e) => {
+            this.logger.error(
+                `섬 참여 데이터 저장 실패: ${islandId}, userId: ${userId}`,
+                e,
+            );
+        });
     }
 
     async createLiveIsland(islandId: string) {
@@ -182,23 +185,8 @@ export class GameIslandService {
     }
 
     async handleLeave(player: Player) {
-        const { roomId: islandId, islandType } = player;
-        const manager = this.islandManagerFactory.get(islandType);
-
-        const key = ISLAND_LOCK_KEY(islandId);
-        await this.lockManager.transaction(key, [
-            {
-                execute: () => manager.left(islandId, player.id),
-                rollback: () => manager.join(player),
-            },
-            {
-                execute: () => manager.removeEmpty(islandId),
-                rollback: () => this.createLiveIsland(islandId),
-            },
-        ]);
-        await this.islandJoinWriter.left(islandId, player.id);
-
-        return player;
+        const manager = this.islandManagerFactory.get(player.islandType);
+        return await manager.handleLeave(player);
     }
 
     async leave(playerId: string) {
@@ -212,7 +200,7 @@ export class GameIslandService {
         return await this.handleLeave(player);
     }
 
-    async kickPlayerById(playerId: string) {
+    async kick(playerId: string) {
         try {
             const player = await this.playerStorageReader.readOne(playerId);
             const { roomId: islandId, islandType } = player;
@@ -251,7 +239,10 @@ export class GameIslandService {
                         reason: ISLAND_FULL,
                     };
                 }
-                if (e.errorType === DomainExceptionType.ISLAND_NOT_FOUND) {
+                if (
+                    e.errorType ===
+                    DomainExceptionType.ISLAND_NOT_FOUND_IN_STORAGE
+                ) {
                     return {
                         canJoin: false,
                         reason: ISLAND_NOT_FOUND_MESSAGE,

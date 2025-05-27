@@ -4,7 +4,8 @@ import {
     ValidationPipe,
     ValidationPipeOptions,
 } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { DomainException } from 'src/domain/exceptions/exceptions';
 
 export class WsValidatePipe extends ValidationPipe {
     constructor(options?: ValidationPipeOptions) {
@@ -16,7 +17,16 @@ export class WsValidatePipe extends ValidationPipe {
             return await super.transform(value, metadata);
         } catch (e: unknown) {
             if (e instanceof HttpException) {
-                throw new WsException(e.getResponse());
+                const errorBody = e.getResponse() as {
+                    error: string;
+                    statusCode: number;
+                    message: string[];
+                };
+                throw new DomainException(
+                    DomainExceptionType.BAD_INPUT,
+                    errorBody.statusCode,
+                    JSON.stringify(errorBody.message),
+                );
             }
             throw e;
         }

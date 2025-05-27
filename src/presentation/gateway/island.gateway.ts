@@ -15,6 +15,7 @@ import { GameService } from 'src/domain/services/game/game.service';
 import { PlayerJoinRequest } from 'src/presentation/dto/game/request/player-join.request';
 import {
     ClientToIsland,
+    IslandSettingsToClient,
     IslandToClient,
 } from 'src/presentation/dto/game/socket/type';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
@@ -27,7 +28,10 @@ import { WsExceptions } from 'src/presentation/dto/game/socket/known-exception';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { checkAppVersion } from 'test/unit/utils/check-app-version';
 
-type TypedSocket = Socket<ClientToIsland, IslandToClient>;
+type TypedSocket = Socket<
+    ClientToIsland,
+    IslandToClient & IslandSettingsToClient
+>;
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
@@ -41,7 +45,10 @@ export class IslandGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
     @WebSocketServer()
-    private readonly wss: Namespace<ClientToIsland, IslandToClient>;
+    private readonly wss: Namespace<
+        ClientToIsland,
+        IslandToClient & IslandSettingsToClient
+    >;
 
     private readonly logger = new Logger(IslandGateway.name);
 
@@ -53,8 +60,7 @@ export class IslandGateway
     ) {}
 
     async kick(userId: string, client: TypedSocket) {
-        const kickedPlayer =
-            await this.gameIslandService.kickPlayerById(userId);
+        const kickedPlayer = await this.gameIslandService.kick(userId);
         if (kickedPlayer) {
             const { clientId, roomId, id } = kickedPlayer;
 
@@ -123,8 +129,15 @@ export class IslandGateway
         @ConnectedSocket() client: TypedSocket,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const player = await this.gameIslandService.leave(userId);
+        const { player, ownerChanged } =
+            await this.gameIslandService.leave(userId);
         if (player) {
+            if (ownerChanged) {
+                this.wss
+                    .to(player.roomId)
+                    .emit('islandInfoUpdated', { islandId: player.roomId });
+            }
+
             await client.leave(player.roomId);
             client.emit('playerLeftSuccess');
             client.to(player.roomId).emit('playerLeft', { id: player.id });
@@ -157,6 +170,22 @@ export class IslandGateway
                 await this.gameService.attack(userId);
 
             this.wss.to(attacker.roomId).emit('attacked', {
+                attackerId: attacker.id,
+                attackedPlayerIds: attackedPlayers.map((player) => player.id),
+            });
+        } catch (e) {
+            this.logger.error(`공격 실패: ${e as string}`);
+        }
+    }
+
+    @SubscribeMessage('strongAttack')
+    async handleStrongAttack(@CurrentUserFromSocket() userId: string) {
+        // TODO 오브젝트 추가되면 공격 대상에 추가
+        try {
+            const { attacker, attackedPlayers } =
+                await this.gameService.attack(userId);
+
+            this.wss.to(attacker.roomId).emit('strongAttacked', {
                 attackerId: attacker.id,
                 attackedPlayerIds: attackedPlayers.map((player) => player.id),
             });
@@ -212,13 +241,19 @@ export class IslandGateway
 
     async handleDisconnect(client: TypedSocket & { userId: string }) {
         try {
-            const player = await this.gameIslandService.leaveByDisconnect(
-                client.id,
-            );
+            const { player, ownerChanged } =
+                await this.gameIslandService.leaveByDisconnect(client.id);
             const { roomId: islandId } = player;
+
+            if (ownerChanged) {
+                this.wss
+                    .to(player.roomId)
+                    .emit('islandInfoUpdated', { islandId: player.roomId });
+            }
 
             await client.leave(islandId);
             client.to(islandId).emit('playerLeft', { id: player.id });
+
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
             );

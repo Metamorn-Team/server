@@ -1,3 +1,4 @@
+import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
@@ -7,7 +8,10 @@ import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
 import { TagEntity } from 'src/domain/entities/tag/tag.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { Player } from 'src/domain/models/game/player';
-import { LiveDesertedIsland } from 'src/domain/types/game.types';
+import {
+    LiveDesertedIsland,
+    LiveNormalIsland,
+} from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ItemGradeEnum } from 'src/domain/types/item.types';
 import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
@@ -162,6 +166,7 @@ export const generatePlayerModel = (partial?: Partial<Player>) => {
         partial?.avatarKey || 'purple_pawn',
         partial?.x ?? 0,
         partial?.y ?? 0,
+        partial?.radius || PLAYER_HIT_BOX.PAWN.RADIUS,
         partial?.isFacingRight || true,
         partial?.lastMoved || now,
         partial?.lastActivity || now,
@@ -172,9 +177,26 @@ export const generateDesertedIslandModel = (
     partial?: Partial<LiveDesertedIsland>,
 ): LiveDesertedIsland => {
     return {
-        id: partial?.id || 'deserted-id',
+        id: partial?.id || v4(),
         max: partial?.max || 4,
         players: partial?.players || new Set(),
         type: IslandTypeEnum.DESERTED,
+    };
+};
+
+export const generateNormalIslandModel = (
+    partial?: Partial<LiveNormalIsland>,
+): LiveNormalIsland => {
+    return {
+        id: partial?.id || v4(),
+        max: partial?.max ?? 4,
+        players: partial?.players || new Set(),
+        type: IslandTypeEnum.NORMAL,
+        coverImage: partial?.coverImage || 'https://example.com/cover.jpg',
+        createdAt: partial?.createdAt || new Date(),
+        description: partial?.description || 'Island description',
+        name: partial?.name || 'Island name',
+        tags: partial?.tags || ['tag1', 'tag2'],
+        ownerId: partial?.ownerId || v4(),
     };
 };
