@@ -21,4 +21,12 @@ export class IslandManagerFactory {
                 throw new Error('Invalid island type');
         }
     }
+
+    getNormalIslandManager(): NormalIslandManager {
+        return this.normalIslandManager;
+    }
+
+    getDesertedIslandManager(): DesertedIslandManager {
+        return this.desertedIslandManager;
+    }
 }
