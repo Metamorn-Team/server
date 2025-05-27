@@ -24,3 +24,4 @@ export const TAG_AT_LEAST_ONE_MESSAGE =
     '섬의 태그는 적어도 하나 이상이어야합니다.';
 export const LOCK_ACQUIRED_FAILED_MESSAGE = (key: string) =>
     `lock 획득 실패: ${key}`;
+export const TOO_MANY_PARTICIPANTS_MESSAGE = '참여 인원이 너무 많습니다.';

@@ -103,10 +103,13 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
         data: NormalIslandUpdateInput,
     ): Promise<void> {
         const key = NORMAL_ISLAND_KEY(islandId);
+        const updateData = { ...data };
 
-        await this.redis
-            .getClient()
-            .hset(key, { ...data, max: data.maxMembers });
+        if (data.maxMembers) {
+            updateData['max'] = data.maxMembers;
+        }
+
+        await this.redis.getClient().hset(key, updateData);
     }
 
     async delete(islandId: string): Promise<void> {

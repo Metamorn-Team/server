@@ -3,6 +3,7 @@ import { Socket } from 'socket.io';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import {
+    WsErrorBody,
     WsExceptions,
     WsExceptionsType,
 } from 'src/presentation/dto/game/socket/known-exception';
@@ -19,7 +20,7 @@ export class WsExceptionFilter implements ExceptionFilter {
         const name = this.getErrorTypeFromException(exception);
         const message = this.getMessageFromException(exception);
 
-        const res = { name, message };
+        const res: WsErrorBody = { name, message };
 
         if (process.env.NODE_ENV !== 'test') {
             this.logger.error(exception);
