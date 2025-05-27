@@ -9,6 +9,10 @@ export interface NormalIslandStorage {
     addPlayerToIsland(islandId: string, playerId: string): Promise<void>;
     removePlayer(islandId: string, playerId: string): Promise<void>;
     getPlayerIdsByIslandId(islandId: string): Promise<string[]>;
+    getFirstPlayerExceptSelf(
+        islandId: string,
+        playerId: string,
+    ): Promise<string | null>;
     update(islandId: string, data: NormalIslandUpdateInput): Promise<void>;
     delete(islandId: string): Promise<void>;
 }
