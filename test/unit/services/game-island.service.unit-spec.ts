@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import Redis from 'ioredis';
 import { ClsModule } from 'nestjs-cls';
 import { clsOptions } from 'src/configs/cls/cls-config';
+import { DesertedIslandManager } from 'src/domain/components/islands/deserted-storage/deserted-island-manager';
 import { NormalIslandManager } from 'src/domain/components/islands/normal-storage/normal-island-manager';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
@@ -11,6 +12,7 @@ import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
@@ -34,6 +36,7 @@ describe('GameIslandService', () => {
     let gameIslandService: GameIslandService;
 
     let normalIslandManager: NormalIslandManager;
+    let desertedIslandManager: DesertedIslandManager;
 
     beforeAll(async () => {
         app = await Test.createTestingModule({
@@ -53,6 +56,9 @@ describe('GameIslandService', () => {
         );
         gameIslandService = app.get<GameIslandService>(GameIslandService);
         normalIslandManager = app.get<NormalIslandManager>(NormalIslandManager);
+        desertedIslandManager = app.get<DesertedIslandManager>(
+            DesertedIslandManager,
+        );
     });
 
     afterAll(async () => {
@@ -178,7 +184,7 @@ describe('GameIslandService', () => {
         });
     });
 
-    describe('섬 이탈', () => {
+    describe('일반 섬 이탈', () => {
         const user = generateUserEntityV2();
         const liveIsland = generateNormalIslandModel();
         const island = generateIsland({
@@ -252,6 +258,101 @@ describe('GameIslandService', () => {
 
             const rollbackedPlayer = playerMemoryStorage.getPlayer(me.id);
             const islandAfterLeave = await normalIslandStorage.getIsland(
+                liveIsland.id,
+            );
+
+            await expect(() =>
+                gameIslandService.handleLeave(me),
+            ).rejects.toThrow(new Error('롤백을 위한 의도적 예외'));
+            expect(rollbackedPlayer?.id).toEqual(me.id);
+            expect(islandAfterLeave?.players.size).toEqual(1);
+            expect(islandAfterLeave?.players.has(me.id)).toEqual(true);
+        });
+    });
+
+    describe('무인도 이탈', () => {
+        const user = generateUserEntityV2();
+        const liveIsland = generateDesertedIslandModel();
+        const island = generateIsland({
+            ...liveIsland,
+            maxMembers: liveIsland.max,
+            updatedAt: new Date(),
+        });
+
+        beforeEach(async () => {
+            await db.user.create({ data: user });
+            await db.island.create({ data: island });
+            await desertedIslandStorage.createIsland(liveIsland);
+        });
+
+        it('무인도 이탈 정상 동작', async () => {
+            // 플레이어 생성 및 섬 참여
+            const me = generatePlayerModel({
+                roomId: liveIsland.id,
+                islandType: IslandTypeEnum.DESERTED,
+            });
+            const otherPlayer = generatePlayerModel({ roomId: liveIsland.id });
+
+            playerMemoryStorage.addPlayer(me);
+            playerMemoryStorage.addPlayer(otherPlayer);
+
+            await desertedIslandStorage.addPlayerToIsland(liveIsland.id, me.id);
+            await desertedIslandStorage.addPlayerToIsland(
+                liveIsland.id,
+                otherPlayer.id,
+            );
+
+            await gameIslandService.handleLeave(me);
+
+            const leavedPlayer = playerMemoryStorage.getPlayer(me.id);
+            const islandAfterLeave = await desertedIslandStorage.getIsland(
+                liveIsland.id,
+            );
+
+            expect(leavedPlayer).toBeNull();
+            expect(islandAfterLeave?.players.size).toEqual(1);
+            expect(islandAfterLeave?.players.has(me.id)).toEqual(false);
+        });
+
+        it('섬 이탈 시 참여 인원이 0명일 경우 섬을 삭제한다', async () => {
+            // 플레이어 생성 및 섬 참여
+            const me = generatePlayerModel({
+                roomId: liveIsland.id,
+                islandType: IslandTypeEnum.DESERTED,
+            });
+
+            playerMemoryStorage.addPlayer(me);
+            await desertedIslandStorage.addPlayerToIsland(liveIsland.id, me.id);
+
+            await gameIslandService.handleLeave(me);
+
+            const leavedPlayer = playerMemoryStorage.getPlayer(me.id);
+            const islandAfterLeave = await desertedIslandStorage.getIsland(
+                liveIsland.id,
+            );
+
+            expect(leavedPlayer).toBeNull();
+            expect(islandAfterLeave).toBeNull();
+        });
+
+        it('섬 이탈 중 예외가 발생하면 이전 동작이 롤백된다', async () => {
+            jest.spyOn(
+                desertedIslandManager,
+                'removeEmpty',
+            ).mockImplementationOnce((_: string) => {
+                throw new Error('롤백을 위한 의도적 예외');
+            });
+
+            const me = generatePlayerModel({
+                roomId: liveIsland.id,
+                islandType: IslandTypeEnum.DESERTED,
+            });
+
+            playerMemoryStorage.addPlayer(me);
+            await desertedIslandStorage.addPlayerToIsland(liveIsland.id, me.id);
+
+            const rollbackedPlayer = playerMemoryStorage.getPlayer(me.id);
+            const islandAfterLeave = await desertedIslandStorage.getIsland(
                 liveIsland.id,
             );
 

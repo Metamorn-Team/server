@@ -46,8 +46,23 @@ export class NormalIslandManager implements IslandManager {
     async join(player: Player) {
         const { id: playerId, roomId: islandId } = player;
 
-        await this.playerStorageWriter.create(player);
-        await this.normalIslandStorageWriter.addPlayer(islandId, playerId);
+        const key = ISLAND_LOCK_KEY(islandId);
+        await this.lockManager.transaction(key, [
+            {
+                execute: () => this.canJoin(islandId),
+            },
+            {
+                execute: () => this.playerStorageWriter.create(player),
+                rollback: () => this.playerStorageWriter.remove(playerId),
+            },
+            {
+                execute: () =>
+                    this.normalIslandStorageWriter.addPlayer(
+                        islandId,
+                        playerId,
+                    ),
+            },
+        ]);
     }
 
     async getActiveUsers(islandId: string, myPlayerId: string) {
@@ -73,14 +88,26 @@ export class NormalIslandManager implements IslandManager {
     async handleLeave(
         player: Player,
     ): Promise<{ player: Player; ownerChanged: boolean }> {
-        const { roomId: islandId } = player;
+        const { id: playerId, roomId: islandId } = player;
         let ownerChanged = false;
 
         const key = ISLAND_LOCK_KEY(islandId);
         await this.lockManager.transaction(key, [
             {
-                execute: () => this.left(islandId, player.id),
-                rollback: () => this.join(player),
+                execute: () =>
+                    this.normalIslandStorageWriter.removePlayer(
+                        islandId,
+                        playerId,
+                    ),
+                rollback: () =>
+                    this.normalIslandStorageWriter.addPlayer(
+                        islandId,
+                        playerId,
+                    ),
+            },
+            {
+                execute: () => this.playerStorageWriter.remove(playerId),
+                rollback: () => this.playerStorageWriter.create(player),
             },
             {
                 execute: async () => {
@@ -97,20 +124,23 @@ export class NormalIslandManager implements IslandManager {
                 execute: () => this.removeEmpty(islandId),
             },
         ]);
-
-        try {
-            await this.islandJoinWriter.left(islandId, player.id);
-        } catch (e) {
-            this.logger.error(
-                `섬 참여 데이터 삭제 실패: ${islandId}, playerId: ${player.id}`,
-                e,
-            );
-        }
+        void this.updateJoinAsLeft(islandId, playerId);
 
         return {
             player,
             ownerChanged,
         };
+    }
+
+    async updateJoinAsLeft(islandId: string, playerId: string) {
+        try {
+            await this.islandJoinWriter.left(islandId, playerId);
+        } catch (e) {
+            this.logger.error(
+                `섬 참여 데이터 삭제 실패: ${islandId}, playerId: ${playerId}`,
+                e,
+            );
+        }
     }
 
     async transferOwnershipToFirstEntrant(
