@@ -1,3 +1,4 @@
+import { Transactional } from '@nestjs-cls/transactional';
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
@@ -69,14 +70,28 @@ export class NormalIslandManager implements IslandManager {
         await this.playerStorageWriter.remove(playerId);
     }
 
-    async handleLeave(player: Player) {
+    async handleLeave(
+        player: Player,
+    ): Promise<{ player: Player; ownerChanged: boolean }> {
         const { roomId: islandId } = player;
+        let ownerChanged = false;
 
         const key = ISLAND_LOCK_KEY(islandId);
         await this.lockManager.transaction(key, [
             {
                 execute: () => this.left(islandId, player.id),
                 rollback: () => this.join(player),
+            },
+            {
+                execute: async () => {
+                    const changed = await this.transferOwnershipToFirstEntrant(
+                        islandId,
+                        player.id,
+                    );
+                    ownerChanged = changed;
+                },
+                rollback: () =>
+                    this.updateOwnerTransaction(islandId, player.id),
             },
             {
                 execute: () => this.removeEmpty(islandId),
@@ -92,7 +107,42 @@ export class NormalIslandManager implements IslandManager {
             );
         }
 
-        return player;
+        return {
+            player,
+            ownerChanged,
+        };
+    }
+
+    async transferOwnershipToFirstEntrant(
+        islandId: string,
+        playerId: string,
+    ): Promise<boolean> {
+        const island = await this.normalIslandStorageReader.readOne(islandId);
+
+        if (island.ownerId !== playerId) {
+            return false;
+        }
+
+        const nextOwnerId =
+            await this.normalIslandStorageReader.getFirstPlayerExceptSelf(
+                islandId,
+                playerId,
+            );
+
+        if (nextOwnerId) {
+            await this.updateOwnerTransaction(islandId, nextOwnerId);
+            return true;
+        }
+
+        return false;
+    }
+
+    @Transactional()
+    async updateOwnerTransaction(islandId: string, newOwnerId: string) {
+        const data = { ownerId: newOwnerId };
+
+        await this.islandWriter.update(islandId, data);
+        await this.normalIslandStorageWriter.update(islandId, data);
     }
 
     async removeEmpty(islandId: string): Promise<void> {

@@ -92,7 +92,7 @@ export class DesertedIslandManager implements IslandManager {
             );
         }
 
-        return player;
+        return { player };
     }
 
     async removeEmpty(islandId: string): Promise<void> {

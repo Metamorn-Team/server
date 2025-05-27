@@ -66,6 +66,13 @@ export class NormalIslandStorageReader implements IslandReader {
         return await this.normalIslandStorage.getPlayerIdsByIslandId(islandId);
     }
 
+    async getFirstPlayerExceptSelf(islandId: string, selfId: string) {
+        return await this.normalIslandStorage.getFirstPlayerExceptSelf(
+            islandId,
+            selfId,
+        );
+    }
+
     // logging
     // getStore() {
     //     return this.normalIslandStorage.getIslandStore();

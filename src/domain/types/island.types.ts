@@ -23,6 +23,7 @@ export interface NormalIslandUpdateInput {
     name?: string;
     description?: string;
     maxMembers?: number;
+    ownerId?: string;
 }
 
 export interface IslandSummary {
