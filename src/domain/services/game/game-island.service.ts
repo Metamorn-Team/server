@@ -185,31 +185,8 @@ export class GameIslandService {
     }
 
     async handleLeave(player: Player) {
-        const { roomId: islandId, islandType } = player;
-        const manager = this.islandManagerFactory.get(islandType);
-
-        const key = ISLAND_LOCK_KEY(islandId);
-        await this.lockManager.transaction(key, [
-            {
-                execute: () => manager.left(islandId, player.id),
-                rollback: () => manager.join(player),
-            },
-            {
-                execute: () => manager.removeEmpty(islandId),
-                rollback: () => this.createLiveIsland(islandId),
-            },
-        ]);
-
-        try {
-            await this.islandJoinWriter.left(islandId, player.id);
-        } catch (e) {
-            this.logger.error(
-                `섬 참여 데이터 삭제 실패: ${islandId}, playerId: ${player.id}`,
-                e,
-            );
-        }
-
-        return player;
+        const manager = this.islandManagerFactory.get(player.islandType);
+        return await manager.handleLeave(player);
     }
 
     async leave(playerId: string) {
