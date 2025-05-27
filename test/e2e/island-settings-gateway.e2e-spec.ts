@@ -19,6 +19,7 @@ import {
 import { UpdateIslandInfoRequest } from 'src/presentation/dto/island/request/update-island-info.request';
 import { login } from 'test/helper/login';
 import { FORBIDDEN_MESSAGE } from 'src/domain/exceptions/message';
+import { WsExceptions } from 'src/presentation/dto/game/socket/known-exception';
 
 describe('IslandSettingsGateway (e2e)', () => {
     let app: INestApplication;
@@ -134,6 +135,43 @@ describe('IslandSettingsGateway (e2e)', () => {
 
             expect(error.name).toEqual('UNKNOWN');
             expect(error.message).toEqual(FORBIDDEN_MESSAGE);
+        });
+
+        it('변경하려는 최대 인원 수가 현재 참여 인원 수보다 작은 경우 예외가 발생한다', async () => {
+            const { accessToken, userId: ownerId } = await login(app);
+            socket = await createSocketConnection(url, app, accessToken);
+
+            const owner = generateUserEntityV2();
+            const island = generateIsland({ ownerId, maxMembers: 2 });
+            const normalIsland = generateNormalIslandModel({
+                id: island.id,
+                ownerId: island.ownerId,
+                name: island.name,
+                coverImage: island.coverImage,
+                description: island.description,
+                max: island.maxMembers,
+            });
+
+            await db.user.create({ data: owner });
+            await db.island.create({ data: island });
+            await normalIslandStorage.createIsland(normalIsland);
+
+            await normalIslandStorage.addPlayerToIsland(island.id, 'player1');
+            await normalIslandStorage.addPlayerToIsland(island.id, 'player2');
+
+            const updateData: UpdateIslandInfoRequest = {
+                id: island.id,
+                maxMembers: 1,
+            };
+
+            socket.emit('updateIslandInfo', updateData);
+
+            const error = await waitForEvent<{ name: string; message: string }>(
+                socket,
+                'wsError',
+            );
+
+            expect(error.name).toEqual(WsExceptions.TOO_MANY_PARTICIPANTS);
         });
     });
 });
