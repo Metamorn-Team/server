@@ -63,12 +63,7 @@ export class DesertedIslandRedisStorage implements DesertedIslandStorage {
 
     async addPlayerToIsland(islandId: string, playerId: string): Promise<void> {
         const key = ISLAND_PLAYERS_KEY(islandId);
-        const players = await this.redis.getClient().smembers(key);
 
-        if (players.length === 0) {
-            await this.redis.getClient().sadd(key, playerId);
-            return;
-        }
         await this.redis.getClient().sadd(key, playerId);
     }
 
