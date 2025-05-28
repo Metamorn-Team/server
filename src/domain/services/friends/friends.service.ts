@@ -126,10 +126,7 @@ export class FriendsService {
             targetId,
         );
 
-        if (
-            friendship.status !== 'PENDING' ||
-            friendship.receiverId !== userId
-        ) {
+        if (friendship.status !== 'PENDING') {
             throw new DomainException(
                 DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
