@@ -6,7 +6,6 @@ import { FriendRepository } from 'src/domain/interface/friend.repository';
 import {
     FriendData,
     FriendRequestDirection,
-    FriendStatus,
     PaginatedFriends,
 } from 'src/domain/types/friend.types';
 
@@ -27,26 +26,6 @@ export class FriendReader {
             limit,
             cursor,
         );
-    }
-
-    async readRequestByIdAndStatus(
-        userId: string,
-        requestId: string,
-        status: FriendStatus,
-    ) {
-        const request = await this.friendRepository.findOneByIdAndStatus(
-            userId,
-            requestId,
-            status,
-        );
-
-        if (!request) {
-            throw new DomainException(
-                DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
-                HttpStatus.NOT_FOUND,
-                FRIEND_REQUEST_NOT_FOUND_MESSAGE,
-            );
-        }
     }
 
     async readRequestBetweenUsers(firstUserId: string, secondUserId: string) {
