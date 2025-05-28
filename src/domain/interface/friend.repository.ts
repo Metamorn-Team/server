@@ -29,11 +29,6 @@ export interface FriendRepository {
     ): Promise<PaginatedFriendRequests>;
     updateStatus(friendshipId: string, status: FriendStatus): Promise<void>;
     updateIsRead(userId: string, isRead?: boolean): Promise<void>;
-    findOneByIdAndStatus(
-        userId: string,
-        requestId: string,
-        stats: FriendStatus,
-    ): Promise<FriendData | null>;
     findFriendshipsWithTargets(
         userId: string,
         targetIds: string[],

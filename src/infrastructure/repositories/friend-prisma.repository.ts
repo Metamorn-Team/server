@@ -197,37 +197,6 @@ export class FriendPrismaRepository implements FriendRepository {
         return { data: mappedRequests, nextCursor };
     }
 
-    async findOneByIdAndStatus(
-        userId: string,
-        requestId: string,
-        status: FriendStatus,
-    ): Promise<FriendData | null> {
-        return this.prisma.friendRequest.findFirst({
-            where: {
-                OR: [
-                    {
-                        id: requestId,
-                        senderId: userId,
-                        status: status,
-                        deletedAt: null,
-                    },
-                    {
-                        id: requestId,
-                        receiverId: userId,
-                        status: status,
-                        deletedAt: null,
-                    },
-                ],
-            },
-            select: {
-                id: true,
-                senderId: true,
-                receiverId: true,
-                status: true,
-            },
-        });
-    }
-
     async findFriendshipsWithTargets(
         userId: string,
         targetIds: string[],
