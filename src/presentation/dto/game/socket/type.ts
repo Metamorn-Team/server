@@ -80,7 +80,7 @@ export type ClientToFriend = {
 
 export type FriendToClient = {
     receiveFriendRequest: () => void;
-    sendFriendRequestSuccess: () => void;
+    sendFriendRequestSuccess: (data: { targetUserId: string }) => void;
 };
 
 export type ErrorToClient = {

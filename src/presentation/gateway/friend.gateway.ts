@@ -52,7 +52,7 @@ export class FriendGateway {
             const { targetUserId } = data;
             await this.friendService.sendFriendRequest(senderId, targetUserId);
 
-            client.emit('sendFriendRequestSuccess');
+            client.emit('sendFriendRequestSuccess', { targetUserId });
 
             const player = await this.playerStorageReader.readOne(targetUserId);
             if (player) {
