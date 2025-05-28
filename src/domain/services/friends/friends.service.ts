@@ -140,10 +140,21 @@ export class FriendsService {
         await this.friendWriter.updateRequestStatus(friendship.id, 'REJECTED');
     }
 
-    async removeFriendship(userId: string, friendshipId: string) {
-        await this.friendChecker.checkUnfriend(userId, friendshipId);
+    async removeFriendship(userId: string, targetId: string) {
+        const friendship = await this.friendReader.readRequestBetweenUsers(
+            userId,
+            targetId,
+        );
 
-        await this.friendWriter.deleteFriendship(friendshipId);
+        if (friendship.status !== 'ACCEPTED') {
+            throw new DomainException(
+                DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                FRIEND_REQUEST_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        await this.friendWriter.deleteFriendship(friendship.id);
     }
 
     async getFriendshipStatus(

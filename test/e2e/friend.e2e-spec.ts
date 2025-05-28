@@ -439,7 +439,7 @@ describe('FriendController (e2e)', () => {
             await prisma.friendRequest.create({ data: friend });
 
             const response = await request(app.getHttpServer())
-                .delete(`/friends/${friend.id}`)
+                .delete(`/friends/${user.id}`)
                 .set('Authorization', currentUser.accessToken);
 
             expect(response.status).toBe(HttpStatus.NO_CONTENT);
