@@ -120,14 +120,24 @@ export class FriendsService {
         await this.friendWriter.updateRequestStatus(friendship.id, 'ACCEPTED');
     }
 
-    async rejectFriend(userId: string, requestId: string): Promise<void> {
-        await this.friendReader.readRequestByIdAndStatus(
+    async rejectFriend(userId: string, targetId: string): Promise<void> {
+        const friendship = await this.friendReader.readRequestBetweenUsers(
             userId,
-            requestId,
-            'PENDING',
+            targetId,
         );
 
-        await this.friendWriter.updateRequestStatus(requestId, 'REJECTED');
+        if (
+            friendship.status !== 'PENDING' ||
+            friendship.receiverId !== userId
+        ) {
+            throw new DomainException(
+                DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                FRIEND_REQUEST_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        await this.friendWriter.updateRequestStatus(friendship.id, 'REJECTED');
     }
 
     async removeFriendship(userId: string, friendshipId: string) {
