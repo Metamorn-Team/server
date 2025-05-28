@@ -86,54 +86,54 @@ export class FriendsController {
     }
 
     @ApiOperation({ summary: '친구 요청 수락' })
-    @ApiParam({
-        name: 'requestId',
-        description: '친구요청 ID(UUID)',
-        example: '1af038aa-ad40-4b49-b484-2491681a813b',
-    })
     @ApiResponse({ status: 204, description: '요청 수락 성공(no content)' })
     @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
+    @ApiParam({
+        name: 'targetId',
+        description: '대상 회원 ID(UUID)',
+        example: '1af038aa-ad40-4b49-b484-2491681a813b',
+    })
     @HttpCode(HttpStatus.NO_CONTENT)
-    @Patch('requests/:requestId/accept')
+    @Patch('requests/:targetId/accept')
     async acceptFriendRequest(
         @CurrentUser() userId: string,
-        @Param('requestId') requestId: string,
+        @Param('targetId') targetId: string,
     ): Promise<void> {
-        await this.friendsService.acceptFriend(userId, requestId);
+        await this.friendsService.acceptFriend(userId, targetId);
     }
 
     @ApiOperation({ summary: '친구 요청 거절' })
-    @ApiParam({
-        name: 'requestId',
-        description: '친구요청 ID(UUID)',
-        example: '1af038aa-ad40-4b49-b484-2491681a813b',
-    })
     @ApiResponse({ status: 204, description: '요청 거절 성공(no content)' })
     @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
+    @ApiParam({
+        name: 'targetId',
+        description: '대상 회원 ID(UUID)',
+        example: '1af038aa-ad40-4b49-b484-2491681a813b',
+    })
     @HttpCode(HttpStatus.NO_CONTENT)
-    @Patch('requests/:requestId/reject')
+    @Patch('requests/:targetId/reject')
     async rejectFriendRequest(
         @CurrentUser() userId: string,
-        @Param('requestId') requestId: string,
+        @Param('targetId') targetId: string,
     ): Promise<void> {
-        await this.friendsService.rejectFriend(userId, requestId);
+        await this.friendsService.rejectFriend(userId, targetId);
     }
 
     @ApiOperation({ summary: '친구 삭제' })
     @ApiParam({
-        name: 'friendshipId',
-        description: '친구관계 ID(UUID)',
+        name: 'targetId',
+        description: '대상 회원 ID(UUID)',
         example: '1af038aa-ad40-4b49-b484-2491681a813b',
     })
     @ApiResponse({ status: 204, description: '요청 성공(no content)' })
     @ApiResponse({ status: 404, description: '친구 관계가 존재하지 않음' })
     @HttpCode(HttpStatus.NO_CONTENT)
-    @Delete(':friendshipId')
+    @Delete(':targetId')
     async removeFriend(
         @CurrentUser() userId: string,
-        @Param('friendshipId') friendshipId: string,
+        @Param('targetId') targetId: string,
     ): Promise<void> {
-        await this.friendsService.removeFriendship(userId, friendshipId);
+        await this.friendsService.removeFriendship(userId, targetId);
     }
 
     @ApiOperation({ summary: '친구 여부 확인' })

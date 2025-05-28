@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { FriendWriter } from 'src/domain/components/friends/friend-writer';
 import { FriendChecker } from 'src/domain/components/friends/friend-checker';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
@@ -14,6 +14,7 @@ import { GetFriendsResponse } from 'src/presentation/dto';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
+import { FRIEND_REQUEST_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 
 @Injectable()
 export class FriendsService {
@@ -102,30 +103,58 @@ export class FriendsService {
         return { data: requestList, nextCursor };
     }
 
-    async acceptFriend(userId: string, requestId: string): Promise<void> {
-        await this.friendReader.readRequestByIdAndStatus(
+    async acceptFriend(userId: string, targetId: string): Promise<void> {
+        const friendship = await this.friendReader.readRequestBetweenUsers(
             userId,
-            requestId,
-            'PENDING',
+            targetId,
         );
 
-        await this.friendWriter.updateRequestStatus(requestId, 'ACCEPTED');
+        if (friendship.status !== 'PENDING') {
+            throw new DomainException(
+                DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                FRIEND_REQUEST_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        await this.friendWriter.updateRequestStatus(friendship.id, 'ACCEPTED');
     }
 
-    async rejectFriend(userId: string, requestId: string): Promise<void> {
-        await this.friendReader.readRequestByIdAndStatus(
+    async rejectFriend(userId: string, targetId: string): Promise<void> {
+        const friendship = await this.friendReader.readRequestBetweenUsers(
             userId,
-            requestId,
-            'PENDING',
+            targetId,
         );
 
-        await this.friendWriter.updateRequestStatus(requestId, 'REJECTED');
+        if (
+            friendship.status !== 'PENDING' ||
+            friendship.receiverId !== userId
+        ) {
+            throw new DomainException(
+                DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                FRIEND_REQUEST_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        await this.friendWriter.updateRequestStatus(friendship.id, 'REJECTED');
     }
 
-    async removeFriendship(userId: string, friendshipId: string) {
-        await this.friendChecker.checkUnfriend(userId, friendshipId);
+    async removeFriendship(userId: string, targetId: string) {
+        const friendship = await this.friendReader.readRequestBetweenUsers(
+            userId,
+            targetId,
+        );
 
-        await this.friendWriter.deleteFriendship(friendshipId);
+        if (friendship.status !== 'ACCEPTED') {
+            throw new DomainException(
+                DomainExceptionType.FRIEND_REQUEST_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                FRIEND_REQUEST_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        await this.friendWriter.deleteFriendship(friendship.id);
     }
 
     async getFriendshipStatus(

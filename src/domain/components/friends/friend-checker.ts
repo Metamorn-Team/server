@@ -54,14 +54,4 @@ export class FriendChecker {
             throw e;
         }
     }
-
-    async checkUnfriend(userId: string, friendshipId: string) {
-        await this.friendReader.readRequestByIdAndStatus(
-            userId,
-            friendshipId,
-            'ACCEPTED',
-        );
-
-        return;
-    }
 }
