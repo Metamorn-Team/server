@@ -287,7 +287,7 @@ describe('FriendController (e2e)', () => {
         });
     });
 
-    describe('PATCH /friends/requests/:requestId/accept - 친구 요청 수락', () => {
+    describe('PATCH /friends/requests/:targetId/accept - 친구 요청 수락', () => {
         let currentUser: { accessToken: string; userId: string };
         const user = generateUserEntityV2();
 
@@ -300,11 +300,12 @@ describe('FriendController (e2e)', () => {
             const friendRequest = generateFriendship(
                 user.id,
                 currentUser.userId,
+                { status: 'PENDING' },
             );
             await prisma.friendRequest.create({ data: friendRequest });
 
             const response = await request(app.getHttpServer())
-                .patch(`/friends/requests/${friendRequest.id}/accept`)
+                .patch(`/friends/requests/${user.id}/accept`)
                 .set('Authorization', currentUser.accessToken);
 
             const updatedRequest = await prisma.friendRequest.findUnique({
@@ -382,7 +383,7 @@ describe('FriendController (e2e)', () => {
         });
     });
 
-    describe('PATCH /friends/requests/:requestId/reject - 친구 요청 거절', () => {
+    describe('PATCH /friends/requests/:targetId/reject - 친구 요청 거절', () => {
         let currentUser: {
             userId: string;
             accessToken: string;
@@ -398,11 +399,12 @@ describe('FriendController (e2e)', () => {
             const friendRequest = generateFriendship(
                 senderUser.id,
                 currentUser.userId,
+                { status: 'PENDING' },
             );
             await prisma.friendRequest.create({ data: friendRequest });
 
             const response = await request(app.getHttpServer())
-                .patch(`/friends/requests/${friendRequest.id}/reject`)
+                .patch(`/friends/requests/${senderUser.id}/reject`)
                 .set('Authorization', currentUser.accessToken);
 
             expect(response.status).toBe(HttpStatus.NO_CONTENT);
@@ -437,7 +439,7 @@ describe('FriendController (e2e)', () => {
             await prisma.friendRequest.create({ data: friend });
 
             const response = await request(app.getHttpServer())
-                .delete(`/friends/${friend.id}`)
+                .delete(`/friends/${user.id}`)
                 .set('Authorization', currentUser.accessToken);
 
             expect(response.status).toBe(HttpStatus.NO_CONTENT);
