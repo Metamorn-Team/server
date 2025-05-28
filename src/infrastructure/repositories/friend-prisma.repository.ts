@@ -86,20 +86,20 @@ export class FriendPrismaRepository implements FriendRepository {
     }
 
     async findRequestBetweenUsers(
-        user1Id: string,
-        user2Id: string,
+        firstUserId: string,
+        secondUserId: string,
     ): Promise<FriendData | null> {
         return this.prisma.friendRequest.findFirst({
             where: {
                 OR: [
                     {
-                        senderId: user1Id,
-                        receiverId: user2Id,
+                        senderId: firstUserId,
+                        receiverId: secondUserId,
                         deletedAt: null,
                     },
                     {
-                        senderId: user2Id,
-                        receiverId: user1Id,
+                        senderId: secondUserId,
+                        receiverId: firstUserId,
                         deletedAt: null,
                     },
                 ],

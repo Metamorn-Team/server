@@ -287,7 +287,7 @@ describe('FriendController (e2e)', () => {
         });
     });
 
-    describe('PATCH /friends/requests/:requestId/accept - 친구 요청 수락', () => {
+    describe('PATCH /friends/requests/:targetId/accept - 친구 요청 수락', () => {
         let currentUser: { accessToken: string; userId: string };
         const user = generateUserEntityV2();
 
@@ -300,11 +300,12 @@ describe('FriendController (e2e)', () => {
             const friendRequest = generateFriendship(
                 user.id,
                 currentUser.userId,
+                { status: 'PENDING' },
             );
             await prisma.friendRequest.create({ data: friendRequest });
 
             const response = await request(app.getHttpServer())
-                .patch(`/friends/requests/${friendRequest.id}/accept`)
+                .patch(`/friends/requests/${user.id}/accept`)
                 .set('Authorization', currentUser.accessToken);
 
             const updatedRequest = await prisma.friendRequest.findUnique({

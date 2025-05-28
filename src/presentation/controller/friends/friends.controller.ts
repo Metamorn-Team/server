@@ -86,20 +86,15 @@ export class FriendsController {
     }
 
     @ApiOperation({ summary: '친구 요청 수락' })
-    @ApiParam({
-        name: 'requestId',
-        description: '친구요청 ID(UUID)',
-        example: '1af038aa-ad40-4b49-b484-2491681a813b',
-    })
     @ApiResponse({ status: 204, description: '요청 수락 성공(no content)' })
     @ApiResponse({ status: 404, description: '친구 요청이 존재하지 않음' })
     @HttpCode(HttpStatus.NO_CONTENT)
-    @Patch('requests/:requestId/accept')
+    @Patch('requests/:targetId/accept')
     async acceptFriendRequest(
         @CurrentUser() userId: string,
-        @Param('requestId') requestId: string,
+        @Param('targetId') targetId: string,
     ): Promise<void> {
-        await this.friendsService.acceptFriend(userId, requestId);
+        await this.friendsService.acceptFriend(userId, targetId);
     }
 
     @ApiOperation({ summary: '친구 요청 거절' })

@@ -49,11 +49,11 @@ export class FriendReader {
         }
     }
 
-    async readRequestBetweenUsers(user1Id: string, user2Id: string) {
+    async readRequestBetweenUsers(firstUserId: string, secondUserId: string) {
         const friendRequest =
             await this.friendRepository.findRequestBetweenUsers(
-                user1Id,
-                user2Id,
+                firstUserId,
+                secondUserId,
             );
 
         if (!friendRequest) {
