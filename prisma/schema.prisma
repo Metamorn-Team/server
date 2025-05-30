@@ -47,6 +47,7 @@ model User {
   goldTransactions       GoldTransaction[]
   userOwnedItems         UserOwnedItem[]
   islands                Island[]
+  equippedItems          EquippedItem[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -163,6 +164,7 @@ model Item {
 
   products       Product[]
   userOwnedItems UserOwnedItem[]
+  equippedItems  EquippedItem[]
 
   @@map("item")
 }
@@ -241,4 +243,19 @@ model UserOwnedItem {
   @@index([userId])
   @@index([itemId])
   @@map("user_owned_item")
+}
+
+model EquippedItem {
+  userId    String   @map("user_id") @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  slot      Int      @db.SmallInt
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+  item Item @relation(fields: [itemId], references: [id])
+
+  @@id([userId, slot])
+  @@index([itemId])
+  @@map("equipped_item")
 }
