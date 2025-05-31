@@ -10,7 +10,7 @@ import { GetProductListRequest } from 'src/presentation/dto/product/request/get-
 import { ProductOrder } from 'src/presentation/dto/shared';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
 import {
-    convertNumberToGrade,
+    convertNumberToItemGrade,
     ItemGradeEnum,
 } from 'src/domain/types/item.types';
 
@@ -117,7 +117,7 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
-                    grade: convertNumberToGrade(auras[i].grade),
+                    grade: convertNumberToItemGrade(auras[i].grade),
                     purchasedStatus: 'NONE',
                 }))
                 .sort((a, b) => (a.price > b.price ? 1 : -1));
@@ -154,7 +154,7 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
-                    grade: convertNumberToGrade(auras[i].grade),
+                    grade: convertNumberToItemGrade(auras[i].grade),
                     purchasedStatus: 'NONE',
                 }))
                 .sort((a, b) => (a.price < b.price ? 1 : -1));
@@ -190,7 +190,7 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
-                    grade: convertNumberToGrade(auras[i].grade),
+                    grade: convertNumberToItemGrade(auras[i].grade),
                     createdAt: product.createdAt,
                     purchasedStatus: 'NONE',
                 }))
