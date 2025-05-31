@@ -158,6 +158,7 @@ model Item {
   name        String   @db.VarChar(50)
   description String   @db.VarChar(200)
   type        String   @db.VarChar(50)
+  itemType    Int      @default(0) @map("item_type") @db.SmallInt
   key         String   @db.VarChar(50)
   grade       Int      @default(0) @db.SmallInt
   createdAt   DateTime @map("created_at")
@@ -174,6 +175,7 @@ model Product {
   name        String    @db.VarChar(50)
   description String    @db.VarChar(200)
   price       Int
+  productType Int       @map("product_type") @db.SmallInt
   coverImage  String    @map("cover_image")
   itemId      String    @map("item_id") @db.Uuid
   createdAt   DateTime  @map("created_at")
