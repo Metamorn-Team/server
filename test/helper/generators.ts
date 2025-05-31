@@ -13,7 +13,8 @@ import {
     LiveNormalIsland,
 } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { ItemGradeEnum } from 'src/domain/types/item.types';
+import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
+import { ProductTypeEnum } from 'src/domain/types/product.types';
 import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
 import { Provider } from 'src/shared/types';
 import { v4 } from 'uuid';
@@ -117,6 +118,7 @@ export const generateProduct = (
         partial?.description || '멋진 오라 설명',
         partial?.price || 1000,
         partial?.coverImage || 'https://image.com',
+        partial?.productType || ProductTypeEnum.AURA,
         partial?.createdAt || new Date(),
         partial?.updatedAt || new Date(),
     );
@@ -128,6 +130,7 @@ export const generateItem = (partial?: Partial<ItemEntity>) => {
         partial?.name || '오라',
         partial?.description || '멋진 오라',
         partial?.type || 'aura',
+        partial?.itemType || ItemTypeEnum.AURA,
         partial?.key || 'aura-1',
         partial?.grade || ItemGradeEnum.NORMAL,
         partial?.createdAt || new Date(),
