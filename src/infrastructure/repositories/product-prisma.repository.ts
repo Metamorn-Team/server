@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ProductRepository } from 'src/domain/interface/product.repository';
 import { convertNumberToGrade } from 'src/domain/types/item.types';
 import {
+    convertNumberToProductType,
     Product,
     ProductForPurchase,
     ProductOrderBy,
+    ProductTypeEnum,
     Sort,
 } from 'src/domain/types/product.types';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
@@ -15,7 +17,7 @@ export class ProductPrismaRepository implements ProductRepository {
 
     async findByCategory(
         userId: string,
-        type: string,
+        type: ProductTypeEnum,
         page: number,
         limit: number,
         orderBy: ProductOrderBy,
@@ -30,7 +32,7 @@ export class ProductPrismaRepository implements ProductRepository {
                     select: {
                         name: true,
                         description: true,
-                        type: true,
+                        itemType: true,
                         key: true,
                         grade: true,
                     },
@@ -50,17 +52,21 @@ export class ProductPrismaRepository implements ProductRepository {
                 [orderBy]: sort,
             },
             where: {
-                item: {
-                    type,
-                },
+                productType: type,
             },
         });
 
         return products.map((product) => {
-            const { item, purchases, ...rest } = product;
+            const { item, purchases, id, price, coverImage } = product;
+
             return {
-                ...rest,
-                ...item,
+                id,
+                price,
+                coverImage,
+                description: item.description,
+                key: item.key,
+                name: item.name,
+                type: convertNumberToProductType(item.itemType),
                 grade: convertNumberToGrade(item.grade),
                 purchasedStatus: purchases.length > 0 ? 'PURCHASED' : 'NONE',
             };
