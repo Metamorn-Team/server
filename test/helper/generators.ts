@@ -6,6 +6,7 @@ import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
 import { TagEntity } from 'src/domain/entities/tag/tag.entity';
+import { UserOwnedItemEntity } from 'src/domain/entities/user-owned-items/user-owned-item.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { Player } from 'src/domain/models/game/player';
 import {
@@ -202,4 +203,12 @@ export const generateNormalIslandModel = (
         tags: partial?.tags || ['tag1', 'tag2'],
         ownerId: partial?.ownerId || v4(),
     };
+};
+
+export const generateOwnedItem = (
+    userId: string,
+    itemId: string,
+    aquiredAt = new Date(),
+): UserOwnedItemEntity => {
+    return new UserOwnedItemEntity(v4(), userId, itemId, aquiredAt);
 };
