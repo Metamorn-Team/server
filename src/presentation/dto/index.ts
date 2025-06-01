@@ -9,3 +9,4 @@ export * from './island';
 export * from './files';
 export * from './tags';
 export * from './items';
+export * from './equiptments';
