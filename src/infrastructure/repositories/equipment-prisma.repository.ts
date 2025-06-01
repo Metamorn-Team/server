@@ -3,7 +3,11 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { Injectable } from '@nestjs/common';
 import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity';
 import { EquipmentRepository } from 'src/domain/interface/equipment.repository';
-import { SlotTypeEnum } from 'src/domain/types/equipment';
+import {
+    convertNumberToSlotType,
+    SlotType,
+    SlotTypeEnum,
+} from 'src/domain/types/equipment';
 
 @Injectable()
 export class EquipmentPrismaRepository implements EquipmentRepository {
@@ -65,5 +69,19 @@ export class EquipmentPrismaRepository implements EquipmentRepository {
         });
 
         return !!result;
+    }
+
+    async findEquippedForEquip(
+        userId: string,
+    ): Promise<{ slot: SlotType; key: string }[]> {
+        const result = await this.txHost.tx.equipment.findMany({
+            select: { slot: true, item: { select: { key: true } } },
+            where: { userId },
+        });
+
+        return result.map((equipped) => ({
+            slot: convertNumberToSlotType(equipped.slot),
+            key: equipped.item.key,
+        }));
     }
 }

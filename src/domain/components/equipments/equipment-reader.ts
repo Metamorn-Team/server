@@ -12,4 +12,8 @@ export class EquipmentReader {
     async assertExist(userId: string, slot: SlotType) {
         await this.equipmentRepository.existBySlot(userId, SlotTypeEnum[slot]);
     }
+
+    async readEquipped(userId: string) {
+        return await this.equipmentRepository.findEquippedForEquip(userId);
+    }
 }
