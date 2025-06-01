@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
@@ -121,6 +122,70 @@ describe('EquipmentController (e2e)', () => {
             expect(body.equippedItems[0]).toMatchObject({
                 slot: 'AURA',
                 key: item2.key,
+            });
+        });
+
+        describe('POST /equipments 입력 값 검증', () => {
+            it('itemId가 UUID 형식이 아니면 예외가 발생한다.', async () => {
+                const { accessToken } = await login(app);
+
+                const body = {
+                    itemId: 'not-a-uuid',
+                    slot: 'AURA',
+                };
+
+                const response = await request(app.getHttpServer())
+                    .post('/equipments')
+                    .set('Authorization', accessToken)
+                    .send(body);
+
+                expect(response.status).toEqual(400);
+            });
+
+            it('존재하지 않는 슬롯을 전달하면 예외가 발생한다.', async () => {
+                const { accessToken } = await login(app);
+
+                const body = {
+                    itemId: '123e4567-e89b-12d3-a456-426614174000',
+                    slot: 'INVALID_SLOT',
+                };
+
+                const response = await request(app.getHttpServer())
+                    .post('/equipments')
+                    .set('Authorization', accessToken)
+                    .send(body);
+
+                expect(response.status).toEqual(400);
+            });
+
+            it('itemId가 누락되면 예외가 발생한다.', async () => {
+                const { accessToken } = await login(app);
+
+                const body = {
+                    slot: 'AURA',
+                };
+
+                const response = await request(app.getHttpServer())
+                    .post('/equipments')
+                    .set('Authorization', accessToken)
+                    .send(body);
+
+                expect(response.status).toEqual(400);
+            });
+
+            it('slot이 누락되면 예외가 발생한다.', async () => {
+                const { accessToken } = await login(app);
+
+                const body = {
+                    itemId: '123e4567-e89b-12d3-a456-426614174000',
+                };
+
+                const response = await request(app.getHttpServer())
+                    .post('/equipments')
+                    .set('Authorization', accessToken)
+                    .send(body);
+
+                expect(response.status).toEqual(400);
             });
         });
     });
