@@ -125,7 +125,7 @@ describe('EquipmentController (e2e)', () => {
             });
         });
 
-        describe('POST /equipments 입력 값 검증', () => {
+        describe('입력 값 검증', () => {
             it('itemId가 UUID 형식이 아니면 예외가 발생한다.', async () => {
                 const { accessToken } = await login(app);
 
