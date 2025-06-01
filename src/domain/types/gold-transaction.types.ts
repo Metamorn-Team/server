@@ -8,15 +8,4 @@ export enum GoldTransactionTypeEnum {
 
 export const convertNumberToGoldTransactionType = (
     type: number,
-): GoldTransactionType => {
-    switch (type) {
-        case 0:
-            return 'PAYMENT';
-        case 1:
-            return 'PURCHASE';
-        case 2:
-            return 'REFUND';
-        default:
-            return 'PAYMENT';
-    }
-};
+): GoldTransactionType => goldTransactionTypes[type];

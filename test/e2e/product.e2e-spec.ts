@@ -7,10 +7,10 @@ import { login } from 'test/helper/login';
 import { ResponseResult } from 'test/helper/types';
 import { generateItem, generateProduct } from 'test/helper/generators';
 import { GetProductListRequest } from 'src/presentation/dto/product/request/get-product-list.request';
-import { ProductType, ProductOrder } from 'src/presentation/dto/shared';
+import { ProductOrder } from 'src/presentation/dto/shared';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
 import {
-    convertNumberToGrade,
+    convertNumberToItemGrade,
     ItemGradeEnum,
 } from 'src/domain/types/item.types';
 
@@ -43,7 +43,7 @@ describe('ProductController (e2e)', () => {
             generateItem({
                 name: `오라${i}`,
                 description: `오라 설명${i}`,
-                type: ProductType.AURA,
+                type: 'AURA',
                 key: `aura${i}`,
                 grade: ItemGradeEnum.NORMAL,
                 createdAt: new Date(Date.now() + i),
@@ -65,7 +65,7 @@ describe('ProductController (e2e)', () => {
             const { accessToken } = await login(app);
 
             const query = {
-                type: ProductType.AURA,
+                type: 'AURA',
                 order: ProductOrder.CHEAPEST,
                 limit: 7,
             };
@@ -117,13 +117,13 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
-                    grade: convertNumberToGrade(auras[i].grade),
+                    grade: convertNumberToItemGrade(auras[i].grade),
                     purchasedStatus: 'NONE',
                 }))
                 .sort((a, b) => (a.price > b.price ? 1 : -1));
 
             const query: GetProductListRequest = {
-                type: ProductType.AURA,
+                type: 'AURA',
                 order: ProductOrder.CHEAPEST,
                 limit: 20,
                 page: 1,
@@ -154,13 +154,13 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
-                    grade: convertNumberToGrade(auras[i].grade),
+                    grade: convertNumberToItemGrade(auras[i].grade),
                     purchasedStatus: 'NONE',
                 }))
                 .sort((a, b) => (a.price < b.price ? 1 : -1));
 
             const query: GetProductListRequest = {
-                type: ProductType.AURA,
+                type: 'AURA',
                 order: ProductOrder.PRICIEST,
                 limit: 20,
                 page: 1,
@@ -190,7 +190,7 @@ describe('ProductController (e2e)', () => {
                     description: auras[i].description,
                     type: auras[i].type,
                     key: auras[i].key,
-                    grade: convertNumberToGrade(auras[i].grade),
+                    grade: convertNumberToItemGrade(auras[i].grade),
                     createdAt: product.createdAt,
                     purchasedStatus: 'NONE',
                 }))
@@ -202,7 +202,7 @@ describe('ProductController (e2e)', () => {
                 });
 
             const query: GetProductListRequest = {
-                type: ProductType.AURA,
+                type: 'AURA',
                 order: ProductOrder.LATEST,
                 limit: 20,
                 page: 1,

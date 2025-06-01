@@ -3,12 +3,13 @@ import {
     Product,
     Sort,
     ProductForPurchase,
+    ProductTypeEnum,
 } from 'src/domain/types/product.types';
 
 export interface ProductRepository {
     findByCategory(
         userId: string,
-        type: string,
+        type: ProductTypeEnum,
         page: number,
         limit: number,
         orderBy: ProductOrderBy,

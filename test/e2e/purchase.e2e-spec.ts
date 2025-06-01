@@ -8,8 +8,7 @@ import {
     generateProduct,
     generatePurchase,
 } from 'test/helper/generators';
-import { ProductType } from 'src/presentation/dto/shared';
-import { ItemGradeEnum } from 'src/domain/types/item.types';
+import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
 import { login } from 'test/helper/login';
 import { PurchaseRequest } from 'src/presentation/dto/purchases/request/puchase.request';
 
@@ -46,7 +45,8 @@ describe('PurchaseController (e2e)', () => {
             generateItem({
                 name: `오라${i}`,
                 description: `오라 설명${i}`,
-                type: ProductType.AURA,
+                type: '',
+                itemType: ItemTypeEnum.AURA,
                 key: `aura${i}`,
                 grade: ItemGradeEnum.NORMAL,
                 createdAt: new Date(Date.now() + i),

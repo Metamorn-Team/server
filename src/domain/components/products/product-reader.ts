@@ -3,6 +3,8 @@ import { ProductRepository } from 'src/domain/interface/product.repository';
 import {
     ProductOrder,
     ProductOrderBy,
+    ProductType,
+    ProductTypeEnum,
     Sort,
 } from 'src/domain/types/product.types';
 
@@ -15,7 +17,7 @@ export class ProductReader {
 
     async read(
         userId: string,
-        type: string,
+        type: ProductType,
         order: ProductOrder,
         page: number,
         limit: number,
@@ -40,7 +42,7 @@ export class ProductReader {
 
         return await this.productRepository.findByCategory(
             userId,
-            type,
+            ProductTypeEnum[type],
             page,
             limit,
             orderBy,
