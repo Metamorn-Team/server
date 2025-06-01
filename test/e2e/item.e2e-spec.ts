@@ -6,7 +6,12 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { login } from 'test/helper/login';
 import { generateItem, generateOwnedItem } from 'test/helper/generators';
 import { ResponseResult } from 'test/helper/types';
-import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
+import {
+    convertNumberToItemGrade,
+    convertNumberToItemType,
+    ItemGradeEnum,
+    ItemTypeEnum,
+} from 'src/domain/types/item.types';
 import { GetOwnedItemListResponse } from 'src/presentation/dto';
 
 describe('ItemController (e2e)', () => {
@@ -71,10 +76,19 @@ describe('ItemController (e2e)', () => {
 
             expect(status).toBe(200);
             expect(body.items.length).toBe(5);
-            expect(body.items.every((item) => item.type === 'AURA')).toBe(true);
-            expect(body.items.every((item) => item.grade === 'NORMAL')).toBe(
-                true,
-            );
+            body.items.forEach((item, i) => {
+                const expected = items[i];
+
+                expect(item).toMatchObject({
+                    id: expected.id,
+                    name: expected.name,
+                    description: expected.description,
+                    type: convertNumberToItemType(expected.itemType),
+                    key: expected.key,
+                    grade: convertNumberToItemGrade(expected.grade),
+                });
+                expect(item.image).toMatch(/^https?:\/\//);
+            });
         });
     });
 });

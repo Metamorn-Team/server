@@ -134,6 +134,7 @@ export const generateItem = (partial?: Partial<ItemEntity>) => {
         partial?.itemType || ItemTypeEnum.AURA,
         partial?.key || 'aura-1',
         partial?.grade || ItemGradeEnum.NORMAL,
+        partial?.image || 'https://image.com',
         partial?.createdAt || new Date(),
     );
 };
