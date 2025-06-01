@@ -161,6 +161,7 @@ model Item {
   itemType    Int      @default(0) @map("item_type") @db.SmallInt
   key         String   @db.VarChar(50)
   grade       Int      @default(0) @db.SmallInt
+  image       String
   createdAt   DateTime @map("created_at")
 
   products       Product[]
