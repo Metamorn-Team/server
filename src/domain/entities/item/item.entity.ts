@@ -7,6 +7,7 @@ export interface ItemPrototype {
     readonly itemType: ItemTypeEnum;
     readonly key: string;
     readonly grade: number;
+    readonly image: string;
 }
 
 export class ItemEntity {
@@ -18,6 +19,7 @@ export class ItemEntity {
         readonly itemType: ItemTypeEnum,
         readonly key: string,
         readonly grade: number,
+        readonly image: string,
         readonly createdAt: Date,
     ) {}
 
@@ -30,6 +32,7 @@ export class ItemEntity {
             proto.itemType,
             proto.key,
             proto.grade,
+            proto.image,
             stdDate,
         );
     }

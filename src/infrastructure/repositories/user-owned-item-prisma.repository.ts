@@ -32,6 +32,7 @@ export class UserOwnedItemPrismaRepository implements UserOwnedItemRepository {
                         itemType: true,
                         key: true,
                         grade: true,
+                        image: true,
                     },
                 },
             },

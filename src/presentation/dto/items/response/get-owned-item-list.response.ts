@@ -38,6 +38,12 @@ class Item {
         description: '아이템 등급 (예: NORMAL, RARE 등)',
     })
     readonly grade: ItemGrade;
+
+    @ApiProperty({
+        example: 'https://cdn.image.com',
+        description: '아이템 이미지',
+    })
+    readonly image: string;
 }
 
 export class GetOwnedItemListResponse {

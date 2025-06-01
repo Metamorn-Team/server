@@ -28,4 +28,5 @@ export interface Item {
     readonly type: ItemType;
     readonly key: string;
     readonly grade: ItemGrade;
+    readonly image: string;
 }
