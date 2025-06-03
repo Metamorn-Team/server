@@ -1,15 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SlotType, slotTypes } from 'src/domain/types/equipment';
 
 class EquippedItem {
-    @ApiProperty({ example: slotTypes[0], description: '장비 슬롯' })
-    readonly slot: SlotType;
+    @ApiProperty({ example: 'toxic-green-aura' })
+    key: string;
 
-    @ApiProperty({ example: 'tomato_aura' })
-    readonly key: string;
+    @ApiProperty({ example: '독성 녹색 오라' })
+    name: string;
 }
 
-export class EquippedItemsResponse {
-    @ApiProperty({ type: [EquippedItem] })
-    readonly equippedItems: EquippedItem[];
+class EquipmentState {
+    @ApiProperty({ type: EquippedItem, nullable: true })
+    AURA: EquippedItem | null;
+
+    @ApiProperty({ type: EquippedItem, nullable: true })
+    SPEECH_BUBBLE: EquippedItem | null;
+}
+
+export class EquipmentStateResponse {
+    @ApiProperty({ type: EquipmentState })
+    readonly equipmentState: EquipmentState;
 }

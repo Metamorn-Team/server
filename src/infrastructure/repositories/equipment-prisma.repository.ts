@@ -5,7 +5,7 @@ import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity
 import { EquipmentRepository } from 'src/domain/interface/equipment.repository';
 import {
     convertNumberToSlotType,
-    SlotType,
+    Equipped,
     SlotTypeEnum,
 } from 'src/domain/types/equipment';
 
@@ -29,6 +29,7 @@ export class EquipmentPrismaRepository implements EquipmentRepository {
             },
             update: {
                 itemId: data.itemId,
+                updatedAt: data.updatedAt,
             },
             create: {
                 ...data,
@@ -71,17 +72,16 @@ export class EquipmentPrismaRepository implements EquipmentRepository {
         return !!result;
     }
 
-    async findEquippedForEquip(
-        userId: string,
-    ): Promise<{ slot: SlotType; key: string }[]> {
+    async findEquippedForEquip(userId: string): Promise<Equipped[]> {
         const result = await this.txHost.tx.equipment.findMany({
-            select: { slot: true, item: { select: { key: true } } },
+            select: { slot: true, item: { select: { key: true, name: true } } },
             where: { userId },
         });
 
         return result.map((equipped) => ({
             slot: convertNumberToSlotType(equipped.slot),
             key: equipped.item.key,
+            name: equipped.item.name,
         }));
     }
 }

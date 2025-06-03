@@ -9,7 +9,7 @@ import { generateItem } from 'test/helper/generators';
 import { SlotType } from 'src/domain/types/equipment';
 import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
 import { ResponseResult } from 'test/helper/types';
-import { EquippedItemsResponse } from 'types';
+import { EquipmentStateResponse } from 'types';
 
 describe('EquipmentController (e2e)', () => {
     let app: INestApplication;
@@ -61,15 +61,15 @@ describe('EquipmentController (e2e)', () => {
                 .set(
                     'Authorization',
                     accessToken,
-                )) as ResponseResult<EquippedItemsResponse>;
+                )) as ResponseResult<EquipmentStateResponse>;
             const { status, body } = response;
 
             expect(status).toEqual(200);
-            expect(body.equippedItems).toHaveLength(1);
-            expect(body.equippedItems[0]).toMatchObject({
-                slot: 'AURA',
+            expect(body.equipmentState.AURA).toMatchObject({
                 key: item.key,
+                name: item.name,
             });
+            expect(body.equipmentState.SPEECH_BUBBLE).toBeNull();
         });
 
         it('같은 부위에 다른 아이템을 장착하면 기존 장착이 덮어써져야 한다', async () => {
@@ -113,16 +113,16 @@ describe('EquipmentController (e2e)', () => {
                 .set(
                     'Authorization',
                     accessToken,
-                )) as ResponseResult<EquippedItemsResponse>;
+                )) as ResponseResult<EquipmentStateResponse>;
 
             const { status, body } = response;
 
             expect(status).toEqual(200);
-            expect(body.equippedItems).toHaveLength(1);
-            expect(body.equippedItems[0]).toMatchObject({
-                slot: 'AURA',
+            expect(body.equipmentState.AURA).toMatchObject({
                 key: item2.key,
+                name: item2.name,
             });
+            expect(body.equipmentState.SPEECH_BUBBLE).toBeNull();
         });
 
         describe('입력 값 검증', () => {

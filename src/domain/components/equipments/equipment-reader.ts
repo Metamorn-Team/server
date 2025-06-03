@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EquipmentRepository } from 'src/domain/interface/equipment.repository';
-import { SlotType, SlotTypeEnum } from 'src/domain/types/equipment';
+import {
+    EquipmentState,
+    SlotType,
+    SlotTypeEnum,
+} from 'src/domain/types/equipment';
 
 @Injectable()
 export class EquipmentReader {
@@ -13,7 +17,22 @@ export class EquipmentReader {
         await this.equipmentRepository.existBySlot(userId, SlotTypeEnum[slot]);
     }
 
-    async readEquipped(userId: string) {
-        return await this.equipmentRepository.findEquippedForEquip(userId);
+    async readEquipmentState(userId: string) {
+        const equippedItems =
+            await this.equipmentRepository.findEquippedForEquip(userId);
+
+        const equipments: EquipmentState = {
+            AURA: null,
+            SPEECH_BUBBLE: null,
+        };
+
+        for (const item of equippedItems) {
+            equipments[item.slot] = {
+                key: item.key,
+                name: item.name,
+            };
+        }
+
+        return equipments;
     }
 }

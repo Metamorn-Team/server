@@ -5,3 +5,14 @@ export enum SlotTypeEnum {
 }
 export type SlotType = (typeof slotTypes)[number];
 export const convertNumberToSlotType = (type: number) => slotTypes[type];
+
+export interface Equipped {
+    readonly slot: SlotType;
+    readonly key: string;
+    readonly name: string;
+}
+
+export type EquipmentState = Record<
+    SlotType,
+    { key: string; name: string } | null
+>;

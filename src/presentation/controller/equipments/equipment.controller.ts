@@ -5,7 +5,7 @@ import { LivislandController } from 'src/common/decorator/livisland-controller.d
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { EquipmentService } from 'src/domain/services/equipments/equipement.service';
 import { EquipRequest } from 'src/presentation/dto/equiptments/request/equip.request';
-import { EquippedItemsResponse } from 'src/presentation/dto/equiptments/response/equipped-items.response';
+import { EquipmentStateResponse } from 'src/presentation/dto/equiptments/response/equipped-items.response';
 
 @LivislandController('equipments')
 export class EquipmentController {
@@ -28,18 +28,19 @@ export class EquipmentController {
     @ApiOperation({
         summary: '창작한 아이템 조회',
         description:
-            '특정 플레이어가 장착하고 있는 아이템을 조회하는 기능 (장착할 수 있는 최소한의 데이터).',
+            '자신이 장착하고 있는 아이템을 조회하는 기능 (장착할 수 있는 최소한의 데이터).',
     })
     @ApiResponse({
         status: 200,
         description: '조회 성공',
-        type: EquippedItemsResponse,
+        type: EquipmentStateResponse,
     })
     @Get('equipped')
     async getEquipped(
         @CurrentUser() userId: string,
-    ): Promise<EquippedItemsResponse> {
-        const equippedItems = await this.equipmentReader.readEquipped(userId);
-        return { equippedItems };
+    ): Promise<EquipmentStateResponse> {
+        const equipmentState =
+            await this.equipmentReader.readEquipmentState(userId);
+        return { equipmentState };
     }
 }
