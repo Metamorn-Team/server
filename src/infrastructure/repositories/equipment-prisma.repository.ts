@@ -7,7 +7,7 @@ import {
     convertNumberToSlotType,
     Equipped,
     SlotTypeEnum,
-} from 'src/domain/types/equipment';
+} from 'src/domain/types/equipment.types';
 
 @Injectable()
 export class EquipmentPrismaRepository implements EquipmentRepository {

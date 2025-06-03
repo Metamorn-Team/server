@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsUUID } from 'class-validator';
-import { SlotType, slotTypes } from 'src/domain/types/equipment';
+import { SlotType, slotTypes } from 'src/domain/types/equipment.types';
 
 export class EquipRequest {
     @ApiProperty({ example: 'uuid' })

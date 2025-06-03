@@ -6,7 +6,7 @@ import { AppModule } from 'src/app.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { login } from 'test/helper/login';
 import { generateItem } from 'test/helper/generators';
-import { SlotType } from 'src/domain/types/equipment';
+import { SlotType } from 'src/domain/types/equipment.types';
 import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
 import { ResponseResult } from 'test/helper/types';
 import { EquipmentStateResponse } from 'types';

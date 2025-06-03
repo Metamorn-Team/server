@@ -4,7 +4,7 @@ import {
     EquipmentState,
     SlotType,
     SlotTypeEnum,
-} from 'src/domain/types/equipment';
+} from 'src/domain/types/equipment.types';
 
 @Injectable()
 export class EquipmentReader {

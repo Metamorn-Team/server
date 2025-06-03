@@ -1,5 +1,5 @@
 import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity';
-import { Equipped, SlotTypeEnum } from 'src/domain/types/equipment';
+import { Equipped, SlotTypeEnum } from 'src/domain/types/equipment.types';
 
 export interface EquipmentRepository {
     save(data: EquipmentEntity): Promise<void>;
