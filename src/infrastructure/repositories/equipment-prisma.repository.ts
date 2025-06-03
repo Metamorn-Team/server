@@ -84,4 +84,34 @@ export class EquipmentPrismaRepository implements EquipmentRepository {
             name: equipped.item.name,
         }));
     }
+
+    async findEquippedByUserIds(
+        userIds: string[],
+    ): Promise<Record<string, Equipped[]>> {
+        const result = await this.txHost.tx.equipment.findMany({
+            where: { userId: { in: userIds } },
+            select: {
+                userId: true,
+                slot: true,
+                item: { select: { key: true, name: true } },
+            },
+        });
+
+        const map: Record<string, Equipped[]> = {};
+
+        for (const row of result) {
+            const userId = row.userId;
+            if (!map[userId]) {
+                map[userId] = [];
+            }
+
+            map[userId].push({
+                slot: convertNumberToSlotType(row.slot),
+                key: row.item.key,
+                name: row.item.name,
+            });
+        }
+
+        return map;
+    }
 }

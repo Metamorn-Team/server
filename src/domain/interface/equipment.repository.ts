@@ -11,6 +11,9 @@ export interface EquipmentRepository {
     ): Promise<void>;
     existBySlot(userId: string, slot: SlotTypeEnum): Promise<boolean>;
     findEquippedForEquip(userId: string): Promise<Equipped[]>;
+    findEquippedByUserIds(
+        userIds: string[],
+    ): Promise<Record<string, Equipped[]>>;
 }
 
 export const EquipmentRepository = Symbol('EquipmentRepository');

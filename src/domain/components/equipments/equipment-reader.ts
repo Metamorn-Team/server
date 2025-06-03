@@ -1,10 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EquipmentRepository } from 'src/domain/interface/equipment.repository';
-import {
-    EquipmentState,
-    SlotType,
-    SlotTypeEnum,
-} from 'src/domain/types/equipment.types';
+import { SlotType, SlotTypeEnum } from 'src/domain/types/equipment.types';
+import { EquipmentState } from 'src/domain/types/equipments/equiment-state';
 
 @Injectable()
 export class EquipmentReader {
@@ -17,22 +14,25 @@ export class EquipmentReader {
         await this.equipmentRepository.existBySlot(userId, SlotTypeEnum[slot]);
     }
 
-    async readEquipmentState(userId: string) {
+    async readEquipmentState(userId: string): Promise<EquipmentState> {
         const equippedItems =
             await this.equipmentRepository.findEquippedForEquip(userId);
 
-        const equipments: EquipmentState = {
-            AURA: null,
-            SPEECH_BUBBLE: null,
-        };
+        return EquipmentState.from(equippedItems);
+    }
 
-        for (const item of equippedItems) {
-            equipments[item.slot] = {
-                key: item.key,
-                name: item.name,
-            };
+    async readEquipmentStates(
+        userIds: string[],
+    ): Promise<Record<string, EquipmentState>> {
+        const equippedItems =
+            await this.equipmentRepository.findEquippedByUserIds(userIds);
+
+        const result: Record<string, EquipmentState> = {};
+
+        for (const userId of userIds) {
+            result[userId] = EquipmentState.from(equippedItems[userId]);
         }
 
-        return equipments;
+        return result;
     }
 }

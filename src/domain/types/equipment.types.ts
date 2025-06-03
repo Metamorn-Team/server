@@ -12,7 +12,9 @@ export interface Equipped {
     readonly name: string;
 }
 
-export type EquipmentState = Record<
-    SlotType,
-    { key: string; name: string } | null
->;
+export interface EquippedItemSummary {
+    key: string;
+    name: string;
+}
+
+export type EquipmentState = Record<SlotType, EquippedItemSummary | null>;
