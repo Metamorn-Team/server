@@ -1,4 +1,5 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-writer';
@@ -9,7 +10,7 @@ import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
-import { Player } from 'src/domain/models/game/player';
+import { Player, PlayerWithEquippedItems } from 'src/domain/models/game/player';
 import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 
@@ -23,6 +24,7 @@ export class DesertedIslandManager implements IslandManager {
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly playerStorageWriter: PlayerStorageWriter,
         private readonly islandWriter: IslandWriter,
+        private readonly equipmentReader: EquipmentReader,
 
         private readonly islandJoinWriter: IslandJoinWriter,
         private readonly lockManager: RedisTransactionManager,
@@ -64,19 +66,22 @@ export class DesertedIslandManager implements IslandManager {
         ]);
     }
 
-    async getActiveUsers(islandId: string, myPlayerId: string) {
+    async getActiveUsers(
+        islandId: string,
+        myPlayerId: string,
+    ): Promise<PlayerWithEquippedItems[]> {
         const island = await this.desertedIslandStorageReader.readOne(islandId);
 
-        const activeUsers: Player[] = [];
+        const playerIds = [...island.players].filter((id) => id !== myPlayerId);
+        const players = await this.playerStorageReader.readMany(playerIds);
 
-        for (const playerId of island.players) {
-            const player = await this.playerStorageReader.readOne(playerId);
-            if (player) {
-                activeUsers.push(player);
-            }
-        }
+        const equipmentMap =
+            await this.equipmentReader.readEquipmentStates(playerIds);
 
-        return activeUsers.filter((player) => player.id !== myPlayerId);
+        return players.map((player) => ({
+            ...player,
+            equipmentState: equipmentMap[player.id],
+        }));
     }
 
     async left(islandId: string, playerId: string) {

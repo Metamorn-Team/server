@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Provider } from '../../shared';
+import { EquipmentState } from '../../equiptments/response/equipped-items.response';
 
 export class GetMyResponse {
     @ApiProperty({
@@ -25,4 +26,7 @@ export class GetMyResponse {
 
     @ApiProperty({ description: '사용자 아바타 키' })
     readonly avatarKey: string;
+
+    @ApiProperty({ type: EquipmentState })
+    readonly equipmentState: EquipmentState;
 }

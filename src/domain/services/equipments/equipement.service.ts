@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EquipmentWriter } from 'src/domain/components/equipments/equipment-writer';
 import { ItemReader } from 'src/domain/components/items/item-reader';
-import { SlotType, SlotTypeEnum } from 'src/domain/types/equipment';
+import { SlotType, SlotTypeEnum } from 'src/domain/types/equipment.types';
 
 @Injectable()
 export class EquipmentService {

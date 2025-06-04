@@ -4,7 +4,7 @@ import {
     EquipmentPrototype,
 } from 'src/domain/entities/equipments/equipment.entity';
 import { EquipmentRepository } from 'src/domain/interface/equipment.repository';
-import { SlotType, SlotTypeEnum } from 'src/domain/types/equipment';
+import { SlotType, SlotTypeEnum } from 'src/domain/types/equipment.types';
 
 @Injectable()
 export class EquipmentWriter {

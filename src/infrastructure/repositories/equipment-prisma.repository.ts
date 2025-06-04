@@ -5,9 +5,9 @@ import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity
 import { EquipmentRepository } from 'src/domain/interface/equipment.repository';
 import {
     convertNumberToSlotType,
-    SlotType,
+    Equipped,
     SlotTypeEnum,
-} from 'src/domain/types/equipment';
+} from 'src/domain/types/equipment.types';
 
 @Injectable()
 export class EquipmentPrismaRepository implements EquipmentRepository {
@@ -29,6 +29,7 @@ export class EquipmentPrismaRepository implements EquipmentRepository {
             },
             update: {
                 itemId: data.itemId,
+                updatedAt: data.updatedAt,
             },
             create: {
                 ...data,
@@ -71,17 +72,44 @@ export class EquipmentPrismaRepository implements EquipmentRepository {
         return !!result;
     }
 
-    async findEquippedForEquip(
-        userId: string,
-    ): Promise<{ slot: SlotType; key: string }[]> {
+    async findEquippedForEquip(userId: string): Promise<Equipped[]> {
         const result = await this.txHost.tx.equipment.findMany({
-            select: { slot: true, item: { select: { key: true } } },
+            select: { slot: true, item: { select: { key: true, name: true } } },
             where: { userId },
         });
 
         return result.map((equipped) => ({
             slot: convertNumberToSlotType(equipped.slot),
             key: equipped.item.key,
+            name: equipped.item.name,
         }));
+    }
+
+    async findEquippedByUserIds(
+        userIds: string[],
+    ): Promise<Record<string, Equipped[]>> {
+        const result = await this.txHost.tx.equipment.findMany({
+            where: { userId: { in: userIds } },
+            select: {
+                userId: true,
+                slot: true,
+                item: { select: { key: true, name: true } },
+            },
+        });
+
+        const map: Record<string, Equipped[]> = {};
+        for (const id of userIds) {
+            map[id] = [];
+        }
+
+        for (const row of result) {
+            map[row.userId].push({
+                slot: convertNumberToSlotType(row.slot),
+                key: row.item.key,
+                name: row.item.name,
+            });
+        }
+
+        return map;
     }
 }

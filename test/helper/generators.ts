@@ -1,4 +1,5 @@
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
+import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
@@ -9,6 +10,7 @@ import { TagEntity } from 'src/domain/entities/tag/tag.entity';
 import { UserOwnedItemEntity } from 'src/domain/entities/user-owned-items/user-owned-item.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { Player } from 'src/domain/models/game/player';
+import { SlotTypeEnum } from 'src/domain/types/equipment.types';
 import {
     LiveDesertedIsland,
     LiveNormalIsland,
@@ -212,4 +214,13 @@ export const generateOwnedItem = (
     aquiredAt = new Date(),
 ): UserOwnedItemEntity => {
     return new UserOwnedItemEntity(v4(), userId, itemId, aquiredAt);
+};
+
+export const generateEquipment = (
+    userId: string,
+    itemId: string,
+    slot: SlotTypeEnum,
+): EquipmentEntity => {
+    const stdDate = new Date();
+    return new EquipmentEntity(userId, itemId, slot, stdDate, stdDate);
 };

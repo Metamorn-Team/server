@@ -1,4 +1,4 @@
-import { SlotTypeEnum } from 'src/domain/types/equipment';
+import { SlotTypeEnum } from 'src/domain/types/equipment.types';
 
 export interface EquipmentPrototype {
     readonly userId: string;
