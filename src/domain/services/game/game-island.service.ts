@@ -17,12 +17,14 @@ import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
+import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 
 @Injectable()
 export class GameIslandService {
     private readonly logger = new Logger(GameIslandService.name);
 
     constructor(
+        private readonly equipmentReader: EquipmentReader,
         private readonly islandWriter: IslandWriter,
         private readonly islandJoinWriter: IslandJoinWriter,
         private readonly userReader: UserReader,
@@ -88,6 +90,9 @@ export class GameIslandService {
             y,
             radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
+        const equipmentState = await this.equipmentReader.readEquipmentState(
+            player.id,
+        );
         await manager.join(player);
 
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
@@ -96,7 +101,7 @@ export class GameIslandService {
         return {
             activePlayers,
             joinedIslandId: island.id,
-            joinedPlayer: player,
+            joinedPlayer: { ...player, equipmentState },
         };
     }
 
@@ -124,6 +129,9 @@ export class GameIslandService {
             y,
             radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
+        const equipmentState = await this.equipmentReader.readEquipmentState(
+            player.id,
+        );
         await manager.join(player);
 
         const activePlayers = await manager.getActiveUsers(islandId, playerId);
@@ -132,7 +140,7 @@ export class GameIslandService {
         return {
             activePlayers,
             joinedIslandId: islandId,
-            joinedPlayer: player,
+            joinedPlayer: { ...player, equipmentState },
         };
     }
 
