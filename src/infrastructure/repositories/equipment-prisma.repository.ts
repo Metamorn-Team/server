@@ -98,14 +98,12 @@ export class EquipmentPrismaRepository implements EquipmentRepository {
         });
 
         const map: Record<string, Equipped[]> = {};
+        for (const id of userIds) {
+            map[id] = [];
+        }
 
         for (const row of result) {
-            const userId = row.userId;
-            if (!map[userId]) {
-                map[userId] = [];
-            }
-
-            map[userId].push({
+            map[row.userId].push({
                 slot: convertNumberToSlotType(row.slot),
                 key: row.item.key,
                 name: row.item.name,

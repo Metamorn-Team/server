@@ -1,4 +1,4 @@
-import { Player } from 'src/domain/models/game/player';
+import { Player, PlayerWithEquippedItems } from 'src/domain/models/game/player';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 export type SocketClientId = string;
@@ -33,7 +33,7 @@ export interface Island {
 }
 
 export interface JoinedIslandInfo {
-    readonly activePlayers: Player[];
+    readonly activePlayers: PlayerWithEquippedItems[];
     readonly joinedIslandId: string;
     readonly joinedPlayer: Player;
 }

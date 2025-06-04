@@ -1,3 +1,4 @@
+import { EquipmentState } from 'src/domain/types/equipments/equiment-state';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 export interface PlayerPrototype {
@@ -53,3 +54,7 @@ export class Player {
         );
     }
 }
+
+export type PlayerWithEquippedItems = Player & {
+    equipmentState: EquipmentState;
+};
