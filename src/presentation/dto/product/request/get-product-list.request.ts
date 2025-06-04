@@ -1,11 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, Max, Min } from 'class-validator';
-import { ProductType, ProductOrder } from '../../shared';
-import { Type } from 'class-transformer';
+import { ProductOrder } from '../../shared';
+import { Transform, Type } from 'class-transformer';
+import { ProductType, productTypes } from 'src/domain/types/product.types';
 
 export class GetProductListRequest {
-    @ApiProperty({ example: ProductType.AURA, enum: ProductType })
-    @IsEnum(ProductType)
+    @ApiProperty({ example: productTypes[0], enum: productTypes })
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            return value.toUpperCase();
+        }
+    })
+    @IsEnum(productTypes)
     readonly type: ProductType;
 
     @ApiProperty({ enum: ProductOrder })

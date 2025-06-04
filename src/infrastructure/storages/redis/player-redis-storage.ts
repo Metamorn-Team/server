@@ -38,6 +38,37 @@ export class PlayerRedisStorage implements PlayerStorage {
         return Object.keys(data).length === 0 ? null : this.parsePlayer(data);
     }
 
+    async getPlayers(playerIds: string[]): Promise<Player[]> {
+        const pipeline = this.redis.getClient().pipeline();
+
+        for (const id of playerIds) {
+            const key = PLAYER_KEY(id);
+            pipeline.hgetall(key);
+        }
+
+        const results = await pipeline.exec();
+
+        if (!results) throw new Error('Redis pipeline failed');
+
+        const players: Player[] = [];
+
+        for (let i = 0; i < results.length; i++) {
+            const [err, data] = results[i];
+
+            if (err) continue;
+
+            if (
+                data &&
+                typeof data === 'object' &&
+                Object.keys(data).length > 0
+            ) {
+                players.push(this.parsePlayer(data as Record<string, string>));
+            }
+        }
+
+        return players;
+    }
+
     async getPlayerByClientId(clientId: string): Promise<Player | null> {
         const keys = await this.redis.getClient().keys(PLAYER_KEY('*'));
 

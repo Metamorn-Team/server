@@ -5,15 +5,5 @@ export enum PurchaseStatusEnum {
     REFUND,
 }
 
-export const convertNumberToPurchaseStatus = (
-    status: number,
-): PurchaseStatus => {
-    switch (status) {
-        case 0:
-            return 'COMPLETE';
-        case 1:
-            return 'REFUND';
-        default:
-            return 'COMPLETE';
-    }
-};
+export const convertNumberToPurchaseStatus = (status: number): PurchaseStatus =>
+    purchaseStatus[status];

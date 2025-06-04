@@ -1,23 +1,11 @@
-import { Controller, Get, Param, UseFilters, UseGuards } from '@nestjs/common';
-import {
-    ApiBearerAuth,
-    ApiOperation,
-    ApiResponse,
-    ApiTags,
-} from '@nestjs/swagger';
-import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
-import { AuthGuard } from 'src/common/guard/auth.guard';
+import { Get, Param } from '@nestjs/common';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { GetIslandDetailResponse } from 'src/presentation/dto/island/response/get-island-detail.response';
 
-@ApiTags('islands')
-@ApiResponse({ status: 400, description: '잘못된 요청' })
-@ApiResponse({ status: 401, description: '인증 실패 (토큰 누락 또는 만료)' })
-@ApiBearerAuth()
-@UseFilters(HttpExceptionFilter)
-@UseGuards(AuthGuard)
-@Controller('islands')
+@LivislandController('islands')
 export class IslandController {
     constructor(
         private readonly playerStorageReader: PlayerStorageReader,

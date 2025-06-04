@@ -21,9 +21,11 @@ import { ChangeAvatarRequest } from 'src/presentation/dto/users/request/change-a
 import { FriendRequestStatus } from '@prisma/client';
 import {
     ChangeBioRequest,
+    GetMyResponse,
     GetUserResponse,
     SearchUsersRequest,
 } from 'src/presentation/dto';
+import { slotTypes } from 'src/domain/types/equipment.types';
 
 describe('UserController (e2e)', () => {
     let app: INestApplication;
@@ -192,6 +194,29 @@ describe('UserController (e2e)', () => {
             const { status } = response;
 
             expect(status).toEqual(404);
+        });
+    });
+
+    describe('(GET) /users/my - 내 정보 조회', () => {
+        it('내 정보 조회 정상 동작', async () => {
+            const { accessToken, userId } = await login(app);
+
+            const response = (await request(app.getHttpServer())
+                .get('/users/my')
+                .set(
+                    'Authorization',
+                    accessToken,
+                )) as ResponseResult<GetMyResponse>;
+            const { status, body } = response;
+
+            const expectedEquipmentState = {};
+            for (const slot of slotTypes) {
+                expectedEquipmentState[slot] = null;
+            }
+
+            expect(status).toEqual(200);
+            expect(body.id).toEqual(userId);
+            expect(body.equipmentState).toEqual(expectedEquipmentState);
         });
     });
 

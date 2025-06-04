@@ -1,6 +1,7 @@
 export * from './request/change-nickname.request';
 export * from './request/change-tag.request';
 export * from './request/change-bio.request';
+export * from './request/change-avatar.request';
 export * from './request/search-users.request';
 
 export * from './response/get-me.response';

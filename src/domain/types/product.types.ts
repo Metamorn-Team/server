@@ -21,9 +21,13 @@ export interface Product {
     readonly purchasedStatus: PurchasedStatus;
 }
 
-export enum ProductType {
-    AURA = 'aura',
+export const productTypes = ['AURA', 'SPEECH_BUBBLE'] as const;
+export type ProductType = (typeof productTypes)[number];
+export enum ProductTypeEnum {
+    AURA,
+    SPEECH_BUBBLE,
 }
+export const convertNumberToProductType = (type: number) => productTypes[type];
 
 export enum ProductOrder {
     LATEST = 'latest',

@@ -7,17 +7,26 @@ export enum ItemGradeEnum {
     EPIC,
 }
 
-export const convertNumberToGrade = (grade: number): ItemGrade => {
-    switch (grade) {
-        case 0:
-            return 'NORMAL';
-        case 1:
-            return 'RARE';
-        case 2:
-            return 'UNIQUE';
-        case 3:
-            return 'EPIC';
-        default:
-            return 'NORMAL';
-    }
+export const convertNumberToItemGrade = (grade: number): ItemGrade =>
+    itemGrades[grade];
+
+export const itemTypes = ['AURA', 'SPEECH_BUBBLE'] as const;
+export type ItemType = (typeof itemTypes)[number];
+export enum ItemTypeEnum {
+    AURA,
+    SPEECH_BUBBLE,
+}
+
+export const convertNumberToItemType = (type: number) => {
+    return itemTypes[type];
 };
+
+export interface Item {
+    readonly id: string;
+    readonly name: string;
+    readonly description: string;
+    readonly type: ItemType;
+    readonly key: string;
+    readonly grade: ItemGrade;
+    readonly image: string;
+}

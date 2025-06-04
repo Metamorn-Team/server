@@ -1,6 +1,5 @@
 import {
     Body,
-    Controller,
     Delete,
     Get,
     HttpCode,
@@ -10,19 +9,10 @@ import {
     Patch,
     Post,
     Query,
-    UseFilters,
-    UseGuards,
 } from '@nestjs/common';
-import {
-    ApiBearerAuth,
-    ApiOperation,
-    ApiParam,
-    ApiResponse,
-    ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
-import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
-import { AuthGuard } from 'src/common/guard/auth.guard';
+import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
 import { FriendReader } from 'src/domain/components/friends/friend-reader';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import {
@@ -35,13 +25,7 @@ import { SendFriendRequest } from 'src/presentation/dto/friends/request/send-fri
 import { CheckFriendshipResponse } from 'src/presentation/dto/friends/response/check-friendship.response';
 import { GetUnreadRequestResponse } from 'src/presentation/dto/friends/response/get-unread-request.response';
 
-@ApiTags('friends')
-@ApiResponse({ status: 400, description: '잘못된 요청' })
-@ApiResponse({ status: 401, description: '인증 실패 (토큰 누락 또는 만료)' })
-@ApiBearerAuth()
-@UseFilters(HttpExceptionFilter)
-@UseGuards(AuthGuard)
-@Controller('friends')
+@LivislandController('friends')
 export class FriendsController {
     constructor(
         private readonly friendsService: FriendsService,

@@ -1,4 +1,5 @@
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
+import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
@@ -6,14 +7,17 @@ import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
 import { TagEntity } from 'src/domain/entities/tag/tag.entity';
+import { UserOwnedItemEntity } from 'src/domain/entities/user-owned-items/user-owned-item.entity';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { Player } from 'src/domain/models/game/player';
+import { SlotTypeEnum } from 'src/domain/types/equipment.types';
 import {
     LiveDesertedIsland,
     LiveNormalIsland,
 } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { ItemGradeEnum } from 'src/domain/types/item.types';
+import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
+import { ProductTypeEnum } from 'src/domain/types/product.types';
 import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
 import { Provider } from 'src/shared/types';
 import { v4 } from 'uuid';
@@ -117,6 +121,7 @@ export const generateProduct = (
         partial?.description || '멋진 오라 설명',
         partial?.price || 1000,
         partial?.coverImage || 'https://image.com',
+        partial?.productType || ProductTypeEnum.AURA,
         partial?.createdAt || new Date(),
         partial?.updatedAt || new Date(),
     );
@@ -128,8 +133,10 @@ export const generateItem = (partial?: Partial<ItemEntity>) => {
         partial?.name || '오라',
         partial?.description || '멋진 오라',
         partial?.type || 'aura',
+        partial?.itemType || ItemTypeEnum.AURA,
         partial?.key || 'aura-1',
         partial?.grade || ItemGradeEnum.NORMAL,
+        partial?.image || 'https://image.com',
         partial?.createdAt || new Date(),
     );
 };
@@ -199,4 +206,21 @@ export const generateNormalIslandModel = (
         tags: partial?.tags || ['tag1', 'tag2'],
         ownerId: partial?.ownerId || v4(),
     };
+};
+
+export const generateOwnedItem = (
+    userId: string,
+    itemId: string,
+    aquiredAt = new Date(),
+): UserOwnedItemEntity => {
+    return new UserOwnedItemEntity(v4(), userId, itemId, aquiredAt);
+};
+
+export const generateEquipment = (
+    userId: string,
+    itemId: string,
+    slot: SlotTypeEnum,
+): EquipmentEntity => {
+    const stdDate = new Date();
+    return new EquipmentEntity(userId, itemId, slot, stdDate, stdDate);
 };

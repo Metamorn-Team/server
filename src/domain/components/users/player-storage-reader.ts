@@ -3,6 +3,7 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { PLAYER_NOT_FOUND_IN_STORAGE } from 'src/domain/exceptions/message';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
+import { Player } from 'src/domain/models/game/player';
 import { PlayerMemoryStorage } from 'src/infrastructure/storages/player-memory-storage';
 
 @Injectable()
@@ -28,6 +29,30 @@ export class PlayerStorageReader {
         this.playerMemoryStorage.addPlayer(player);
 
         return player;
+    }
+
+    async readMany(ids: string[]): Promise<Player[]> {
+        const players: Player[] = [];
+        const idToFetch: string[] = [];
+
+        ids.forEach((id) => {
+            const player = this.playerMemoryStorage.getPlayer(id);
+
+            if (player) {
+                players.push(player);
+            } else {
+                idToFetch.push(id);
+            }
+        });
+
+        if (idToFetch.length === 0) return players;
+
+        const fetchedPlayers = await this.playerStorage.getPlayers(idToFetch);
+        fetchedPlayers.forEach((player) =>
+            this.playerMemoryStorage.addPlayer(player),
+        );
+
+        return [...players, ...fetchedPlayers];
     }
 
     async readOneByClientId(clientId: string) {
