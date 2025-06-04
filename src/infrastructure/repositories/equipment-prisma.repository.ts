@@ -1,0 +1,87 @@
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { Injectable } from '@nestjs/common';
+import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity';
+import { EquipmentRepository } from 'src/domain/interface/equipment.repository';
+import {
+    convertNumberToSlotType,
+    SlotType,
+    SlotTypeEnum,
+} from 'src/domain/types/equipment';
+
+@Injectable()
+export class EquipmentPrismaRepository implements EquipmentRepository {
+    constructor(
+        private readonly txHost: TransactionHost<TransactionalAdapterPrisma>,
+    ) {}
+
+    async save(data: EquipmentEntity): Promise<void> {
+        await this.txHost.tx.equipment.create({ data });
+    }
+
+    async upsert(data: EquipmentEntity): Promise<void> {
+        await this.txHost.tx.equipment.upsert({
+            where: {
+                userId_slot: {
+                    userId: data.userId,
+                    slot: data.slot,
+                },
+            },
+            update: {
+                itemId: data.itemId,
+            },
+            create: {
+                ...data,
+            },
+        });
+    }
+
+    async update(
+        userId: string,
+        slot: SlotTypeEnum,
+        data: Partial<Omit<EquipmentEntity, 'userId' | 'slot'>>,
+    ): Promise<void> {
+        const { itemId, updatedAt } = data;
+
+        await this.txHost.tx.equipment.update({
+            data: {
+                itemId,
+                updatedAt: updatedAt || new Date(),
+            },
+            where: {
+                userId_slot: {
+                    userId,
+                    slot,
+                },
+            },
+        });
+    }
+
+    async existBySlot(userId: string, slot: SlotTypeEnum): Promise<boolean> {
+        const result = await this.txHost.tx.equipment.findUnique({
+            select: { userId: true },
+            where: {
+                userId_slot: {
+                    userId,
+                    slot,
+                },
+            },
+        });
+
+        return !!result;
+    }
+
+    async findEquippedForEquip(
+        userId: string,
+    ): Promise<{ slot: SlotType; key: string }[]> {
+        const result = await this.txHost.tx.equipment.findMany({
+            select: { slot: true, item: { select: { key: true } } },
+            where: { userId },
+        });
+
+        return result.map((equipped) => ({
+            slot: convertNumberToSlotType(equipped.slot),
+            key: equipped.item.key,
+        }));
+    }
+}

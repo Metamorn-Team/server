@@ -47,7 +47,7 @@ model User {
   goldTransactions       GoldTransaction[]
   userOwnedItems         UserOwnedItem[]
   islands                Island[]
-  equippedItems          EquippedItem[]
+  equippedItems          Equipment[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -166,7 +166,7 @@ model Item {
 
   products       Product[]
   userOwnedItems UserOwnedItem[]
-  equippedItems  EquippedItem[]
+  equippedItems  Equipment[]
 
   @@map("item")
 }
@@ -248,7 +248,7 @@ model UserOwnedItem {
   @@map("user_owned_item")
 }
 
-model EquippedItem {
+model Equipment {
   userId    String   @map("user_id") @db.Uuid
   itemId    String   @map("item_id") @db.Uuid
   slot      Int      @db.SmallInt
@@ -260,5 +260,5 @@ model EquippedItem {
 
   @@id([userId, slot])
   @@index([itemId])
-  @@map("equipped_item")
+  @@map("equipment")
 }

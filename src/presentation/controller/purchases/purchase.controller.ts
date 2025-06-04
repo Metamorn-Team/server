@@ -1,23 +1,11 @@
-import { Body, Controller, Post, UseFilters, UseGuards } from '@nestjs/common';
-import {
-    ApiBearerAuth,
-    ApiOperation,
-    ApiResponse,
-    ApiTags,
-} from '@nestjs/swagger';
+import { Body, Post } from '@nestjs/common';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
-import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
-import { AuthGuard } from 'src/common/guard/auth.guard';
+import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
 import { PurchaseService } from 'src/domain/services/purchases/purchase.service';
 import { PurchaseRequest } from 'src/presentation/dto/purchases/request/puchase.request';
 
-@ApiTags('purchases')
-@ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
-@ApiResponse({ status: 401, description: '인증 실패' })
-@ApiBearerAuth()
-@UseFilters(HttpExceptionFilter)
-@UseGuards(AuthGuard)
-@Controller('purchases')
+@LivislandController('purchases')
 export class PurchaseController {
     constructor(private readonly purchaseService: PurchaseService) {}
 

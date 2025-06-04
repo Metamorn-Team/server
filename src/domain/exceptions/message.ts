@@ -15,6 +15,7 @@ export const INVALID_TOKEN_MESSAGE = '유효하지 않은 토큰입니다.';
 export const INVALID_INPUT_MESSAGE = '잘못된 입력입니다.';
 export const PRODUCT_NOT_FOUND_MESSAGE = (data: string) =>
     `${data}, 존재하지 않는 상품입니다.`;
+export const ITEM_NOT_FOUND_MESSAGE = '존재하지 않는 아이템입니다';
 export const NOT_ENOUGH_GOLD_MESSAGE = '골드가 부족합니다.';
 export const PRODUCT_PURCHASE_LIMIT_EXCEEDED_MESSAGE =
     '해당 상품 구매 횟수를 초과했습니다.';

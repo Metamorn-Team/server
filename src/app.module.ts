@@ -22,6 +22,7 @@ import { RedisModule } from 'src/infrastructure/redis/redis.module';
 import { validationSchema } from 'src/env-validation';
 import { IslandModule } from 'src/modules/islands/island.module';
 import { ItemModule } from 'src/modules/items/item.module';
+import { EquipmentModule } from 'src/modules/equipments/equipment.module';
 
 @Module({
     imports: [
@@ -43,6 +44,7 @@ import { ItemModule } from 'src/modules/items/item.module';
         TagModule,
         IslandModule,
         ItemModule,
+        EquipmentModule,
 
         LoaderModule,
     ],
