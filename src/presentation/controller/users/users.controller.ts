@@ -10,6 +10,7 @@ import {
 import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
+import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import { UserService } from 'src/domain/services/users/users.service';
@@ -30,6 +31,7 @@ export class UserController {
         private readonly userService: UserService,
         private readonly userReader: UserReader,
         private readonly friendService: FriendsService,
+        private readonly equipmentReader: EquipmentReader,
     ) {}
 
     @ApiOperation({
@@ -95,7 +97,14 @@ export class UserController {
     })
     @Get('my')
     async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
-        return await this.userReader.readProfile(userId);
+        const profile = await this.userReader.readProfile(userId);
+        const equipmentState =
+            await this.equipmentReader.readEquipmentState(userId);
+
+        return {
+            ...profile,
+            equipmentState,
+        };
     }
 
     @ApiOperation({

@@ -8,7 +8,7 @@ class EquippedItem {
     name: string;
 }
 
-class EquipmentState {
+export class EquipmentState {
     @ApiProperty({ type: EquippedItem, nullable: true })
     AURA: EquippedItem | null;
 
