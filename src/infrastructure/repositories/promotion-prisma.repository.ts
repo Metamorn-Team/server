@@ -10,6 +10,9 @@ export class PromotionPrismaRepository implements PromotionRepository {
     async findAll(now: Date): Promise<Promotion[]> {
         return await this.prisma.promotion.findMany({
             where: {
+                startedAt: {
+                    lte: now,
+                },
                 endedAt: {
                     gt: now,
                 },
