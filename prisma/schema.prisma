@@ -196,7 +196,7 @@ model Product {
 model Promotion {
   id          String   @id @db.Uuid
   name        String
-  type        Int      @db.SmallInt
+  type        String   @db.VarChar(50)
   description String?
   startedAt   DateTime @map("started_at")
   endedAt     DateTime @map("ended_at")

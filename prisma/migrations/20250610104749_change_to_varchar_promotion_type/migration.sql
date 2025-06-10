@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "promotion" ALTER COLUMN "type" SET DATA TYPE VARCHAR(50);
