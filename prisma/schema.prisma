@@ -185,11 +185,39 @@ model Product {
 
   purchases Purchase[]
 
-  item              Item    @relation(fields: [itemId], references: [id])
-  productCategoryId String? @db.Uuid
+  item              Item               @relation(fields: [itemId], references: [id])
+  productCategoryId String?            @db.Uuid
+  promotionProducts PromotionProduct[]
 
   @@index([itemId])
   @@map("product")
+}
+
+model Promotion {
+  id          String   @id @db.Uuid
+  name        String
+  type        Int      @db.SmallInt
+  description String?
+  startedAt   DateTime @map("started_at")
+  endedAt     DateTime @map("ended_at")
+
+  promotionProducts PromotionProduct[]
+
+  @@map("promotion")
+}
+
+model PromotionProduct {
+  id           String @id @db.Uuid
+  productId    String @map("product_id") @db.Uuid
+  promotionId  String @map("promotion_id") @db.Uuid
+  discountRate Float? @map("discount_rate")
+
+  product   Product   @relation(fields: [productId], references: [id])
+  promotion Promotion @relation(fields: [promotionId], references: [id])
+
+  @@index([productId])
+  @@index([promotionId])
+  @@map("promotion_product")
 }
 
 model ProductCategory {
