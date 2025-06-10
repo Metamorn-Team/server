@@ -23,6 +23,7 @@ import { validationSchema } from 'src/env-validation';
 import { IslandModule } from 'src/modules/islands/island.module';
 import { ItemModule } from 'src/modules/items/item.module';
 import { EquipmentModule } from 'src/modules/equipments/equipment.module';
+import { PromotionModule } from 'src/modules/promotions/promotion.module';
 
 @Module({
     imports: [
@@ -45,6 +46,7 @@ import { EquipmentModule } from 'src/modules/equipments/equipment.module';
         IslandModule,
         ItemModule,
         EquipmentModule,
+        PromotionModule,
 
         LoaderModule,
     ],
