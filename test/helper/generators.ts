@@ -133,7 +133,6 @@ export const generateItem = (partial?: Partial<ItemEntity>) => {
         partial?.id || v4(),
         partial?.name || '오라',
         partial?.description || '멋진 오라',
-        partial?.type || 'aura',
         partial?.itemType || ItemTypeEnum.AURA,
         partial?.key || 'aura-1',
         partial?.grade || ItemGradeEnum.NORMAL,

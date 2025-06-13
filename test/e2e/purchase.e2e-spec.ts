@@ -45,7 +45,6 @@ describe('PurchaseController (e2e)', () => {
             generateItem({
                 name: `오라${i}`,
                 description: `오라 설명${i}`,
-                type: '',
                 itemType: ItemTypeEnum.AURA,
                 key: `aura${i}`,
                 grade: ItemGradeEnum.NORMAL,

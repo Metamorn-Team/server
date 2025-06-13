@@ -11,7 +11,9 @@ import { ProductOrder } from 'src/presentation/dto/shared';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
 import {
     convertNumberToItemGrade,
+    convertNumberToItemType,
     ItemGradeEnum,
+    ItemTypeEnum,
 } from 'src/domain/types/item.types';
 
 describe('ProductController (e2e)', () => {
@@ -43,7 +45,7 @@ describe('ProductController (e2e)', () => {
             generateItem({
                 name: `오라${i}`,
                 description: `오라 설명${i}`,
-                type: 'AURA',
+                itemType: ItemTypeEnum.AURA,
                 key: `aura${i}`,
                 grade: ItemGradeEnum.NORMAL,
                 createdAt: new Date(Date.now() + i),
@@ -115,7 +117,7 @@ describe('ProductController (e2e)', () => {
                     coverImage: product.coverImage,
                     name: auras[i].name,
                     description: auras[i].description,
-                    type: auras[i].type,
+                    type: convertNumberToItemType(auras[i].itemType),
                     key: auras[i].key,
                     grade: convertNumberToItemGrade(auras[i].grade),
                     purchasedStatus: 'NONE',
@@ -152,7 +154,7 @@ describe('ProductController (e2e)', () => {
                     coverImage: product.coverImage,
                     name: auras[i].name,
                     description: auras[i].description,
-                    type: auras[i].type,
+                    type: convertNumberToItemType(auras[i].itemType),
                     key: auras[i].key,
                     grade: convertNumberToItemGrade(auras[i].grade),
                     purchasedStatus: 'NONE',
@@ -188,7 +190,7 @@ describe('ProductController (e2e)', () => {
                     coverImage: product.coverImage,
                     name: auras[i].name,
                     description: auras[i].description,
-                    type: auras[i].type,
+                    type: convertNumberToItemType(auras[i].itemType),
                     key: auras[i].key,
                     grade: convertNumberToItemGrade(auras[i].grade),
                     createdAt: product.createdAt,

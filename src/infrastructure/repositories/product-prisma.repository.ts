@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ProductRepository } from 'src/domain/interface/product.repository';
-import { convertNumberToItemGrade } from 'src/domain/types/item.types';
+import {
+    convertNumberToItemGrade,
+    ItemTypeEnum,
+} from 'src/domain/types/item.types';
 import {
     convertNumberToProductType,
     Product,
@@ -88,11 +91,11 @@ export class ProductPrismaRepository implements ProductRepository {
         });
     }
 
-    async countByType(type: string): Promise<number> {
+    async countByType(type: ItemTypeEnum): Promise<number> {
         return await this.prisma.product.count({
             where: {
                 item: {
-                    type,
+                    itemType: type,
                 },
             },
         });

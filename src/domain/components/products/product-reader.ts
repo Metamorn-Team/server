@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ProductRepository } from 'src/domain/interface/product.repository';
+import { ItemType, ItemTypeEnum } from 'src/domain/types/item.types';
 import {
     ProductOrder,
     ProductOrderBy,
@@ -54,7 +55,7 @@ export class ProductReader {
         return await this.productRepository.findByIds(ids);
     }
 
-    async count(type: string) {
-        return await this.productRepository.countByType(type);
+    async count(type: ItemType) {
+        return await this.productRepository.countByType(ItemTypeEnum[type]);
     }
 }

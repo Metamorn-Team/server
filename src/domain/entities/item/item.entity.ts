@@ -3,7 +3,6 @@ import { ItemTypeEnum } from 'src/domain/types/item.types';
 export interface ItemPrototype {
     readonly name: string;
     readonly description: string;
-    readonly type: string;
     readonly itemType: ItemTypeEnum;
     readonly key: string;
     readonly grade: number;
@@ -15,7 +14,6 @@ export class ItemEntity {
         readonly id: string,
         readonly name: string,
         readonly description: string,
-        readonly type: string,
         readonly itemType: ItemTypeEnum,
         readonly key: string,
         readonly grade: number,
@@ -28,7 +26,6 @@ export class ItemEntity {
             idGen(),
             proto.name,
             proto.description,
-            proto.type,
             proto.itemType,
             proto.key,
             proto.grade,
