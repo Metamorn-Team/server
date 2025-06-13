@@ -213,6 +213,7 @@ model Promotion {
   @@map("promotion")
 }
 
+// productId, promotionId는 변경 가능한 데이터여야해서 id 따로 둠
 model PromotionProduct {
   id           String @id @db.Uuid
   productId    String @map("product_id") @db.Uuid
@@ -222,8 +223,8 @@ model PromotionProduct {
   product   Product   @relation(fields: [productId], references: [id])
   promotion Promotion @relation(fields: [promotionId], references: [id])
 
-  @@index([productId])
   @@index([promotionId])
+  @@index([productId])
   @@map("promotion_product")
 }
 
