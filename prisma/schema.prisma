@@ -26,6 +26,14 @@ enum OAuthProvider {
   NAVER
 }
 
+model Admin {
+  id       String @id @db.Uuid
+  username String @unique
+  password String
+
+  @@map("admin")
+}
+
 model User {
   id        String        @id @db.Uuid
   email     String        @db.VarChar(255)
@@ -157,7 +165,6 @@ model Item {
   id          String   @id @db.Uuid
   name        String   @db.VarChar(50)
   description String   @db.VarChar(200)
-  type        String   @db.VarChar(50)
   itemType    Int      @default(0) @map("item_type") @db.SmallInt
   key         String   @db.VarChar(50)
   grade       Int      @default(0) @db.SmallInt
@@ -196,7 +203,7 @@ model Product {
 model Promotion {
   id          String   @id @db.Uuid
   name        String
-  type        String   @db.VarChar(50)
+  type        Int      @db.SmallInt
   description String   @db.VarChar(100)
   startedAt   DateTime @map("started_at")
   endedAt     DateTime @map("ended_at")
