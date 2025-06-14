@@ -6,11 +6,13 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import {
     generateItem,
     generateProduct,
+    generatePromotion,
     generatePurchase,
 } from 'test/helper/generators';
 import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
 import { login } from 'test/helper/login';
 import { PurchaseRequest } from 'src/presentation/dto/purchases/request/puchase.request';
+import { v4 } from 'uuid';
 
 describe('PurchaseController (e2e)', () => {
     let app: INestApplication;
@@ -27,6 +29,9 @@ describe('PurchaseController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await db.promotionProduct.deleteMany();
+        await db.promotion.deleteMany();
+
         await db.goldTransaction.deleteMany();
         await db.purchase.deleteMany();
         await db.userOwnedItem.deleteMany();
@@ -92,6 +97,52 @@ describe('PurchaseController (e2e)', () => {
 
             expect(status).toEqual(HttpStatus.CREATED);
             expect(purchases.length).toEqual(products.length);
+            expect(goldTranasction?.amount).toEqual(totalPrice);
+            expect(user?.gold).toEqual(0);
+            expect(goldTranasction?.balance).toEqual(user?.gold);
+        });
+
+        it('프로모션이 적용된 상품은 할인가로 구매된다', async () => {
+            const { userId, accessToken } = await login(app);
+
+            // 프로모션 생성및 상품 연결
+            const product = products[0];
+            const promotion = generatePromotion();
+            const promotionProduct = {
+                id: v4(),
+                productId: product.id,
+                promotionId: promotion.id,
+                discountRate: 0.5,
+            };
+
+            await db.promotion.create({ data: promotion });
+            await db.promotionProduct.create({ data: promotionProduct });
+
+            const totalPrice = Math.floor(
+                product.price * (1 - promotionProduct.discountRate),
+            );
+
+            await db.user.update({
+                data: { gold: totalPrice },
+                where: { id: userId },
+            });
+
+            const dto: PurchaseRequest = {
+                productIds: [product.id],
+            };
+
+            const response = await request(app.getHttpServer())
+                .post('/purchases')
+                .send(dto)
+                .set('Authorization', accessToken);
+            const { status } = response;
+
+            const purchases = await db.purchase.findMany();
+            const goldTranasction = await db.goldTransaction.findFirst();
+            const user = await db.user.findUnique({ where: { id: userId } });
+
+            expect(status).toEqual(HttpStatus.CREATED);
+            expect(purchases.length).toEqual(1);
             expect(goldTranasction?.amount).toEqual(totalPrice);
             expect(user?.gold).toEqual(0);
             expect(goldTranasction?.balance).toEqual(user?.gold);
