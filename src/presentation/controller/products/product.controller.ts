@@ -5,7 +5,7 @@ import { LivislandController } from 'src/common/decorator/livisland-controller.d
 import { ProductReader } from 'src/domain/components/products/product-reader';
 import { ProductService } from 'src/domain/services/product/product.service';
 import { GetProductListRequest } from 'src/presentation/dto/product/request/get-product-list.request';
-import { GetProductListResponseV2 } from 'src/presentation/dto/product/response/get-product-list-response-v2';
+import { GetProductListResponseV2 } from 'src/presentation/dto/product/response/get-product-list.response-v2';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
 
 @LivislandController('products')

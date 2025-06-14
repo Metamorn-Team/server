@@ -15,7 +15,7 @@ import {
     ItemGradeEnum,
     ItemTypeEnum,
 } from 'src/domain/types/item.types';
-import { GetProductListResponseV2 } from 'src/presentation/dto/product/response/get-product-list-response-v2';
+import { GetProductListResponseV2 } from 'src/presentation/dto/product/response/get-product-list.response-v2';
 
 describe('ProductController (e2e)', () => {
     let app: INestApplication;
