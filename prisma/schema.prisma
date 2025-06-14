@@ -179,22 +179,21 @@ model Item {
 }
 
 model Product {
-  id          String    @id @db.Uuid
-  name        String    @db.VarChar(50)
-  description String    @db.VarChar(200)
-  price       Int
-  productType Int       @map("product_type") @db.SmallInt
-  coverImage  String    @map("cover_image")
-  itemId      String    @map("item_id") @db.Uuid
-  createdAt   DateTime  @map("created_at")
-  updatedAt   DateTime  @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
+  id                String    @id @db.Uuid
+  name              String    @db.VarChar(50)
+  description       String    @db.VarChar(200)
+  price             Int
+  productType       Int       @map("product_type") @db.SmallInt
+  coverImage        String    @map("cover_image")
+  itemId            String    @map("item_id") @db.Uuid
+  createdAt         DateTime  @map("created_at")
+  updatedAt         DateTime  @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+  productCategoryId String?   @db.Uuid
 
-  purchases Purchase[]
-
-  item              Item               @relation(fields: [itemId], references: [id])
-  productCategoryId String?            @db.Uuid
-  promotionProducts PromotionProduct[]
+  purchases         Purchase[]
+  item              Item              @relation(fields: [itemId], references: [id])
+  promotionProducts PromotionProduct?
 
   @@index([itemId])
   @@map("product")
@@ -214,9 +213,10 @@ model Promotion {
 }
 
 // productId, promotionId는 변경 가능한 데이터여야해서 id 따로 둠
+// product와 1:1
 model PromotionProduct {
   id           String @id @db.Uuid
-  productId    String @map("product_id") @db.Uuid
+  productId    String @unique @map("product_id") @db.Uuid
   promotionId  String @map("promotion_id") @db.Uuid
   discountRate Float? @map("discount_rate")
 
