@@ -77,17 +77,37 @@ export class ProductPrismaRepository implements ProductRepository {
     }
 
     async findByIds(ids: string[]): Promise<ProductForPurchase[]> {
-        return await this.prisma.product.findMany({
+        const result = await this.prisma.product.findMany({
             select: {
                 id: true,
                 price: true,
                 itemId: true,
+                promotionProducts: {
+                    select: {
+                        discountRate: true,
+                    },
+                },
             },
             where: {
                 id: {
                     in: ids,
                 },
             },
+        });
+
+        return result.map((row) => {
+            const highestDiscount = row.promotionProducts.length
+                ? Math.max(
+                      ...row.promotionProducts.map((p) => p.discountRate ?? 0),
+                  )
+                : null;
+
+            return {
+                id: row.id,
+                itemId: row.itemId,
+                originPrice: row.price,
+                discountRate: highestDiscount,
+            };
         });
     }
 

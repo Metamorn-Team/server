@@ -5,7 +5,8 @@ export type PurchasedStatus = (typeof purchasedStatus)[number];
 
 export interface ProductForPurchase {
     readonly id: string;
-    readonly price: number;
+    readonly originPrice: number;
+    readonly discountRate: number | null;
     readonly itemId: string;
 }
 
