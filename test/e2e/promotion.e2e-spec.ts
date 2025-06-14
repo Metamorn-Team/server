@@ -8,6 +8,7 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { login } from 'test/helper/login';
 import { ResponseResult } from 'test/helper/types';
 import { GetAllPromotionResponse } from 'src/presentation/dto/promotions/response/get-all-promotion.response';
+import { PromotionTypeEnum } from 'src/domain/types/promotion.types';
 
 describe('PromotionController (e2e)', () => {
     let app: INestApplication;
@@ -37,7 +38,7 @@ describe('PromotionController (e2e)', () => {
             generatePromotion({
                 description: `프로모션 ${i}입니다`,
                 name: `프로모션 ${i}`,
-                type: 'LAUNCH',
+                type: PromotionTypeEnum.LAUNCH,
             }),
         );
 
