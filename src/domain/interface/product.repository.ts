@@ -8,7 +8,7 @@ import {
 } from 'src/domain/types/product.types';
 
 export interface ProductRepository {
-    findByCategory(
+    findByType(
         userId: string,
         type: ProductTypeEnum,
         page: number,

@@ -18,7 +18,7 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 export class ProductPrismaRepository implements ProductRepository {
     constructor(private readonly prisma: PrismaService) {}
 
-    async findByCategory(
+    async findByType(
         userId: string,
         type: ProductTypeEnum,
         page: number,

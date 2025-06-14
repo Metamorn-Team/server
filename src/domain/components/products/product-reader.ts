@@ -41,7 +41,7 @@ export class ProductReader {
             sort = Sort.DESC;
         }
 
-        return await this.productRepository.findByCategory(
+        return await this.productRepository.findByType(
             userId,
             ProductTypeEnum[type],
             page,
