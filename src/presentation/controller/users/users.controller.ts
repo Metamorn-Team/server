@@ -1,25 +1,16 @@
 import {
     Body,
-    Controller,
     Get,
     HttpCode,
     HttpStatus,
     Param,
     Patch,
     Query,
-    UseFilters,
-    UseGuards,
 } from '@nestjs/common';
-import {
-    ApiBearerAuth,
-    ApiOperation,
-    ApiParam,
-    ApiResponse,
-    ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
-import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
-import { AuthGuard } from 'src/common/guard/auth.guard';
+import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
+import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import { UserService } from 'src/domain/services/users/users.service';
@@ -34,18 +25,13 @@ import { GetMyResponse } from 'src/presentation/dto/users/response/get-me.respon
 import { GetUserResponse } from 'src/presentation/dto/users/response/get-user.response';
 import { SearchUserResponse } from 'src/presentation/dto/users/response/search-users.response';
 
-@ApiTags('users')
-@ApiResponse({ status: 400, description: '잘못된 요청 데이터 형식' })
-@ApiResponse({ status: 401, description: '인증 실패' })
-@ApiBearerAuth()
-@UseFilters(HttpExceptionFilter)
-@UseGuards(AuthGuard)
-@Controller('users')
+@LivislandController('users')
 export class UserController {
     constructor(
         private readonly userService: UserService,
         private readonly userReader: UserReader,
         private readonly friendService: FriendsService,
+        private readonly equipmentReader: EquipmentReader,
     ) {}
 
     @ApiOperation({
@@ -111,7 +97,14 @@ export class UserController {
     })
     @Get('my')
     async getMyProfile(@CurrentUser() userId: string): Promise<GetMyResponse> {
-        return await this.userReader.readProfile(userId);
+        const profile = await this.userReader.readProfile(userId);
+        const equipmentState =
+            await this.equipmentReader.readEquipmentState(userId);
+
+        return {
+            ...profile,
+            equipmentState,
+        };
     }
 
     @ApiOperation({

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { ProductType, ProductOrder } from 'src/presentation/dto/shared';
+import { ProductOrder } from 'src/presentation/dto/shared';
 import { login } from 'test/helper/login';
 
 describe('Products Input Validation (e2e)', () => {
@@ -43,7 +43,7 @@ describe('Products Input Validation (e2e)', () => {
             const { accessToken } = await login(app);
 
             const query = {
-                category: ProductType.AURA,
+                category: 'AURA',
                 order: 'old',
                 limit: 20,
                 page: 1,
@@ -60,7 +60,7 @@ describe('Products Input Validation (e2e)', () => {
             const { accessToken } = await login(app);
 
             const query = {
-                category: ProductType.AURA,
+                category: 'AURA',
                 order: ProductOrder.LATEST,
                 limit: 20,
                 page: 0,
@@ -77,7 +77,7 @@ describe('Products Input Validation (e2e)', () => {
             const { accessToken } = await login(app);
 
             const query = {
-                category: ProductType.AURA,
+                category: 'AURA',
                 order: ProductOrder.LATEST,
                 limit: 0,
                 page: 1,
@@ -94,7 +94,7 @@ describe('Products Input Validation (e2e)', () => {
             const { accessToken } = await login(app);
 
             const query = {
-                category: ProductType.AURA,
+                category: 'AURA',
                 order: ProductOrder.LATEST,
                 limit: 31,
                 page: 1,

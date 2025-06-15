@@ -47,6 +47,7 @@ model User {
   goldTransactions       GoldTransaction[]
   userOwnedItems         UserOwnedItem[]
   islands                Island[]
+  equippedItems          Equipment[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -157,12 +158,15 @@ model Item {
   name        String   @db.VarChar(50)
   description String   @db.VarChar(200)
   type        String   @db.VarChar(50)
+  itemType    Int      @default(0) @map("item_type") @db.SmallInt
   key         String   @db.VarChar(50)
   grade       Int      @default(0) @db.SmallInt
+  image       String
   createdAt   DateTime @map("created_at")
 
   products       Product[]
   userOwnedItems UserOwnedItem[]
+  equippedItems  Equipment[]
 
   @@map("item")
 }
@@ -172,6 +176,7 @@ model Product {
   name        String    @db.VarChar(50)
   description String    @db.VarChar(200)
   price       Int
+  productType Int       @map("product_type") @db.SmallInt
   coverImage  String    @map("cover_image")
   itemId      String    @map("item_id") @db.Uuid
   createdAt   DateTime  @map("created_at")
@@ -241,4 +246,19 @@ model UserOwnedItem {
   @@index([userId])
   @@index([itemId])
   @@map("user_owned_item")
+}
+
+model Equipment {
+  userId    String   @map("user_id") @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  slot      Int      @db.SmallInt
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+  item Item @relation(fields: [itemId], references: [id])
+
+  @@id([userId, slot])
+  @@index([itemId])
+  @@map("equipment")
 }
