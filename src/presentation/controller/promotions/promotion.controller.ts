@@ -14,7 +14,7 @@ export class PromotionController {
         description: '프로모션 조회 성공',
         type: [GetAllPromotionResponse],
     })
-    @Get()
+    @Get('all')
     async getAll(): Promise<GetAllPromotionResponse> {
         const promotions = await this.promotionReader.readAll();
         return { promotions };

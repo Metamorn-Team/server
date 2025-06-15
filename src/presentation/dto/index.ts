@@ -10,3 +10,5 @@ export * from './files';
 export * from './tags';
 export * from './items';
 export * from './equiptments';
+export * from './promotions';
+export * from './promotion-product';
