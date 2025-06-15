@@ -33,7 +33,7 @@ describe('PromotionController (e2e)', () => {
         await app.close();
     });
 
-    describe('GET /promotions - 진행 중인 모든 프로모션 조회', () => {
+    describe('GET /promotions/all - 진행 중인 모든 프로모션 조회', () => {
         const promotions = Array.from({ length: 5 }, (_, i) =>
             generatePromotion({
                 description: `프로모션 ${i}입니다`,
@@ -50,7 +50,7 @@ describe('PromotionController (e2e)', () => {
             const { accessToken } = await login(app);
 
             const response = (await request(app.getHttpServer())
-                .get('/promotions')
+                .get('/promotions/all')
                 .set(
                     'Authorization',
                     accessToken,
@@ -79,7 +79,7 @@ describe('PromotionController (e2e)', () => {
             const { accessToken } = await login(app);
 
             const response = (await request(app.getHttpServer())
-                .get('/promotions')
+                .get('/promotions/all')
                 .set(
                     'Authorization',
                     accessToken,

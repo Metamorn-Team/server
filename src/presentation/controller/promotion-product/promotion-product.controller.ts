@@ -4,7 +4,7 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
 import { PromotionProductReader } from 'src/domain/components/promotion-product/promotion-product-reader';
 import { GetPromotionProductListRequest } from 'src/presentation/dto/promotion-product/request/get-promotion-product-list.request';
-import { GetProductListResponseV2 } from 'types';
+import { GetProductListResponseV2 } from 'src/presentation/dto/product/response/get-product-list.response-v2';
 
 @LivislandController('promotion-products')
 export class PromotionProductController {
