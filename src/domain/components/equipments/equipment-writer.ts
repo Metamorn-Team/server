@@ -28,4 +28,8 @@ export class EquipmentWriter {
             itemId,
         });
     }
+
+    async delete(userId: string, slot: SlotType) {
+        await this.equipmentRepository.delete(userId, SlotTypeEnum[slot]);
+    }
 }

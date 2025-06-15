@@ -18,4 +18,8 @@ export class EquipmentService {
             slot: SlotTypeEnum[slot],
         });
     }
+
+    async unequipItem(userId: string, slot: SlotType) {
+        await this.equipmentWriter.delete(userId, slot);
+    }
 }

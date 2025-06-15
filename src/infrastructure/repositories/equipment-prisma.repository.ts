@@ -112,4 +112,15 @@ export class EquipmentPrismaRepository implements EquipmentRepository {
 
         return map;
     }
+
+    async delete(userId: string, slot: SlotTypeEnum): Promise<void> {
+        await this.txHost.tx.equipment.delete({
+            where: {
+                userId_slot: {
+                    userId,
+                    slot,
+                },
+            },
+        });
+    }
 }
