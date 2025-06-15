@@ -26,6 +26,14 @@ enum OAuthProvider {
   NAVER
 }
 
+model Admin {
+  id       String @id @db.Uuid
+  username String @unique
+  password String
+
+  @@map("admin")
+}
+
 model User {
   id        String        @id @db.Uuid
   email     String        @db.VarChar(255)
@@ -157,7 +165,6 @@ model Item {
   id          String   @id @db.Uuid
   name        String   @db.VarChar(50)
   description String   @db.VarChar(200)
-  type        String   @db.VarChar(50)
   itemType    Int      @default(0) @map("item_type") @db.SmallInt
   key         String   @db.VarChar(50)
   grade       Int      @default(0) @db.SmallInt
@@ -172,24 +179,53 @@ model Item {
 }
 
 model Product {
-  id          String    @id @db.Uuid
-  name        String    @db.VarChar(50)
-  description String    @db.VarChar(200)
-  price       Int
-  productType Int       @map("product_type") @db.SmallInt
-  coverImage  String    @map("cover_image")
-  itemId      String    @map("item_id") @db.Uuid
-  createdAt   DateTime  @map("created_at")
-  updatedAt   DateTime  @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
+  id                String    @id @db.Uuid
+  name              String    @db.VarChar(50)
+  description       String    @db.VarChar(200)
+  price             Int
+  productType       Int       @map("product_type") @db.SmallInt
+  coverImage        String    @map("cover_image")
+  itemId            String    @map("item_id") @db.Uuid
+  createdAt         DateTime  @map("created_at")
+  updatedAt         DateTime  @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+  productCategoryId String?   @db.Uuid
 
-  purchases Purchase[]
-
-  item              Item    @relation(fields: [itemId], references: [id])
-  productCategoryId String? @db.Uuid
+  purchases         Purchase[]
+  item              Item              @relation(fields: [itemId], references: [id])
+  promotionProducts PromotionProduct?
 
   @@index([itemId])
   @@map("product")
+}
+
+model Promotion {
+  id          String   @id @db.Uuid
+  name        String
+  type        Int      @db.SmallInt
+  description String   @db.VarChar(100)
+  startedAt   DateTime @map("started_at")
+  endedAt     DateTime @map("ended_at")
+
+  promotionProducts PromotionProduct[]
+
+  @@map("promotion")
+}
+
+// productId, promotionId는 변경 가능한 데이터여야해서 id 따로 둠
+// product와 1:1
+model PromotionProduct {
+  id           String @id @db.Uuid
+  productId    String @unique @map("product_id") @db.Uuid
+  promotionId  String @map("promotion_id") @db.Uuid
+  discountRate Float? @map("discount_rate")
+
+  product   Product   @relation(fields: [productId], references: [id])
+  promotion Promotion @relation(fields: [promotionId], references: [id])
+
+  @@index([promotionId])
+  @@index([productId])
+  @@map("promotion_product")
 }
 
 model ProductCategory {

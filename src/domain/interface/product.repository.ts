@@ -1,3 +1,4 @@
+import { ItemTypeEnum } from 'src/domain/types/item.types';
 import {
     ProductOrderBy,
     Product,
@@ -7,7 +8,7 @@ import {
 } from 'src/domain/types/product.types';
 
 export interface ProductRepository {
-    findByCategory(
+    findByType(
         userId: string,
         type: ProductTypeEnum,
         page: number,
@@ -18,7 +19,7 @@ export interface ProductRepository {
 
     findByIds(ids: string[]): Promise<ProductForPurchase[]>;
 
-    countByType(type: string): Promise<number>;
+    countByType(type: ItemTypeEnum): Promise<number>;
 }
 
 export const ProductRepository = Symbol('ProductRepository');

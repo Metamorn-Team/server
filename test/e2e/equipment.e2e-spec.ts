@@ -42,7 +42,6 @@ describe('EquipmentController (e2e)', () => {
             const item = generateItem({
                 name: '장착용 오라',
                 description: '테스트용 오라입니다',
-                type: 'AURA',
                 key: 'test-aura-key',
                 itemType: ItemTypeEnum.AURA,
                 grade: ItemGradeEnum.NORMAL,
@@ -78,7 +77,6 @@ describe('EquipmentController (e2e)', () => {
             const item1 = generateItem({
                 name: '첫 번째 오라',
                 description: '기존 오라',
-                type: 'AURA',
                 key: 'first-aura-key',
                 itemType: ItemTypeEnum.AURA,
                 grade: ItemGradeEnum.NORMAL,
@@ -95,7 +93,6 @@ describe('EquipmentController (e2e)', () => {
             const item2 = generateItem({
                 name: '두 번째 오라',
                 description: '덮어쓸 오라',
-                type: 'AURA',
                 key: 'second-aura-key',
                 itemType: ItemTypeEnum.AURA,
                 grade: ItemGradeEnum.NORMAL,
