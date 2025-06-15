@@ -1,9 +1,10 @@
-import { Body, Get, Post } from '@nestjs/common';
+import { Body, Delete, Get, Param, ParseEnumPipe, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { EquipmentService } from 'src/domain/services/equipments/equipement.service';
+import { SlotType, slotTypes } from 'src/domain/types/equipment.types';
 import { EquipRequest } from 'src/presentation/dto/equiptments/request/equip.request';
 import { EquipmentStateResponse } from 'src/presentation/dto/equiptments/response/equipped-items.response';
 
@@ -42,5 +43,21 @@ export class EquipmentController {
         const equipmentState =
             await this.equipmentReader.readEquipmentState(userId);
         return { equipmentState };
+    }
+
+    @ApiOperation({
+        summary: '창작한 아이템 해제',
+        description: '자신이 장착하고 있는 아이템을 해제하는 기능',
+    })
+    @ApiResponse({
+        status: 204,
+        description: '해제 성공',
+    })
+    @Delete(':slot')
+    async unequipItem(
+        @CurrentUser() userId: string,
+        @Param('slot', new ParseEnumPipe(slotTypes)) slot: SlotType,
+    ) {
+        await this.equipmentsService.unequipItem(userId, slot);
     }
 }

@@ -14,6 +14,7 @@ export interface EquipmentRepository {
     findEquippedByUserIds(
         userIds: string[],
     ): Promise<Record<string, Equipped[]>>;
+    delete(userId: string, slot: SlotTypeEnum): Promise<void>;
 }
 
 export const EquipmentRepository = Symbol('EquipmentRepository');
