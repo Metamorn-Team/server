@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ProductRepository } from 'src/domain/interface/product.repository';
-import { convertNumberToItemGrade } from 'src/domain/types/item.types';
+import {
+    convertNumberToItemGrade,
+    ItemTypeEnum,
+} from 'src/domain/types/item.types';
 import {
     convertNumberToProductType,
     Product,
@@ -15,7 +18,7 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 export class ProductPrismaRepository implements ProductRepository {
     constructor(private readonly prisma: PrismaService) {}
 
-    async findByCategory(
+    async findByType(
         userId: string,
         type: ProductTypeEnum,
         page: number,
@@ -74,11 +77,16 @@ export class ProductPrismaRepository implements ProductRepository {
     }
 
     async findByIds(ids: string[]): Promise<ProductForPurchase[]> {
-        return await this.prisma.product.findMany({
+        const result = await this.prisma.product.findMany({
             select: {
                 id: true,
                 price: true,
                 itemId: true,
+                promotionProducts: {
+                    select: {
+                        discountRate: true,
+                    },
+                },
             },
             where: {
                 id: {
@@ -86,13 +94,25 @@ export class ProductPrismaRepository implements ProductRepository {
                 },
             },
         });
+
+        return result.map((row) => {
+            return {
+                id: row.id,
+                itemId: row.itemId,
+                originPrice: row.price,
+                discountRate:
+                    row.promotionProducts !== null
+                        ? row.promotionProducts.discountRate
+                        : null,
+            };
+        });
     }
 
-    async countByType(type: string): Promise<number> {
+    async countByType(type: ItemTypeEnum): Promise<number> {
         return await this.prisma.product.count({
             where: {
                 item: {
-                    type,
+                    itemType: type,
                 },
             },
         });

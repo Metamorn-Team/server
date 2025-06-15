@@ -46,7 +46,6 @@ describe('ItemController (e2e)', () => {
                 generateItem({
                     name: `오라${i}`,
                     description: `설명${i}`,
-                    type: 'AURA',
                     itemType: ItemTypeEnum.AURA,
                     key: `aura_key_${i}`,
                     grade: ItemGradeEnum.NORMAL,

@@ -5,6 +5,7 @@ import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.en
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
+import { PromotionEntity } from 'src/domain/entities/promotion/promotion.entity';
 import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
 import { TagEntity } from 'src/domain/entities/tag/tag.entity';
 import { UserOwnedItemEntity } from 'src/domain/entities/user-owned-items/user-owned-item.entity';
@@ -18,6 +19,7 @@ import {
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
 import { ProductTypeEnum } from 'src/domain/types/product.types';
+import { PromotionTypeEnum } from 'src/domain/types/promotion.types';
 import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
 import { Provider } from 'src/shared/types';
 import { v4 } from 'uuid';
@@ -132,7 +134,6 @@ export const generateItem = (partial?: Partial<ItemEntity>) => {
         partial?.id || v4(),
         partial?.name || '오라',
         partial?.description || '멋진 오라',
-        partial?.type || 'aura',
         partial?.itemType || ItemTypeEnum.AURA,
         partial?.key || 'aura-1',
         partial?.grade || ItemGradeEnum.NORMAL,
@@ -223,4 +224,20 @@ export const generateEquipment = (
 ): EquipmentEntity => {
     const stdDate = new Date();
     return new EquipmentEntity(userId, itemId, slot, stdDate, stdDate);
+};
+
+export const generatePromotion = (
+    partial?: Partial<PromotionEntity>,
+): PromotionEntity => {
+    const stdDate = new Date();
+    return new PromotionEntity(
+        partial?.id || v4(),
+        partial?.name || '오픈 기념',
+        partial?.type || PromotionTypeEnum.LAUNCH,
+        partial?.description || '오픈 기념 무료 이벤트',
+        partial?.startedAt || stdDate,
+        partial?.endedAt ||
+            // 1달
+            new Date(stdDate.getTime() + 1000 * 60 * 60 * 24 * 30),
+    );
 };

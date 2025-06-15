@@ -11,8 +11,11 @@ import { ProductOrder } from 'src/presentation/dto/shared';
 import { GetProductListResponse } from 'src/presentation/dto/product/response/get-product-list.response';
 import {
     convertNumberToItemGrade,
+    convertNumberToItemType,
     ItemGradeEnum,
+    ItemTypeEnum,
 } from 'src/domain/types/item.types';
+import { GetProductListResponseV2 } from 'src/presentation/dto/product/response/get-product-list.response-v2';
 
 describe('ProductController (e2e)', () => {
     let app: INestApplication;
@@ -43,7 +46,7 @@ describe('ProductController (e2e)', () => {
             generateItem({
                 name: `오라${i}`,
                 description: `오라 설명${i}`,
-                type: 'AURA',
+                itemType: ItemTypeEnum.AURA,
                 key: `aura${i}`,
                 grade: ItemGradeEnum.NORMAL,
                 createdAt: new Date(Date.now() + i),
@@ -70,21 +73,21 @@ describe('ProductController (e2e)', () => {
                 limit: 7,
             };
             const page1 = (await request(app.getHttpServer())
-                .get('/products')
+                .get('/products/v2')
                 .query({ ...query, page: 1 })
                 .set(
                     'Authorization',
                     accessToken,
                 )) as ResponseResult<GetProductListResponse>;
             const page2 = (await request(app.getHttpServer())
-                .get('/products')
+                .get('/products/v2')
                 .query({ ...query, page: 2 })
                 .set(
                     'Authorization',
                     accessToken,
                 )) as ResponseResult<GetProductListResponse>;
             const page3 = (await request(app.getHttpServer())
-                .get('/products')
+                .get('/products/v2')
                 .query({ ...query, page: 3 })
                 .set(
                     'Authorization',
@@ -108,19 +111,23 @@ describe('ProductController (e2e)', () => {
         it('저렴한 순 조회 정상 동작', async () => {
             const { accessToken } = await login(app);
 
-            const expectedProducts = products
-                .map((product, i) => ({
-                    id: product.id,
-                    price: product.price,
-                    coverImage: product.coverImage,
-                    name: auras[i].name,
-                    description: auras[i].description,
-                    type: auras[i].type,
-                    key: auras[i].key,
-                    grade: convertNumberToItemGrade(auras[i].grade),
-                    purchasedStatus: 'NONE',
-                }))
-                .sort((a, b) => (a.price > b.price ? 1 : -1));
+            const expectedProducts: GetProductListResponseV2['products'] =
+                products
+                    .map((product, i) => ({
+                        id: product.id,
+                        originPrice: product.price,
+                        saledPrice: null,
+                        discountRate: null,
+                        promotionName: null,
+                        coverImage: product.coverImage,
+                        name: auras[i].name,
+                        description: auras[i].description,
+                        type: convertNumberToItemType(auras[i].itemType),
+                        key: auras[i].key,
+                        grade: convertNumberToItemGrade(auras[i].grade),
+                        purchasedStatus: 'NONE' as const,
+                    }))
+                    .sort((a, b) => (a.originPrice > b.originPrice ? 1 : -1));
 
             const query: GetProductListRequest = {
                 type: 'AURA',
@@ -129,12 +136,12 @@ describe('ProductController (e2e)', () => {
                 page: 1,
             };
             const response = (await request(app.getHttpServer())
-                .get('/products')
+                .get('/products/v2')
                 .query(query)
                 .set(
                     'Authorization',
                     accessToken,
-                )) as ResponseResult<GetProductListResponse>;
+                )) as ResponseResult<GetProductListResponseV2>;
             const { body, status } = response;
 
             expect(status).toEqual(HttpStatus.OK);
@@ -145,19 +152,23 @@ describe('ProductController (e2e)', () => {
         it('비싼 순 조회 정상 동작', async () => {
             const { accessToken } = await login(app);
 
-            const expectedProducts = products
-                .map((product, i) => ({
-                    id: product.id,
-                    price: product.price,
-                    coverImage: product.coverImage,
-                    name: auras[i].name,
-                    description: auras[i].description,
-                    type: auras[i].type,
-                    key: auras[i].key,
-                    grade: convertNumberToItemGrade(auras[i].grade),
-                    purchasedStatus: 'NONE',
-                }))
-                .sort((a, b) => (a.price < b.price ? 1 : -1));
+            const expectedProducts: GetProductListResponseV2['products'] =
+                products
+                    .map((product, i) => ({
+                        id: product.id,
+                        originPrice: product.price,
+                        saledPrice: null,
+                        discountRate: null,
+                        promotionName: null,
+                        coverImage: product.coverImage,
+                        name: auras[i].name,
+                        description: auras[i].description,
+                        type: convertNumberToItemType(auras[i].itemType),
+                        key: auras[i].key,
+                        grade: convertNumberToItemGrade(auras[i].grade),
+                        purchasedStatus: 'NONE' as const,
+                    }))
+                    .sort((a, b) => (a.originPrice < b.originPrice ? 1 : -1));
 
             const query: GetProductListRequest = {
                 type: 'AURA',
@@ -166,7 +177,7 @@ describe('ProductController (e2e)', () => {
                 page: 1,
             };
             const response = (await request(app.getHttpServer())
-                .get('/products')
+                .get('/products/v2')
                 .query(query)
                 .set(
                     'Authorization',
@@ -181,25 +192,29 @@ describe('ProductController (e2e)', () => {
         it('최신 순 조회 정상 동작', async () => {
             const { accessToken } = await login(app);
 
-            const expectedProducts = products
-                .map((product, i) => ({
-                    id: product.id,
-                    price: product.price,
-                    coverImage: product.coverImage,
-                    name: auras[i].name,
-                    description: auras[i].description,
-                    type: auras[i].type,
-                    key: auras[i].key,
-                    grade: convertNumberToItemGrade(auras[i].grade),
-                    createdAt: product.createdAt,
-                    purchasedStatus: 'NONE',
-                }))
-                .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-                .map((product) => {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { createdAt, ...rest } = product;
-                    return rest;
-                });
+            const expectedProducts: GetProductListResponseV2['products'] =
+                products
+                    .map((product, i) => ({
+                        id: product.id,
+                        originPrice: product.price,
+                        saledPrice: null,
+                        discountRate: null,
+                        promotionName: null,
+                        coverImage: product.coverImage,
+                        name: auras[i].name,
+                        description: auras[i].description,
+                        type: convertNumberToItemType(auras[i].itemType),
+                        key: auras[i].key,
+                        grade: convertNumberToItemGrade(auras[i].grade),
+                        createdAt: product.createdAt,
+                        purchasedStatus: 'NONE' as const,
+                    }))
+                    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+                    .map((product) => {
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        const { createdAt, ...rest } = product;
+                        return rest;
+                    });
 
             const query: GetProductListRequest = {
                 type: 'AURA',
@@ -208,7 +223,7 @@ describe('ProductController (e2e)', () => {
                 page: 1,
             };
             const response = (await request(app.getHttpServer())
-                .get('/products')
+                .get('/products/v2')
                 .query(query)
                 .set(
                     'Authorization',

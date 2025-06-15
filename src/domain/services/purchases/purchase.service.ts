@@ -38,7 +38,13 @@ export class PurchaseService {
         this.checkProductsExist(products, productIds);
         await this.checkIsPurchased(buyerId, productIds);
 
-        const totalPrice = products.reduce((total, p) => total + p.price, 0);
+        const totalPrice = products.reduce((total, p) => {
+            if (p.discountRate !== null) {
+                return total + this.discount(p.discountRate, p.originPrice);
+            }
+            return total + p.originPrice;
+        }, 0);
+
         const goldBalance = await this.userReader.getGoldBalanceById(buyerId);
 
         const remainingGold = this.calculateGoldBalance(
@@ -56,6 +62,10 @@ export class PurchaseService {
             purchases,
             userOwnedItems,
         );
+    }
+
+    discount(rate: number, origin: number) {
+        return Math.floor(origin * (1 - rate));
     }
 
     @Transactional()
@@ -82,7 +92,12 @@ export class PurchaseService {
     ) {
         const purchases = PurchaseEntity.createBulk(
             buyerId,
-            products.map((p) => ({ goldAmount: p.price, productId: p.id })),
+            products.map((p) => ({
+                goldAmount: p.discountRate
+                    ? this.discount(p.discountRate, p.originPrice)
+                    : p.originPrice,
+                productId: p.id,
+            })),
             v4,
         );
 
