@@ -20,6 +20,7 @@ import {
     CreatedIslandResponse,
     GetLiveIslandListResponse,
 } from 'src/presentation/dto';
+import { v4 } from 'uuid';
 
 describe('LobyGateway (e2e)', () => {
     let app: INestApplication;
@@ -50,6 +51,8 @@ describe('LobyGateway (e2e)', () => {
     afterEach(async () => {
         await redis.flushall();
         await db.islandTag.deleteMany();
+        await db.playerSpawnPoint.deleteMany();
+        await db.map.deleteMany();
         await db.island.deleteMany();
         await db.tag.deleteMany();
         await db.user.deleteMany();
@@ -68,12 +71,24 @@ describe('LobyGateway (e2e)', () => {
         });
 
         it('섬 생성 정상 동작', async () => {
+            const map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'island',
+                    name: '섬',
+                    description: '섬 설명',
+                    image: 'https://example.com/image.png',
+                    createdAt: new Date(),
+                },
+            });
+
             const dto: CreateIslandRequest = {
                 coverImage: 'https://example.com/image.png',
                 description: '섬 설명',
                 maxMembers: 5,
                 name: '섬 이름',
                 tags: [tag.name],
+                mapKey: map.key,
             };
             socket.emit('createIsland', dto);
 

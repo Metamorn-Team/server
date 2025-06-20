@@ -69,6 +69,7 @@ export const generateIsland = (
         partial?.type ?? IslandTypeEnum.DESERTED,
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
+        partial?.mapId || v4(),
         partial?.ownerId,
         partial?.tag || 'dev',
         partial?.name,
