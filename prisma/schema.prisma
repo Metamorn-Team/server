@@ -304,7 +304,7 @@ model Equipment {
 
 model Map {
   id String @id @db.Uuid
-  key String @db.VarChar(50)
+  key String @db.VarChar(50) @unique
   name String @db.VarChar(50)
   description String @db.VarChar(200)
   image String
