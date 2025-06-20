@@ -14,10 +14,10 @@ import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { IslandManagerFactory } from 'src/domain/components/islands/factory/island-manager-factory';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
-import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
+import { MapReader } from 'src/domain/components/map/map-reader';
 
 @Injectable()
 export class GameIslandService {
@@ -35,7 +35,7 @@ export class GameIslandService {
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
 
         private readonly islandManagerFactory: IslandManagerFactory,
-        private readonly lockManager: RedisTransactionManager,
+        private readonly mapReader: MapReader,
     ) {}
 
     async getAvailableDesertedIsland() {
@@ -55,9 +55,13 @@ export class GameIslandService {
     }
 
     async createIsland() {
+        const maps = await this.mapReader.readAll();
+        const map = maps[Math.floor(Math.random() * maps.length)];
+
         const island = await this.islandWriter.create({
             type: IslandTypeEnum.DESERTED,
             maxMembers: DESERTED_MAX_MEMBERS,
+            mapId: map.id,
         });
 
         return this.createLiveIsland(island.id);

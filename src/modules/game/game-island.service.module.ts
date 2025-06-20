@@ -7,6 +7,7 @@ import { DesertedIslandStorageComponentModule } from 'src/modules/islands/desert
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
 import { IslandManagerFactoryModule } from 'src/modules/islands/island-manager-factory.module';
 import { NormalIslandStorageComponentModule } from 'src/modules/islands/normal-island-storage-component.module';
+import { MapComponentModule } from 'src/modules/map/map-component.module';
 import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
 import { UserComponentModule } from 'src/modules/users/users-component.module';
 
@@ -20,6 +21,7 @@ import { UserComponentModule } from 'src/modules/users/users-component.module';
         DesertedIslandStorageComponentModule,
         NormalIslandStorageComponentModule,
         IslandManagerFactoryModule,
+        MapComponentModule,
         RedisTransactionManagerModule,
     ],
     providers: [GameIslandService],
