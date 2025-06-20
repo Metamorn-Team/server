@@ -35,7 +35,10 @@ export interface Island {
 
 export interface JoinedIslandInfo {
     readonly activePlayers: PlayerWithEquippedItems[];
-    readonly joinedIslandId: string;
+    readonly joinedIsland: {
+        id: string;
+        mapKey: string;
+    };
     readonly joinedPlayer: PlayerWithEquippedItems;
 }
 

@@ -5,7 +5,11 @@ import { UserReader } from 'src/domain/components/users/user-reader';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player } from 'src/domain/models/game/player';
-import { JoinedIslandInfo, SocketClientId } from 'src/domain/types/game.types';
+import {
+    JoinedIslandInfo,
+    LiveIsland,
+    SocketClientId,
+} from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
@@ -54,7 +58,7 @@ export class GameIslandService {
         ];
     }
 
-    async createIsland() {
+    async createIsland(): Promise<LiveIsland> {
         const maps = await this.mapReader.readAll();
         const map = maps[Math.floor(Math.random() * maps.length)];
 
@@ -104,7 +108,11 @@ export class GameIslandService {
 
         return {
             activePlayers,
-            joinedIslandId: island.id,
+            joinedIsland: {
+                id: island.id,
+                // TODO required로 변경되면 default 제거
+                mapKey: island.mapKey || 'island',
+            },
             joinedPlayer: { ...player, equipmentState },
         };
     }
@@ -114,7 +122,7 @@ export class GameIslandService {
         clientId: string,
         x: number,
         y: number,
-    ) {
+    ): Promise<JoinedIslandInfo> {
         const user = await this.userReader.readProfile(playerId);
         const manager = this.islandManagerFactory.get(IslandTypeEnum.DESERTED);
 
@@ -143,7 +151,11 @@ export class GameIslandService {
 
         return {
             activePlayers,
-            joinedIslandId: islandId,
+            joinedIsland: {
+                id: joinableIsland.id,
+                // TODO required로 변경되면 default 제거
+                mapKey: joinableIsland.mapKey || 'island',
+            },
             joinedPlayer: { ...player, equipmentState },
         };
     }

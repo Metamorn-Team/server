@@ -83,7 +83,7 @@ export class IslandGateway
 
         this.logger.log(`joined player : ${userId}`);
 
-        const { activePlayers, joinedIslandId, joinedPlayer } =
+        const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinDesertedIsland(
                 userId,
                 client.id,
@@ -91,10 +91,12 @@ export class IslandGateway
                 y,
             );
 
-        await client.join(joinedIslandId);
-        client.emit('playerJoinSuccess', { x, y });
+        await client.join(joinedIsland.id);
+        client.emit('playerJoinSuccess', { x, y, mapKey: joinedIsland.mapKey });
         client.emit('activePlayers', activePlayers);
-        client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
+        client
+            .to(joinedIsland.id)
+            .emit('playerJoin', { ...joinedPlayer, x, y });
     }
 
     @SubscribeMessage('joinNormalIsland')
@@ -109,7 +111,7 @@ export class IslandGateway
 
         this.logger.log(`joined player : ${userId}`);
 
-        const { activePlayers, joinedIslandId, joinedPlayer } =
+        const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinNormalIsland(
                 userId,
                 client.id,
@@ -118,10 +120,12 @@ export class IslandGateway
                 y,
             );
 
-        await client.join(joinedIslandId);
-        client.emit('playerJoinSuccess', { x, y });
+        await client.join(joinedIsland.id);
+        client.emit('playerJoinSuccess', { x, y, mapKey: joinedIsland.mapKey });
         client.emit('activePlayers', activePlayers);
-        client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
+        client
+            .to(joinedIsland.id)
+            .emit('playerJoin', { ...joinedPlayer, x, y });
     }
 
     @SubscribeMessage('playerLeft')
