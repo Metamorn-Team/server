@@ -22,6 +22,7 @@ import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { MapReader } from 'src/domain/components/map/map-reader';
+import { PlayerSpawnPointReader } from 'src/domain/components/player-spawn-point/player-spawn-point-reader';
 
 @Injectable()
 export class GameIslandService {
@@ -40,6 +41,7 @@ export class GameIslandService {
 
         private readonly islandManagerFactory: IslandManagerFactory,
         private readonly mapReader: MapReader,
+        private readonly playerSpawnPointReader: PlayerSpawnPointReader,
     ) {}
 
     async getAvailableDesertedIsland() {
@@ -79,12 +81,15 @@ export class GameIslandService {
         playerId: string,
         clientId: string,
         islandId: string,
-        x: number,
-        y: number,
     ): Promise<JoinedIslandInfo> {
         const user = await this.userReader.readProfile(playerId);
         const island = await this.normalIslandStorageReader.readOne(islandId);
         const manager = this.islandManagerFactory.get(IslandTypeEnum.NORMAL);
+
+        // TODO 기본 값 제거
+        const spawnPoint = await this.playerSpawnPointReader.readRandomPoint(
+            island.mapKey || 'island',
+        );
 
         const player = Player.create({
             id: user.id,
@@ -94,8 +99,8 @@ export class GameIslandService {
             roomId: islandId,
             islandType: island.type,
             tag: user.tag,
-            x,
-            y,
+            x: spawnPoint.x,
+            y: spawnPoint.y,
             radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
         const equipmentState = await this.equipmentReader.readEquipmentState(
@@ -120,13 +125,15 @@ export class GameIslandService {
     async joinDesertedIsland(
         playerId: string,
         clientId: string,
-        x: number,
-        y: number,
     ): Promise<JoinedIslandInfo> {
         const user = await this.userReader.readProfile(playerId);
         const manager = this.islandManagerFactory.get(IslandTypeEnum.DESERTED);
 
         const joinableIsland = await this.getAvailableDesertedIsland();
+        // TODO 기본 값 제거
+        const spawnPoint = await this.playerSpawnPointReader.readRandomPoint(
+            joinableIsland.mapKey || 'island',
+        );
 
         const { id: islandId, type } = joinableIsland;
         const player = Player.create({
@@ -137,8 +144,8 @@ export class GameIslandService {
             islandType: type,
             tag: user.tag,
             roomId: islandId,
-            x,
-            y,
+            x: spawnPoint.x,
+            y: spawnPoint.y,
             radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
         const equipmentState = await this.equipmentReader.readEquipmentState(
