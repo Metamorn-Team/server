@@ -19,7 +19,6 @@ import {
     IslandToClient,
 } from 'src/presentation/dto/game/socket/type';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
-import { JoinDesertedIslandReqeust } from 'src/presentation/dto/game/request/join-deserted-island.request';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
@@ -75,26 +74,22 @@ export class IslandGateway
     @SubscribeMessage('joinDesertedIsland')
     async handleJoinDesertedIsland(
         @ConnectedSocket() client: TypedSocket,
-        @MessageBody() data: JoinDesertedIslandReqeust,
         @CurrentUserFromSocket() userId: string,
     ) {
         await this.kick(userId, client);
-        const { x, y } = data;
 
         this.logger.log(`joined player : ${userId}`);
 
-        const { activePlayers, joinedIslandId, joinedPlayer } =
-            await this.gameIslandService.joinDesertedIsland(
-                userId,
-                client.id,
-                x,
-                y,
-            );
+        const { activePlayers, joinedIsland, joinedPlayer } =
+            await this.gameIslandService.joinDesertedIsland(userId, client.id);
+        const { x, y } = joinedPlayer;
 
-        await client.join(joinedIslandId);
-        client.emit('playerJoinSuccess', { x, y });
+        await client.join(joinedIsland.id);
+        client.emit('playerJoinSuccess', { x, y, mapKey: joinedIsland.mapKey });
         client.emit('activePlayers', activePlayers);
-        client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
+        client
+            .to(joinedIsland.id)
+            .emit('playerJoin', { ...joinedPlayer, x, y });
     }
 
     @SubscribeMessage('joinNormalIsland')
@@ -105,23 +100,24 @@ export class IslandGateway
     ) {
         await this.kick(userId, client);
 
-        const { x, y, islandId } = data;
+        const { islandId } = data;
 
         this.logger.log(`joined player : ${userId}`);
 
-        const { activePlayers, joinedIslandId, joinedPlayer } =
+        const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinNormalIsland(
                 userId,
                 client.id,
                 islandId,
-                x,
-                y,
             );
+        const { x, y } = joinedPlayer;
 
-        await client.join(joinedIslandId);
-        client.emit('playerJoinSuccess', { x, y });
+        await client.join(joinedIsland.id);
+        client.emit('playerJoinSuccess', { x, y, mapKey: joinedIsland.mapKey });
         client.emit('activePlayers', activePlayers);
-        client.to(joinedIslandId).emit('playerJoin', { ...joinedPlayer, x, y });
+        client
+            .to(joinedIsland.id)
+            .emit('playerJoin', { ...joinedPlayer, x, y });
     }
 
     @SubscribeMessage('playerLeft')

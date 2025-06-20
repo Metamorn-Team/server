@@ -45,6 +45,8 @@ describe('IslandGateway (e2e)', () => {
     afterEach(async () => {
         await redis.flushall();
         await db.islandTag.deleteMany();
+        await db.playerSpawnPoint.deleteMany();
+        await db.map.deleteMany();
         await db.islandJoin.deleteMany();
         await db.island.deleteMany();
         await db.user.deleteMany();
@@ -56,6 +58,26 @@ describe('IslandGateway (e2e)', () => {
 
     describe('일반 섬 입장', () => {
         it('동시에 여러 회원이 입장을 요청해도 최대 인원 이상 참여되지 않는다. (Race condition)', async () => {
+            const map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'island',
+                    name: '섬',
+                    description: '섬 설명',
+                    image: 'https://example.com/image.png',
+                    createdAt: new Date(),
+                },
+            });
+            await db.playerSpawnPoint.create({
+                data: {
+                    id: v4(),
+                    mapId: map.id,
+                    x: 0,
+                    y: 0,
+                    createdAt: new Date(),
+                },
+            });
+
             const island: LiveNormalIsland = {
                 id: v4(),
                 coverImage: 'http://test.com',
@@ -67,6 +89,7 @@ describe('IslandGateway (e2e)', () => {
                 tags: ['자유'],
                 type: IslandTypeEnum.NORMAL,
                 ownerId: v4(),
+                mapKey: map.key,
             };
             await normalIslandStorage.createIsland(island);
 
@@ -95,8 +118,6 @@ describe('IslandGateway (e2e)', () => {
                         });
 
                         socket.emit('joinNormalIsland', {
-                            x: 0,
-                            y: 0,
                             islandId: island.id,
                         });
                     });
@@ -114,6 +135,26 @@ describe('IslandGateway (e2e)', () => {
 
     describe('무인도 입장', () => {
         it('동시에 여러 회원이 입장을 요청해도 최대 인원 이상 참여되지 않는다. (Race condition)', async () => {
+            const map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'island',
+                    name: '섬',
+                    description: '섬 설명',
+                    image: 'https://example.com/image.png',
+                    createdAt: new Date(),
+                },
+            });
+            await db.playerSpawnPoint.create({
+                data: {
+                    id: v4(),
+                    mapId: map.id,
+                    x: 0,
+                    y: 0,
+                    createdAt: new Date(),
+                },
+            });
+
             const island: LiveDesertedIsland = {
                 id: v4(),
                 max: 3,
@@ -153,10 +194,7 @@ describe('IslandGateway (e2e)', () => {
                             res();
                         });
 
-                        socket.emit('joinDesertedIsland', {
-                            x: 0,
-                            y: 0,
-                        });
+                        socket.emit('joinDesertedIsland');
                     });
                 }),
             );

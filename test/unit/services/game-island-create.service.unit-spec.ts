@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Map } from '@prisma/client';
 import Redis from 'ioredis';
 import { ClsModule } from 'nestjs-cls';
 import { clsOptions } from 'src/configs/cls/cls-config';
@@ -15,6 +16,7 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-create-service.module';
 import { generateTag, generateUserEntityV2 } from 'test/helper/generators';
+import { v4 } from 'uuid';
 
 describe('GameIslandService', () => {
     let app: TestingModule;
@@ -47,6 +49,8 @@ describe('GameIslandService', () => {
     afterEach(async () => {
         await redis.flushall();
         await db.islandTag.deleteMany();
+        await db.playerSpawnPoint.deleteMany();
+        await db.map.deleteMany();
         await db.tag.deleteMany();
         await db.island.deleteMany();
         await db.user.deleteMany();
@@ -55,22 +59,34 @@ describe('GameIslandService', () => {
     describe('섬 생성', () => {
         const user = generateUserEntityV2();
         const tag = generateTag('자유');
-
-        const prototype: NormalIslandPrototype = {
-            maxMembers: 5,
-            type: IslandTypeEnum.NORMAL,
-            coverImage: 'https://example.com/cover.jpg',
-            description: '섬 설명',
-            name: '섬 이름',
-            ownerId: user.id,
-        };
+        let map: Map;
 
         beforeEach(async () => {
             await db.user.create({ data: user });
             await db.tag.create({ data: tag });
+            map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'island',
+                    name: '섬',
+                    description: '섬 설명',
+                    image: 'https://example.com/image.png',
+                    createdAt: new Date(),
+                },
+            });
         });
 
         it('섬 생성 정상 동작', async () => {
+            const prototype: NormalIslandPrototype = {
+                maxMembers: 5,
+                type: IslandTypeEnum.NORMAL,
+                coverImage: 'https://example.com/cover.jpg',
+                description: '섬 설명',
+                name: '섬 이름',
+                ownerId: user.id,
+                mapKey: map.key,
+            };
+
             await gameIslandCreateService.create(prototype, [tag.name]);
 
             const createdIslandInDb = await db.island.findFirst();
@@ -83,6 +99,16 @@ describe('GameIslandService', () => {
         });
 
         it('태그가 1가 미만인 경우 예외가 발생한다.', async () => {
+            const prototype: NormalIslandPrototype = {
+                maxMembers: 5,
+                type: IslandTypeEnum.NORMAL,
+                coverImage: 'https://example.com/cover.jpg',
+                description: '섬 설명',
+                name: '섬 이름',
+                ownerId: user.id,
+                mapKey: map.key,
+            };
+
             await expect(
                 gameIslandCreateService.create(prototype, []),
             ).rejects.toThrow(

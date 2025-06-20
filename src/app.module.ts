@@ -25,6 +25,7 @@ import { ItemModule } from 'src/modules/items/item.module';
 import { EquipmentModule } from 'src/modules/equipments/equipment.module';
 import { PromotionModule } from 'src/modules/promotions/promotion.module';
 import { PromotionProductModule } from 'src/modules/promotion-product/promotion-product.module';
+import { MapModule } from 'src/modules/map/map.module';
 
 @Module({
     imports: [
@@ -49,6 +50,7 @@ import { PromotionProductModule } from 'src/modules/promotion-product/promotion-
         EquipmentModule,
         PromotionModule,
         PromotionProductModule,
+        MapModule,
 
         LoaderModule,
     ],

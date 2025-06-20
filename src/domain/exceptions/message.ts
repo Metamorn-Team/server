@@ -26,3 +26,4 @@ export const TAG_AT_LEAST_ONE_MESSAGE =
 export const LOCK_ACQUIRED_FAILED_MESSAGE = (key: string) =>
     `lock 획득 실패: ${key}`;
 export const TOO_MANY_PARTICIPANTS_MESSAGE = '참여 인원이 너무 많습니다.';
+export const MAP_NOT_FOUND_MESSAG = '존재하지 않는 맵입니다.';

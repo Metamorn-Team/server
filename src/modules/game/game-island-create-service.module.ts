@@ -3,6 +3,7 @@ import { GameIslandCreateService } from 'src/domain/services/game/game-island-cr
 import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-component.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
 import { NormalIslandStorageComponentModule } from 'src/modules/islands/normal-island-storage-component.module';
+import { MapComponentModule } from 'src/modules/map/map-component.module';
 import { TagComponentModule } from 'src/modules/tags/tag-component.module';
 import { UserComponentModule } from 'src/modules/users/users-component.module';
 
@@ -13,6 +14,7 @@ import { UserComponentModule } from 'src/modules/users/users-component.module';
         IslandComponentModule,
         TagComponentModule,
         IslandTagComponentModule,
+        MapComponentModule,
     ],
     providers: [GameIslandCreateService],
     exports: [GameIslandCreateService],

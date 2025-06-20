@@ -69,6 +69,7 @@ export const generateIsland = (
         partial?.type ?? IslandTypeEnum.DESERTED,
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
+        partial?.mapId || v4(),
         partial?.ownerId,
         partial?.tag || 'dev',
         partial?.name,
@@ -189,6 +190,7 @@ export const generateDesertedIslandModel = (
         max: partial?.max || 4,
         players: partial?.players || new Set(),
         type: IslandTypeEnum.DESERTED,
+        mapKey: partial?.mapKey || 'island',
     };
 };
 
@@ -206,6 +208,7 @@ export const generateNormalIslandModel = (
         name: partial?.name || 'Island name',
         tags: partial?.tags || ['tag1', 'tag2'],
         ownerId: partial?.ownerId || v4(),
+        mapKey: partial?.mapKey || 'island',
     };
 };
 
