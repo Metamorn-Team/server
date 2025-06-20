@@ -312,6 +312,7 @@ model Map {
 
   islands Island[]
   spawnZones SpawnZone[]
+  playerSpawnPoints PlayerSpawnPoint[]
   
   @@map("map")
 }
@@ -342,5 +343,18 @@ model SpawnZone {
 
   @@map("spawn_zone")
   @@index([spawnObjectId])
+  @@index([mapId])
+}
+
+model PlayerSpawnPoint {
+  id        String  @id @db.Uuid
+  mapId     String  @db.Uuid @map("map_id")
+  x         Int     @db.SmallInt
+  y         Int     @db.SmallInt
+  createdAt DateTime @map("created_at")
+
+  map       Map @relation(fields: [mapId], references: [id])
+
+  @@map("player_spawn_point")
   @@index([mapId])
 }
