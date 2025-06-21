@@ -16,7 +16,10 @@ export class PromotionProductPrismaRepository
 {
     constructor(private readonly prisma: PrismaService) {}
 
-    async findByProductIds(productIds: string[]): Promise<PromotionForCalc[]> {
+    async findByProductIds(
+        productIds: string[],
+        now = new Date(),
+    ): Promise<PromotionForCalc[]> {
         const result = await this.prisma.promotionProduct.findMany({
             select: {
                 discountRate: true,
@@ -31,6 +34,14 @@ export class PromotionProductPrismaRepository
             where: {
                 productId: {
                     in: productIds,
+                },
+                promotion: {
+                    startedAt: {
+                        lte: now,
+                    },
+                    endedAt: {
+                        gt: now,
+                    },
                 },
             },
         });
