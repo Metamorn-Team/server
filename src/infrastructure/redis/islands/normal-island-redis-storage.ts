@@ -53,6 +53,7 @@ export class NormalIslandRedisStorage implements NormalIslandStorage {
             tags,
             players: new Set(players),
             ownerId: islandInfo.ownerId,
+            mapKey: islandInfo.mapKey,
         };
     }
 
