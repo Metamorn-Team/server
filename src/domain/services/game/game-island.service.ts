@@ -7,6 +7,7 @@ import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player } from 'src/domain/models/game/player';
 import {
     JoinedIslandInfo,
+    LiveDesertedIsland,
     LiveIsland,
     SocketClientId,
 } from 'src/domain/types/game.types';
@@ -70,7 +71,7 @@ export class GameIslandService {
             mapId: map.id,
         });
 
-        return this.createLiveIsland(island.id);
+        return this.createLiveIsland(island.id, map.key);
     }
 
     getIsland(islandId: string) {
@@ -176,16 +177,17 @@ export class GameIslandService {
         });
     }
 
-    async createLiveIsland(islandId: string) {
-        const island = {
+    async createLiveIsland(islandId: string, mapKey: string) {
+        const liveIsland: LiveDesertedIsland = {
             id: islandId,
             max: DESERTED_MAX_MEMBERS,
             players: new Set<SocketClientId>(),
             type: IslandTypeEnum.DESERTED,
+            mapKey,
         };
-        await this.desertedIslandStorageWriter.create(island);
+        await this.desertedIslandStorageWriter.create(liveIsland);
 
-        return island;
+        return liveIsland;
     }
 
     async handleLeave(player: Player) {

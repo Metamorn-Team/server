@@ -10,7 +10,6 @@ import {
     IsArray,
     ArrayMaxSize,
     ArrayMinSize,
-    IsOptional,
 } from 'class-validator';
 
 export class CreateIslandRequest {
@@ -47,8 +46,7 @@ export class CreateIslandRequest {
     readonly tags: string[];
 
     @ApiProperty({ example: 'island' })
-    @IsOptional()
     @Length(1, 50)
     @IsString()
-    readonly mapKey?: string;
+    readonly mapKey: string;
 }

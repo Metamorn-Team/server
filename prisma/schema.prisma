@@ -92,7 +92,7 @@ model FriendRequest {
 model Island {
   id          String    @id @db.Uuid
   ownerId     String?   @db.Uuid
-  mapId       String?   @db.Uuid
+  mapId       String   @db.Uuid
   name        String?   @db.VarChar(50)
   description String?   @db.VarChar(200)
   coverImage  String?   @map("cover_image")

@@ -8,7 +8,7 @@ export interface LiveIsland {
     players: Set<string>;
     type: IslandTypeEnum;
     max: number;
-    mapKey?: string;
+    mapKey: string;
 }
 
 export type LiveDesertedIsland = LiveIsland;

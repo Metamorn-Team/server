@@ -19,8 +19,11 @@ import {
     CanJoinIslandResponse,
     CreatedIslandResponse,
     GetLiveIslandListResponse,
+    WsErrorBody,
+    WsExceptions,
 } from 'src/presentation/dto';
 import { v4 } from 'uuid';
+import { Map } from '@prisma/client';
 
 describe('LobyGateway (e2e)', () => {
     let app: INestApplication;
@@ -52,8 +55,8 @@ describe('LobyGateway (e2e)', () => {
         await redis.flushall();
         await db.islandTag.deleteMany();
         await db.playerSpawnPoint.deleteMany();
-        await db.map.deleteMany();
         await db.island.deleteMany();
+        await db.map.deleteMany();
         await db.tag.deleteMany();
         await db.user.deleteMany();
     });
@@ -65,13 +68,11 @@ describe('LobyGateway (e2e)', () => {
 
     describe('섬 생성', () => {
         const tag = generateTag('자유');
+        let map: Map;
 
         beforeEach(async () => {
             await db.tag.create({ data: tag });
-        });
-
-        it('섬 생성 정상 동작', async () => {
-            const map = await db.map.create({
+            map = await db.map.create({
                 data: {
                     id: v4(),
                     key: 'island',
@@ -81,7 +82,9 @@ describe('LobyGateway (e2e)', () => {
                     createdAt: new Date(),
                 },
             });
+        });
 
+        it('섬 생성 정상 동작', async () => {
             const dto: CreateIslandRequest = {
                 coverImage: 'https://example.com/image.png',
                 description: '섬 설명',
@@ -107,6 +110,128 @@ describe('LobyGateway (e2e)', () => {
             expect(island?.tags).toEqual([tag.name]);
             expect(island?.type).toEqual(IslandTypeEnum.NORMAL);
             expect(island?.players.size).toEqual(0);
+        });
+
+        it('mapKey가 없는 경우 섬 생성 실패', async () => {
+            const dto = {
+                coverImage: 'https://example.com/image.png',
+                description: '섬 설명',
+                maxMembers: 5,
+                name: '섬 이름',
+                tags: [tag.name],
+            };
+            socket.emit('createIsland', dto as CreateIslandRequest);
+
+            const response = await waitForEvent<WsErrorBody>(socket, 'wsError');
+
+            expect(response.name).toEqual(WsExceptions.BAD_INPUT);
+        });
+
+        it('name이 없는 경우 섬 생성 실패', async () => {
+            const dto = {
+                coverImage: 'https://example.com/image.png',
+                description: '섬 설명',
+                maxMembers: 5,
+                tags: [tag.name],
+                mapKey: map.key,
+            };
+            socket.emit('createIsland', dto as CreateIslandRequest);
+
+            const response = await waitForEvent<WsErrorBody>(socket, 'wsError');
+
+            expect(response.name).toEqual(WsExceptions.BAD_INPUT);
+        });
+
+        it('description이 없는 경우 섬 생성 실패', async () => {
+            const dto = {
+                coverImage: 'https://example.com/image.png',
+                maxMembers: 5,
+                name: '섬 이름',
+                tags: [tag.name],
+                mapKey: map.key,
+            };
+            socket.emit('createIsland', dto as CreateIslandRequest);
+
+            const response = await waitForEvent<WsErrorBody>(socket, 'wsError');
+
+            expect(response.name).toEqual(WsExceptions.BAD_INPUT);
+        });
+
+        it('maxMembers가 없는 경우 섬 생성 실패', async () => {
+            const dto = {
+                coverImage: 'https://example.com/image.png',
+                description: '섬 설명',
+                name: '섬 이름',
+                tags: [tag.name],
+                mapKey: map.key,
+            };
+            socket.emit('createIsland', dto as CreateIslandRequest);
+
+            const response = await waitForEvent<WsErrorBody>(socket, 'wsError');
+
+            expect(response.name).toEqual(WsExceptions.BAD_INPUT);
+        });
+
+        it('maxMembers가 5보다 큰 경우 섬 생성 실패', async () => {
+            const dto = {
+                coverImage: 'https://example.com/image.png',
+                description: '섬 설명',
+                name: '섬 이름',
+                maxMembers: 6,
+                tags: [tag.name],
+                mapKey: map.key,
+            };
+            socket.emit('createIsland', dto as CreateIslandRequest);
+
+            const response = await waitForEvent<WsErrorBody>(socket, 'wsError');
+
+            expect(response.name).toEqual(WsExceptions.BAD_INPUT);
+        });
+
+        it('maxMembers가 1보다 작은 경우 섬 생성 실패', async () => {
+            const dto = {
+                coverImage: 'https://example.com/image.png',
+                description: '섬 설명',
+                name: '섬 이름',
+                maxMembers: 0,
+                tags: [tag.name],
+                mapKey: map.key,
+            };
+            socket.emit('createIsland', dto as CreateIslandRequest);
+
+            const response = await waitForEvent<WsErrorBody>(socket, 'wsError');
+
+            expect(response.name).toEqual(WsExceptions.BAD_INPUT);
+        });
+
+        it('coverImage가 없는 경우 섬 생성 실패', async () => {
+            const dto = {
+                description: '섬 설명',
+                maxMembers: 5,
+                name: '섬 이름',
+                tags: [tag.name],
+                mapKey: map.key,
+            };
+            socket.emit('createIsland', dto as CreateIslandRequest);
+
+            const response = await waitForEvent<WsErrorBody>(socket, 'wsError');
+
+            expect(response.name).toEqual(WsExceptions.BAD_INPUT);
+        });
+
+        it('tags가 없는 경우 섬 생성 실패', async () => {
+            const dto = {
+                coverImage: 'https://example.com/image.png',
+                description: '섬 설명',
+                maxMembers: 5,
+                name: '섬 이름',
+                mapKey: map.key,
+            };
+            socket.emit('createIsland', dto as CreateIslandRequest);
+
+            const response = await waitForEvent<WsErrorBody>(socket, 'wsError');
+
+            expect(response.name).toEqual(WsExceptions.BAD_INPUT);
         });
     });
 
@@ -147,7 +272,7 @@ describe('LobyGateway (e2e)', () => {
         });
     });
 
-    describe('섬의 활성 일반 섬 조회', () => {
+    describe('활성 일반 섬 조회', () => {
         const islands = Array.from({ length: 10 }, (_, i) =>
             generateNormalIslandModel({
                 name: `섬 ${i + 1}`,

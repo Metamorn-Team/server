@@ -50,9 +50,9 @@ describe('GameIslandService', () => {
         await redis.flushall();
         await db.islandTag.deleteMany();
         await db.playerSpawnPoint.deleteMany();
+        await db.island.deleteMany();
         await db.map.deleteMany();
         await db.tag.deleteMany();
-        await db.island.deleteMany();
         await db.user.deleteMany();
     });
 
