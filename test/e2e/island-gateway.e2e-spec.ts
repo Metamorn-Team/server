@@ -160,6 +160,7 @@ describe('IslandGateway (e2e)', () => {
                 max: 3,
                 players: new Set<string>(),
                 type: IslandTypeEnum.DESERTED,
+                mapKey: map.key,
             };
             await desertedIslandStorage.createIsland(island);
             await db.island.create({
