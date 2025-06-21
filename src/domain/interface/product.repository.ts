@@ -17,7 +17,10 @@ export interface ProductRepository {
         sort: Sort,
     ): Promise<Product[]>;
 
-    findByIds(ids: string[]): Promise<ProductForPurchase[]>;
+    findByIdsForPurchase(
+        ids: string[],
+        now?: Date,
+    ): Promise<ProductForPurchase[]>;
 
     countByType(type: ItemTypeEnum): Promise<number>;
 }

@@ -148,6 +148,58 @@ describe('PurchaseController (e2e)', () => {
             expect(goldTranasction?.balance).toEqual(user?.gold);
         });
 
+        it('종료된 프로모션이 적용된 상품은 원가로 구매된다', async () => {
+            const { userId, accessToken } = await login(app);
+
+            // 종료된 프로모션 생성 및 상품 연결
+            const product = products[0];
+            const endedPromotion = {
+                id: v4(),
+                name: '종료된 프로모션',
+                type: 0,
+                description: '종료된 프로모션입니다',
+                startedAt: new Date(Date.now() - 2000), // 2초 전 시작
+                endedAt: new Date(Date.now() - 1000), // 1초 전 종료
+            };
+            const promotionProduct = {
+                id: v4(),
+                productId: product.id,
+                promotionId: endedPromotion.id,
+                discountRate: 0.5,
+            };
+
+            await db.promotion.create({ data: endedPromotion });
+            await db.promotionProduct.create({ data: promotionProduct });
+
+            // 원가로 구매
+            const totalPrice = product.price;
+
+            await db.user.update({
+                data: { gold: totalPrice },
+                where: { id: userId },
+            });
+
+            const dto: PurchaseRequest = {
+                productIds: [product.id],
+            };
+
+            const response = await request(app.getHttpServer())
+                .post('/purchases')
+                .send(dto)
+                .set('Authorization', accessToken);
+            const { status } = response;
+
+            const purchases = await db.purchase.findMany();
+            const goldTranasction = await db.goldTransaction.findFirst();
+            const user = await db.user.findUnique({ where: { id: userId } });
+
+            expect(status).toEqual(HttpStatus.CREATED);
+            expect(purchases.length).toEqual(1);
+            expect(goldTranasction?.amount).toEqual(totalPrice);
+            expect(user?.gold).toEqual(0);
+            expect(goldTranasction?.balance).toEqual(user?.gold);
+        });
+
         it('골드 잔액이 부족한 경우 예외가 발생한다', async () => {
             const { userId, accessToken } = await login(app);
 
