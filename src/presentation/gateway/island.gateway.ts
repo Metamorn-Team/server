@@ -26,6 +26,8 @@ import { WsConnectionAuthenticator } from 'src/common/ws-auth/ws-connection-auth
 import { WsExceptions } from 'src/presentation/dto/game/socket/known-exception';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { checkAppVersion } from 'test/unit/utils/check-app-version';
+import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
+import { IslandActiveObject } from 'types';
 
 type TypedSocket = Socket<
     ClientToIsland,
@@ -56,6 +58,7 @@ export class IslandGateway
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly gameService: GameService,
         private readonly gameIslandService: GameIslandService,
+        private readonly islandActiveObjectReader: IslandActiveObjectReader,
     ) {}
 
     async kick(userId: string, client: TypedSocket) {
@@ -82,10 +85,20 @@ export class IslandGateway
 
         const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinDesertedIsland(userId, client.id);
+
+        const activeObjects = this.islandActiveObjectReader
+            .readAll(joinedIsland.id)
+            .map((object) => IslandActiveObject.fromActiveObject(object));
+
         const { x, y } = joinedPlayer;
 
         await client.join(joinedIsland.id);
-        client.emit('playerJoinSuccess', { x, y, mapKey: joinedIsland.mapKey });
+        client.emit('playerJoinSuccess', {
+            x,
+            y,
+            mapKey: joinedIsland.mapKey,
+            activeObjects,
+        });
         client.emit('activePlayers', activePlayers);
         client
             .to(joinedIsland.id)
@@ -110,10 +123,18 @@ export class IslandGateway
                 client.id,
                 islandId,
             );
+        const activeObjects = this.islandActiveObjectReader
+            .readAll(joinedIsland.id)
+            .map((object) => IslandActiveObject.fromActiveObject(object));
         const { x, y } = joinedPlayer;
 
         await client.join(joinedIsland.id);
-        client.emit('playerJoinSuccess', { x, y, mapKey: joinedIsland.mapKey });
+        client.emit('playerJoinSuccess', {
+            x,
+            y,
+            mapKey: joinedIsland.mapKey,
+            activeObjects,
+        });
         client.emit('activePlayers', activePlayers);
         client
             .to(joinedIsland.id)

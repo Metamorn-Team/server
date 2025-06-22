@@ -16,6 +16,7 @@ import { GameIslandServiceModule } from 'src/modules/game/game-island.service.mo
 import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-create-service.module';
 import { IslandSettingsGateway } from 'src/presentation/gateway/island-settings.gateway';
 import { IslandServiceModule } from 'src/modules/islands/island-service.module';
+import { IslandActiveObjectComponentModule } from 'src/modules/island-spawn-objects/island-active-object-component.module';
 
 @Module({
     imports: [
@@ -31,6 +32,7 @@ import { IslandServiceModule } from 'src/modules/islands/island-service.module';
         GameIslandCreateServiceModule,
         GameServiceModule,
         GameIslandServiceModule,
+        IslandActiveObjectComponentModule,
     ],
     providers: [
         LobyGateway,
