@@ -14,6 +14,7 @@ import { IslandTagWriter } from 'src/domain/components/island-tags/island-tag-wr
 import { NormalIslandStorageWriter } from 'src/domain/components/islands/normal-storage/normal-island-storage-writer';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { MapReader } from 'src/domain/components/map/map-reader';
+import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 
 @Injectable()
 export class GameIslandCreateService {
@@ -24,6 +25,7 @@ export class GameIslandCreateService {
         private readonly tagReader: TagReader,
         private readonly islandTagWriter: IslandTagWriter,
         private readonly mapReader: MapReader,
+        private readonly islandActiveObjectSpawner: IslandActiveObjectSpawner,
     ) {}
 
     async create(input: NormalIslandPrototype, tagNames: string[]) {
@@ -60,6 +62,10 @@ export class GameIslandCreateService {
             ownerId: owner.id,
             mapKey,
         });
+        await this.islandActiveObjectSpawner.spawnInitialObjects(
+            island.id,
+            map.id,
+        );
 
         return island.id;
     }
