@@ -321,8 +321,9 @@ model Map {
 model SpawnObject {
   id String @id @db.Uuid
   name String @db.VarChar(50)
-  type Int @db.SmallInt
+  type String @db.VarChar(50)
   respawnTime Int @db.SmallInt @map("respawn_time")
+  maxHp Int @db.SmallInt @map("max_hp")
   createdAt DateTime @map("created_at")
 
   spawnZones SpawnZone[]
