@@ -165,21 +165,21 @@ export const generateTag = (name: string) => {
 
 export const generatePlayerModel = (partial?: Partial<Player>) => {
     const now = Date.now();
-    return new Player(
-        partial?.id || v4(),
-        partial?.clientId || v4(),
-        partial?.roomId || 'island-id',
-        partial?.islandType ?? IslandTypeEnum.NORMAL,
-        partial?.nickname || 'nick',
-        partial?.tag || 'tag',
-        partial?.avatarKey || 'purple_pawn',
-        partial?.x ?? 0,
-        partial?.y ?? 0,
-        partial?.radius || PLAYER_HIT_BOX.PAWN.RADIUS,
-        partial?.isFacingRight || true,
-        partial?.lastMoved || now,
-        partial?.lastActivity || now,
-    );
+    return new Player({
+        id: partial?.id || v4(),
+        clientId: partial?.clientId || v4(),
+        roomId: partial?.roomId || 'island-id',
+        islandType: partial?.islandType ?? IslandTypeEnum.NORMAL,
+        nickname: partial?.nickname || 'nick',
+        tag: partial?.tag || 'tag',
+        avatarKey: partial?.avatarKey || 'purple_pawn',
+        x: partial?.x ?? 0,
+        y: partial?.y ?? 0,
+        radius: partial?.radius || PLAYER_HIT_BOX.PAWN.RADIUS,
+        isFacingRight: partial?.isFacingRight ?? true,
+        lastMoved: partial?.lastMoved || now,
+        lastActivity: partial?.lastActivity || now,
+    });
 };
 
 export const generateDesertedIslandModel = (
