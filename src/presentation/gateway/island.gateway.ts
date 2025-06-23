@@ -27,7 +27,7 @@ import { WsExceptions } from 'src/presentation/dto/game/socket/known-exception';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { checkAppVersion } from 'test/unit/utils/check-app-version';
 import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
-import { IslandActiveObject } from 'types';
+import { IslandActiveObject } from 'src/presentation/dto/game/response/player-join-success.response';
 
 type TypedSocket = Socket<
     ClientToIsland,
