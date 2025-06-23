@@ -3,3 +3,10 @@ export const PLAYER_HIT_BOX = {
         RADIUS: 15,
     },
 };
+
+export const OBJECT_HIT_BOX = {
+    TREE: {
+        width: 30,
+        height: 20,
+    },
+};
