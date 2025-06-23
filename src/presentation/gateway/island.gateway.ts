@@ -184,7 +184,7 @@ export class IslandGateway
         // NOTE 현재는 플레이어만
         try {
             const { attacker, attackedPlayers } =
-                await this.gameService.attack(userId);
+                await this.gameService.attackPlayer(userId);
 
             this.wss.to(attacker.roomId).emit('attacked', {
                 attackerId: attacker.id,
@@ -197,10 +197,10 @@ export class IslandGateway
 
     @SubscribeMessage('strongAttack')
     async handleStrongAttack(@CurrentUserFromSocket() userId: string) {
-        // TODO 오브젝트 추가되면 공격 대상에 추가
         try {
             const { attacker, attackedPlayers } =
-                await this.gameService.attack(userId);
+                await this.gameService.attackObject(userId);
+            this.logger.debug('오브젝트 공격: ', attackedPlayers);
 
             this.wss.to(attacker.roomId).emit('strongAttacked', {
                 attackerId: attacker.id,

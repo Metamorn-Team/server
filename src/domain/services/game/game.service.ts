@@ -5,6 +5,7 @@ import { GamePlayerManager } from 'src/domain/components/game/game-player-manage
 import { GameAttackManager } from 'src/domain/components/game/game-attack-manager';
 import { LiveIsland } from 'src/domain/types/game.types';
 import { IslandStorageReaderFactory } from 'src/domain/components/islands/factory/island-storage-reader-factory';
+import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
 
 @Injectable()
 export class GameService {
@@ -13,6 +14,7 @@ export class GameService {
         private readonly gameAttackManager: GameAttackManager,
         private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
         private readonly islandStorageReaderFactory: IslandStorageReaderFactory,
+        private readonly islandActiveObjectReader: IslandActiveObjectReader,
     ) {}
 
     async move(
@@ -32,7 +34,7 @@ export class GameService {
         return player;
     }
 
-    async attack(attackerId: string) {
+    async attackPlayer(attackerId: string) {
         const attacker = this.playerMemoryStorageManager.readOne(attackerId);
         const { roomId: islandId, islandType } = attacker;
 
@@ -43,11 +45,46 @@ export class GameService {
             return { attacker, attackedPlayers: [] };
         }
 
-        const attackBox = this.gameAttackManager.calcAttackRangeBox(attacker);
-        const attackedPlayers = this.gameAttackManager.findTargetsInBox(
+        const players = this.playerMemoryStorageManager.readMany(
             Array.from(island.players),
+        );
+
+        const attackedPlayers = this.gameAttackManager.findCollidingObjects(
             attackerId,
-            attackBox,
+            attacker.getAttackBox(),
+            players.map((player) => ({
+                id: player.id,
+                hitBox: player.getHitBox(),
+            })),
+        );
+        await this.gamePlayerManager.updateLastActivity(attacker);
+
+        return {
+            attacker,
+            attackedPlayers,
+        };
+    }
+
+    async attackObject(attackerId: string) {
+        const attacker = this.playerMemoryStorageManager.readOne(attackerId);
+        const { roomId: islandId, islandType } = attacker;
+
+        const reader = this.islandStorageReaderFactory.get(islandType);
+        const island = await reader.readOne(islandId);
+
+        if (this.isIslandEmpty(island)) {
+            return { attacker, attackedPlayers: [] };
+        }
+
+        const objects = this.islandActiveObjectReader.readAll(islandId);
+
+        const attackedPlayers = this.gameAttackManager.findCollidingObjects(
+            attackerId,
+            attacker.getAttackBox(),
+            objects.map((object) => ({
+                id: object.id,
+                hitBox: object.getHitBox(),
+            })),
         );
         await this.gamePlayerManager.updateLastActivity(attacker);
 

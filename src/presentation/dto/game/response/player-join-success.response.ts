@@ -5,8 +5,8 @@ export class IslandActiveObject {
         readonly id: string,
         readonly type: string,
         readonly hp: number,
-        readonly gX: number,
-        readonly gY: number,
+        readonly x: number,
+        readonly y: number,
     ) {}
 
     static fromActiveObject(activeObject: ActiveObject): IslandActiveObject {
@@ -14,8 +14,8 @@ export class IslandActiveObject {
             activeObject.id,
             activeObject.type,
             activeObject.hp,
-            activeObject.gridX,
-            activeObject.gridY,
+            activeObject.x,
+            activeObject.y,
         );
     }
 }
