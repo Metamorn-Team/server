@@ -150,7 +150,7 @@ describe('GameService', () => {
                 attackedRight.id,
             );
 
-            const result = await gameService.attack(attacker.id);
+            const result = await gameService.attackPlayer(attacker.id);
 
             expect(result.attacker.id).toEqual(attacker.id);
             expect(result.attackedPlayers.length).toEqual(2);
@@ -187,7 +187,7 @@ describe('GameService', () => {
                 attackedPlayer2.id,
             );
 
-            const result = await gameService.attack(attacker.id);
+            const result = await gameService.attackPlayer(attacker.id);
 
             expect(result.attacker.id).toEqual(attacker.id);
             expect(result.attackedPlayers.length).toEqual(0);
