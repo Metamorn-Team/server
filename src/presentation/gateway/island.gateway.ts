@@ -181,7 +181,6 @@ export class IslandGateway
 
     @SubscribeMessage('attack')
     async handleAttack(@CurrentUserFromSocket() userId: string) {
-        // NOTE 현재는 플레이어만
         try {
             const { attacker, attackedPlayers } =
                 await this.gameService.attackPlayer(userId);
@@ -200,7 +199,6 @@ export class IslandGateway
         try {
             const { attacker, attackedPlayers } =
                 await this.gameService.attackObject(userId);
-            this.logger.debug('오브젝트 공격: ', attackedPlayers);
 
             this.wss.to(attacker.roomId).emit('strongAttacked', {
                 attackerId: attacker.id,
