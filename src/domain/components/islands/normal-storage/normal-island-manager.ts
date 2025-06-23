@@ -79,10 +79,11 @@ export class NormalIslandManager implements IslandManager {
         const equipmentMap =
             await this.equipmentReader.readEquipmentStates(playerIds);
 
-        return players.map((player) => ({
-            ...player,
-            equipmentState: equipmentMap[player.id],
-        }));
+        return players.map((player) =>
+            Object.assign(player, {
+                equipmentState: equipmentMap[player.id],
+            }),
+        );
     }
 
     async left(islandId: string, playerId: string) {

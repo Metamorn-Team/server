@@ -141,7 +141,7 @@ export class GameIslandService {
                 // TODO required로 변경되면 default 제거
                 mapKey: island.mapKey || 'island',
             },
-            joinedPlayer: { ...player, equipmentState },
+            joinedPlayer: Object.assign(player, { equipmentState }),
         };
     }
 
@@ -186,7 +186,7 @@ export class GameIslandService {
                 // TODO required로 변경되면 default 제거
                 mapKey: joinableIsland.mapKey || 'island',
             },
-            joinedPlayer: { ...player, equipmentState },
+            joinedPlayer: Object.assign(player, { equipmentState }),
         };
     }
 
