@@ -26,4 +26,8 @@ export class IslandActiveObjectStorage {
             this.islandObjectsStorage.get(islandId)?.values() || [],
         );
     }
+
+    deleteAllByIslandId(islandId: string): void {
+        this.islandObjectsStorage.delete(islandId);
+    }
 }

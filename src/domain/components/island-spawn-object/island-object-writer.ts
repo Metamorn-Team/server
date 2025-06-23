@@ -12,4 +12,8 @@ export class IslandObjectWriter {
     createMany(objects: PersistentObject[]): Promise<void> {
         return this.islandObjectStorage.createMany(objects);
     }
+
+    async deleteAllByIslandId(islandId: string): Promise<void> {
+        await this.islandObjectStorage.deleteAllByIslandId(islandId);
+    }
 }

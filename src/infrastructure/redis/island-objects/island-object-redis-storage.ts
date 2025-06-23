@@ -76,4 +76,16 @@ export class IslandObjectRedisStorage implements IslandObjectStorage {
 
         return objects;
     }
+
+    async deleteAllByIslandId(islandId: string): Promise<void> {
+        const client = this.redis.getClient();
+        const keys = await client.keys(
+            `${PERSISTENT_OBJECT_KEY(islandId, '*')}`,
+        );
+        if (keys.length === 0) return;
+
+        const pipeline = client.pipeline();
+        keys.forEach((key) => pipeline.del(key));
+        await pipeline.exec();
+    }
 }

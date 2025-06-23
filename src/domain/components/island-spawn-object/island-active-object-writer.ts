@@ -12,4 +12,8 @@ export class IslandActiveObjectWriter {
     createMany(objects: ActiveObject[]) {
         this.islandSpawnObjectMemoryStorage.createMany(objects);
     }
+
+    deleteAllByIslandId(islandId: string) {
+        this.islandSpawnObjectMemoryStorage.deleteAllByIslandId(islandId);
+    }
 }
