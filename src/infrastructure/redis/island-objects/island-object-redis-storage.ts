@@ -77,6 +77,37 @@ export class IslandObjectRedisStorage implements IslandObjectStorage {
         return objects;
     }
 
+    async readAllByIslandId(islandId: string): Promise<PersistentObject[]> {
+        const client = this.redis.getClient();
+        const keys = await client.keys(
+            `${PERSISTENT_OBJECT_KEY(islandId, '*')}`,
+        );
+        if (keys.length === 0) return [];
+
+        const pipeline = client.pipeline();
+
+        keys.forEach((key) => pipeline.hgetall(key));
+
+        const results = await pipeline.exec();
+        if (!results) throw new Error('Redis pipeline failed');
+
+        const objects: PersistentObject[] = [];
+
+        for (const result of results) {
+            const [err, data] = result;
+            if (err) continue;
+            objects.push(
+                new PersistentObject(
+                    this.parsePersistentObjectPrototype(
+                        data as Record<string, string>,
+                    ),
+                ),
+            );
+        }
+
+        return objects;
+    }
+
     async deleteAllByIslandId(islandId: string): Promise<void> {
         const client = this.redis.getClient();
         const keys = await client.keys(

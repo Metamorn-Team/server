@@ -12,4 +12,8 @@ export class IslandObjectReader {
     async readAll(): Promise<PersistentObject[]> {
         return this.islandObjectStorage.readAll();
     }
+
+    async readAllByIslandId(islandId: string): Promise<PersistentObject[]> {
+        return this.islandObjectStorage.readAllByIslandId(islandId);
+    }
 }
