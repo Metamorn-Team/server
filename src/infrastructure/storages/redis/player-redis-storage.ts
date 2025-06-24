@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
-import { Player } from 'src/domain/models/game/player';
+import { Player, PlayerPrototype } from 'src/domain/models/game/player';
 import { PLAYER_KEY } from 'src/infrastructure/redis/key';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 
@@ -8,7 +8,9 @@ import { RedisClientService } from 'src/infrastructure/redis/redis-client.servic
 export class PlayerRedisStorage implements PlayerStorage {
     constructor(private readonly redis: RedisClientService) {}
 
-    private parsePlayer(data: Record<string, string>): Player {
+    private parsePlayerPrototype(
+        data: Record<string, string>,
+    ): PlayerPrototype {
         return {
             id: data.id,
             clientId: data.clientId,
@@ -35,7 +37,9 @@ export class PlayerRedisStorage implements PlayerStorage {
         const key = PLAYER_KEY(playerId);
         const data = await this.redis.getClient().hgetall(key);
 
-        return Object.keys(data).length === 0 ? null : this.parsePlayer(data);
+        return Object.keys(data).length === 0
+            ? null
+            : Player.create(this.parsePlayerPrototype(data));
     }
 
     async getPlayers(playerIds: string[]): Promise<Player[]> {
@@ -62,7 +66,13 @@ export class PlayerRedisStorage implements PlayerStorage {
                 typeof data === 'object' &&
                 Object.keys(data).length > 0
             ) {
-                players.push(this.parsePlayer(data as Record<string, string>));
+                players.push(
+                    Player.create(
+                        this.parsePlayerPrototype(
+                            data as Record<string, string>,
+                        ),
+                    ),
+                );
             }
         }
 
@@ -75,7 +85,7 @@ export class PlayerRedisStorage implements PlayerStorage {
         for (const key of keys) {
             const data = await this.redis.getClient().hgetall(key);
             if (data.clientId === clientId) {
-                return this.parsePlayer(data);
+                return Player.create(this.parsePlayerPrototype(data));
             }
         }
 
@@ -89,7 +99,7 @@ export class PlayerRedisStorage implements PlayerStorage {
         for (const key of keys) {
             const data = await this.redis.getClient().hgetall(key);
             if (data.roomId === islandId) {
-                players.push(this.parsePlayer(data));
+                players.push(Player.create(this.parsePlayerPrototype(data)));
             }
         }
 
@@ -124,7 +134,13 @@ export class PlayerRedisStorage implements PlayerStorage {
                 typeof data === 'object' &&
                 Object.keys(data).length > 0
             ) {
-                players.push(this.parsePlayer(data as Record<string, string>));
+                players.push(
+                    Player.create(
+                        this.parsePlayerPrototype(
+                            data as Record<string, string>,
+                        ),
+                    ),
+                );
             }
         }
 

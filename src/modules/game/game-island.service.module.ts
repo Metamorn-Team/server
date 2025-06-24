@@ -3,6 +3,7 @@ import { GameIslandService } from 'src/domain/services/game/game-island.service'
 import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-transaction-manger.module';
 import { EquipmentComponentModule } from 'src/modules/equipments/equipment-component.module';
 import { IslandJoinComponentModule } from 'src/modules/island-joins/island-join-component.module';
+import { IslandActiveObjectSpawnerModule } from 'src/modules/island-spawn-objects/island-active-object-spawner.module';
 import { DesertedIslandStorageComponentModule } from 'src/modules/islands/deserted-island-storage-component.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
 import { IslandManagerFactoryModule } from 'src/modules/islands/island-manager-factory.module';
@@ -24,6 +25,7 @@ import { UserComponentModule } from 'src/modules/users/users-component.module';
         IslandManagerFactoryModule,
         MapComponentModule,
         PlayerSpawnPointComponentModule,
+        IslandActiveObjectSpawnerModule,
         RedisTransactionManagerModule,
     ],
     providers: [GameIslandService],

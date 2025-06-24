@@ -1,56 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
-import { PlayerMemoryStorageManager } from 'src/domain/components/users/player-memory-storage-manager';
-import { Player } from 'src/domain/models/game/player';
-import { Circle, Rectangle } from 'src/domain/types/game.types';
-import { isCircleInRect } from 'src/utils/game/collision';
+import { CollidableObject } from 'src/domain/models/game/player';
+import { Rectangle } from 'src/domain/types/game.types';
+import { isColliding } from 'src/utils/game/collision';
 
+// TODO 의존성 없어서 함수로 분리하고 굳이 주입 안 해도 될듯함.
 @Injectable()
 export class GameAttackManager {
-    constructor(
-        private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
-    ) {}
-
-    calcAttackRangeBox(attacker: Player) {
-        // TODO 아바타 추가되면 avatarKey에 따라 분기
-        // 공격 박스의 끝부분이 캐릭터 중심 좌표에 있음
-        const boxSize = ATTACK_BOX_SIZE.PAWN;
-        const attackBox = {
-            x: attacker.isFacingRight
-                ? attacker.x + boxSize.width / 2
-                : attacker.x - boxSize.width / 2,
-            y: attacker.y,
-            width: boxSize.width,
-            height: boxSize.height,
-        };
-
-        return attackBox;
-    }
-
-    findTargetsInBox(
-        playerIds: string[],
+    findCollidingObjects(
         attackerId: string,
         attackRangeBox: Rectangle,
+        objects: CollidableObject[],
     ) {
-        return playerIds.reduce((acc, playerId) => {
-            if (playerId === attackerId) return acc;
-            let player: Player;
+        return objects.reduce((acc, object) => {
+            if (object.id === attackerId) return acc;
 
-            try {
-                player = this.playerMemoryStorageManager.readOne(playerId);
-            } catch (_) {
-                return acc;
-            }
-
-            if (this.isInAttackBox(player, attackRangeBox)) {
-                acc.push(player);
+            if (isColliding(object.hitBox, attackRangeBox)) {
+                acc.push(object);
             }
             return acc;
-        }, [] as Player[]);
-    }
-
-    isInAttackBox(target: Circle, box: Rectangle) {
-        const isHit = isCircleInRect(target, box);
-        return isHit;
+        }, [] as CollidableObject[]);
     }
 }

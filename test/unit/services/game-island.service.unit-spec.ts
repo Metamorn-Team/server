@@ -4,6 +4,10 @@ import { Map } from '@prisma/client';
 import Redis from 'ioredis';
 import { ClsModule } from 'nestjs-cls';
 import { clsOptions } from 'src/configs/cls/cls-config';
+import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
+import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
+import { IslandObjectReader } from 'src/domain/components/island-spawn-object/island-object-reader';
+import { IslandObjectWriter } from 'src/domain/components/island-spawn-object/island-object-writer';
 import { DesertedIslandManager } from 'src/domain/components/islands/deserted-storage/deserted-island-manager';
 import { NormalIslandManager } from 'src/domain/components/islands/normal-storage/normal-island-manager';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
@@ -19,10 +23,14 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { PlayerMemoryStorage } from 'src/infrastructure/storages/player-memory-storage';
 import { GameIslandServiceModule } from 'src/modules/game/game-island.service.module';
+import { IslandActiveObjectComponentModule } from 'src/modules/island-spawn-objects/island-active-object-component.module';
+import { IslandObjectComponentModule } from 'src/modules/island-spawn-objects/island-object-component.module';
 import {
+    generateActiveObject,
     generateDesertedIslandModel,
     generateIsland,
     generateNormalIslandModel,
+    generatePersistentObject,
     generatePlayerModel,
     generateUserEntityV2,
 } from 'test/helper/generators';
@@ -37,6 +45,11 @@ describe('GameIslandService', () => {
     let desertedIslandStorage: DesertedIslandStorage;
     let gameIslandService: GameIslandService;
 
+    let islandObjectReader: IslandObjectReader;
+    let islandActiveObjectReader: IslandActiveObjectReader;
+    let islandObjectWriter: IslandObjectWriter;
+    let islandActiveObjectWriter: IslandActiveObjectWriter;
+
     let normalIslandManager: NormalIslandManager;
     let desertedIslandManager: DesertedIslandManager;
 
@@ -46,6 +59,8 @@ describe('GameIslandService', () => {
                 GameIslandServiceModule,
                 PrismaModule,
                 ClsModule.forRoot(clsOptions),
+                IslandObjectComponentModule,
+                IslandActiveObjectComponentModule,
             ],
         }).compile();
 
@@ -60,6 +75,14 @@ describe('GameIslandService', () => {
         normalIslandManager = app.get<NormalIslandManager>(NormalIslandManager);
         desertedIslandManager = app.get<DesertedIslandManager>(
             DesertedIslandManager,
+        );
+        islandObjectReader = app.get<IslandObjectReader>(IslandObjectReader);
+        islandActiveObjectReader = app.get<IslandActiveObjectReader>(
+            IslandActiveObjectReader,
+        );
+        islandObjectWriter = app.get<IslandObjectWriter>(IslandObjectWriter);
+        islandActiveObjectWriter = app.get<IslandActiveObjectWriter>(
+            IslandActiveObjectWriter,
         );
     });
 
@@ -265,7 +288,13 @@ describe('GameIslandService', () => {
             expect(islandAfterLeave?.players.has(me.id)).toEqual(false);
         });
 
-        it('섬 이탈 시 참여 인원이 0명일 경우 섬을 삭제한다', async () => {
+        it('섬 이탈 시 참여 인원이 0명일 경우 모든 오브젝트를 제거하고 섬을 삭제한다', async () => {
+            // redis에 영속화된 object, memory에 캐싱된 object 생성
+            const object = generatePersistentObject(liveIsland.id);
+            const activeObject = generateActiveObject(liveIsland.id);
+            await islandObjectWriter.createMany([object]);
+            islandActiveObjectWriter.createMany([activeObject]);
+
             // 플레이어 생성 및 섬 참여
             const me = generatePlayerModel({ roomId: liveIsland.id });
 
@@ -278,9 +307,17 @@ describe('GameIslandService', () => {
             const islandAfterLeave = await normalIslandStorage.getIsland(
                 liveIsland.id,
             );
+            const deletedObject = await islandObjectReader.readAllByIslandId(
+                liveIsland.id,
+            );
+            const deletedActiveObject = islandActiveObjectReader.readAll(
+                liveIsland.id,
+            );
 
             expect(leavedPlayer).toBeNull();
             expect(islandAfterLeave).toBeNull();
+            expect(deletedObject.length).toEqual(0);
+            expect(deletedActiveObject.length).toEqual(0);
         });
 
         it('섬 이탈 중 예외가 발생하면 이전 동작이 롤백된다', async () => {

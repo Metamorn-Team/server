@@ -24,6 +24,7 @@ import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { MapReader } from 'src/domain/components/map/map-reader';
 import { PlayerSpawnPointReader } from 'src/domain/components/player-spawn-point/player-spawn-point-reader';
+import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 
 @Injectable()
 export class GameIslandService {
@@ -43,6 +44,7 @@ export class GameIslandService {
         private readonly islandManagerFactory: IslandManagerFactory,
         private readonly mapReader: MapReader,
         private readonly playerSpawnPointReader: PlayerSpawnPointReader,
+        private readonly islandActiveObjectSpawner: IslandActiveObjectSpawner,
     ) {}
 
     async getAvailableDesertedIsland() {
@@ -61,6 +63,19 @@ export class GameIslandService {
         ];
     }
 
+    async createLiveIsland(islandId: string, mapKey: string) {
+        const liveIsland: LiveDesertedIsland = {
+            id: islandId,
+            max: DESERTED_MAX_MEMBERS,
+            players: new Set<SocketClientId>(),
+            type: IslandTypeEnum.DESERTED,
+            mapKey,
+        };
+        await this.desertedIslandStorageWriter.create(liveIsland);
+
+        return liveIsland;
+    }
+
     async createIsland(): Promise<LiveIsland> {
         const maps = await this.mapReader.readAll();
         const map = maps[Math.floor(Math.random() * maps.length)];
@@ -71,7 +86,14 @@ export class GameIslandService {
             mapId: map.id,
         });
 
-        return this.createLiveIsland(island.id, map.key);
+        const liveIsland = await this.createLiveIsland(island.id, map.key);
+        // 오브젝트 초기화
+        await this.islandActiveObjectSpawner.spawnInitialObjects(
+            island.id,
+            map.id,
+        );
+
+        return liveIsland;
     }
 
     getIsland(islandId: string) {
@@ -119,7 +141,7 @@ export class GameIslandService {
                 // TODO required로 변경되면 default 제거
                 mapKey: island.mapKey || 'island',
             },
-            joinedPlayer: { ...player, equipmentState },
+            joinedPlayer: Object.assign(player, { equipmentState }),
         };
     }
 
@@ -164,7 +186,7 @@ export class GameIslandService {
                 // TODO required로 변경되면 default 제거
                 mapKey: joinableIsland.mapKey || 'island',
             },
-            joinedPlayer: { ...player, equipmentState },
+            joinedPlayer: Object.assign(player, { equipmentState }),
         };
     }
 
@@ -175,19 +197,6 @@ export class GameIslandService {
                 e,
             );
         });
-    }
-
-    async createLiveIsland(islandId: string, mapKey: string) {
-        const liveIsland: LiveDesertedIsland = {
-            id: islandId,
-            max: DESERTED_MAX_MEMBERS,
-            players: new Set<SocketClientId>(),
-            type: IslandTypeEnum.DESERTED,
-            mapKey,
-        };
-        await this.desertedIslandStorageWriter.create(liveIsland);
-
-        return liveIsland;
     }
 
     async handleLeave(player: Player) {

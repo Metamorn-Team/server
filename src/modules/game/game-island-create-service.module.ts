@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GameIslandCreateService } from 'src/domain/services/game/game-island-create.service';
+import { IslandActiveObjectSpawnerModule } from 'src/modules/island-spawn-objects/island-active-object-spawner.module';
 import { IslandTagComponentModule } from 'src/modules/island-tags/island-tag-component.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
 import { NormalIslandStorageComponentModule } from 'src/modules/islands/normal-island-storage-component.module';
@@ -15,6 +16,7 @@ import { UserComponentModule } from 'src/modules/users/users-component.module';
         TagComponentModule,
         IslandTagComponentModule,
         MapComponentModule,
+        IslandActiveObjectSpawnerModule,
     ],
     providers: [GameIslandCreateService],
     exports: [GameIslandCreateService],

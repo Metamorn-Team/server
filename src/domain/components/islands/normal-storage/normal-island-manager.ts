@@ -2,6 +2,8 @@ import { Transactional } from '@nestjs-cls/transactional';
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
+import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
+import { IslandObjectWriter } from 'src/domain/components/island-spawn-object/island-object-writer';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
@@ -26,8 +28,10 @@ export class NormalIslandManager implements IslandManager {
         private readonly playerStorageWriter: PlayerStorageWriter,
         private readonly islandWriter: IslandWriter,
         private readonly equipmentReader: EquipmentReader,
-
         private readonly islandJoinWriter: IslandJoinWriter,
+        private readonly islandActiveObjectWriter: IslandActiveObjectWriter,
+        private readonly islandObjectWriter: IslandObjectWriter,
+
         private readonly lockManager: RedisTransactionManager,
     ) {}
 
@@ -79,10 +83,11 @@ export class NormalIslandManager implements IslandManager {
         const equipmentMap =
             await this.equipmentReader.readEquipmentStates(playerIds);
 
-        return players.map((player) => ({
-            ...player,
-            equipmentState: equipmentMap[player.id],
-        }));
+        return players.map((player) =>
+            Object.assign(player, {
+                equipmentState: equipmentMap[player.id],
+            }),
+        );
     }
 
     async left(islandId: string, playerId: string) {
@@ -180,17 +185,34 @@ export class NormalIslandManager implements IslandManager {
         await this.normalIslandStorageWriter.update(islandId, data);
     }
 
+    // 제거 실패 로깅만 하고 스케줄에서 정리해야하나 고민..
     async removeEmpty(islandId: string): Promise<void> {
         const playerCount =
             await this.normalIslandStorageReader.countPlayer(islandId);
 
         if (playerCount < 1) {
-            await this.normalIslandStorageWriter.remove(islandId);
+            try {
+                await this.normalIslandStorageWriter.remove(islandId);
+            } catch (e) {
+                this.logger.error(`메모리/Redis 섬 제거 실패: ${islandId}`, e);
+            }
+
+            try {
+                await this.islandObjectWriter.deleteAllByIslandId(islandId);
+            } catch (e) {
+                this.logger.error(`PersistentObject 제거 실패: ${islandId}`, e);
+            }
+
+            try {
+                this.islandActiveObjectWriter.deleteAllByIslandId(islandId);
+            } catch (e) {
+                this.logger.error(`ActiveObject 제거 실패: ${islandId}`, e);
+            }
 
             try {
                 await this.islandWriter.remove(islandId);
             } catch (e) {
-                this.logger.error(`빈 섬 제거 실패: ${islandId}`, e);
+                this.logger.error(`DB 섬 제거 실패: ${islandId}`, e);
             }
         }
     }
