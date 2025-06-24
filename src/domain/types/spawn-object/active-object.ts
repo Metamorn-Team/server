@@ -61,29 +61,41 @@ export class PersistentObject {
     }
 }
 
+export interface ActiveObjectPrototype {
+    readonly id: string;
+    readonly islandId: string;
+    readonly type: string;
+    readonly x: number;
+    readonly y: number;
+    respawnTime: number;
+    hp: number;
+}
+
 export class ActiveObject {
-    constructor(
-        public readonly id: string,
-        public readonly islandId: string,
-        public readonly type: string,
-        public respawnTime: number,
-        public hp: number,
-        public readonly x: number,
-        public readonly y: number,
-    ) {}
+    public readonly id: string;
+    public readonly islandId: string;
+    public readonly type: string;
+    public readonly x: number;
+    public readonly y: number;
+    public respawnTime: number;
+    public hp: number;
+
+    constructor(param: ActiveObjectPrototype) {
+        Object.assign(this, param);
+    }
 
     static fromPersistentObject(
         persistentObject: PersistentObject,
     ): ActiveObject {
-        return new ActiveObject(
-            persistentObject.id,
-            persistentObject.islandId,
-            persistentObject.type,
-            persistentObject.respawnTime,
-            persistentObject.maxHp,
-            persistentObject.x,
-            persistentObject.y,
-        );
+        return new ActiveObject({
+            id: persistentObject.id,
+            islandId: persistentObject.islandId,
+            type: persistentObject.type,
+            x: persistentObject.x,
+            y: persistentObject.y,
+            respawnTime: persistentObject.respawnTime,
+            hp: persistentObject.maxHp,
+        });
     }
 
     public getHitBox(): Rectangle {
