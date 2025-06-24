@@ -16,7 +16,6 @@ import { CanJoinIslandResponse } from '../response/can-join-island.response';
 import { CreateIslandRequest } from '../request/create-island.request';
 import { GetLiveIslandListReqeust } from '../../island/request/get-live-island-list.request';
 import { GetLiveIslandListResponse } from '../../island/response/get-live-island-list.response';
-import { JoinDesertedIslandReqeust } from '../request/join-deserted-island.request';
 import { WsErrorBody } from './known-exception';
 import { SendFriendRequest } from '../../friends/request/send-friend.request';
 import { UpdateIslandInfoRequest } from 'src/presentation/dto/island/request/update-island-info.request';
@@ -41,7 +40,7 @@ export type ChatToClient = {
 };
 
 export type ClientToIsland = {
-    joinDesertedIsland: (data: JoinDesertedIslandReqeust) => void;
+    joinDesertedIsland: () => void;
     joinNormalIsland: (data: PlayerJoinRequest) => void;
     playerLeft: () => void;
     playerKicked: () => void;

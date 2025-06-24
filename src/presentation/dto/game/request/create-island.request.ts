@@ -44,4 +44,9 @@ export class CreateIslandRequest {
     @ArrayMaxSize(3)
     @ArrayMinSize(1)
     readonly tags: string[];
+
+    @ApiProperty({ example: 'island' })
+    @Length(1, 50)
+    @IsString()
+    readonly mapKey: string;
 }

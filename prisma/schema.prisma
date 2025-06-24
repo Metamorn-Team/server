@@ -92,6 +92,7 @@ model FriendRequest {
 model Island {
   id          String    @id @db.Uuid
   ownerId     String?   @db.Uuid
+  mapId       String   @db.Uuid
   name        String?   @db.VarChar(50)
   description String?   @db.VarChar(200)
   coverImage  String?   @map("cover_image")
@@ -103,11 +104,13 @@ model Island {
   deletedAt   DateTime? @map("deleted_at")
 
   owner       User?        @relation(fields: [ownerId], references: [id])
+  map       Map?        @relation(fields: [mapId], references: [id])
   islandJoins IslandJoin[]
   islandTags  IslandTag[]
 
   @@index([ownerId])
   @@map("island")
+  @@index([mapId])
 }
 
 model IslandTag {
@@ -297,4 +300,62 @@ model Equipment {
   @@id([userId, slot])
   @@index([itemId])
   @@map("equipment")
+}
+
+model Map {
+  id String @id @db.Uuid
+  key String @db.VarChar(50) @unique
+  name String @db.VarChar(50)
+  description String @db.VarChar(200)
+  image String
+  createdAt DateTime @map("created_at")
+
+  islands Island[]
+  spawnZones SpawnZone[]
+  playerSpawnPoints PlayerSpawnPoint[]
+  
+  @@map("map")
+}
+
+// TODO reward는 추후 기획 후 추가
+model SpawnObject {
+  id String @id @db.Uuid
+  name String @db.VarChar(50)
+  type String @db.VarChar(50)
+  respawnTime Int @db.SmallInt @map("respawn_time")
+  maxHp Int @db.SmallInt @map("max_hp")
+  createdAt DateTime @map("created_at")
+
+  spawnZones SpawnZone[]
+
+  @@map("spawn_object")
+}
+
+model SpawnZone {
+  id String @id @db.Uuid
+  gridX Int @db.SmallInt @map("grid_x")
+  gridY Int @db.SmallInt @map("grid_y")
+  mapId String @map("map_id") @db.Uuid
+  spawnObjectId String @map("spawn_object_id") @db.Uuid
+  createdAt DateTime @map("created_at")
+
+  map Map @relation(fields: [mapId], references: [id])
+  spawnObject SpawnObject @relation(fields: [spawnObjectId], references: [id])
+
+  @@map("spawn_zone")
+  @@index([spawnObjectId])
+  @@index([mapId])
+}
+
+model PlayerSpawnPoint {
+  id        String  @id @db.Uuid
+  mapId     String  @db.Uuid @map("map_id")
+  x         Int     @db.SmallInt
+  y         Int     @db.SmallInt
+  createdAt DateTime @map("created_at")
+
+  map       Map @relation(fields: [mapId], references: [id])
+
+  @@map("player_spawn_point")
+  @@index([mapId])
 }

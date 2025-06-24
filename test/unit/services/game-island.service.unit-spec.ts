@@ -1,8 +1,13 @@
 import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Map } from '@prisma/client';
 import Redis from 'ioredis';
 import { ClsModule } from 'nestjs-cls';
 import { clsOptions } from 'src/configs/cls/cls-config';
+import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
+import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
+import { IslandObjectReader } from 'src/domain/components/island-spawn-object/island-object-reader';
+import { IslandObjectWriter } from 'src/domain/components/island-spawn-object/island-object-writer';
 import { DesertedIslandManager } from 'src/domain/components/islands/deserted-storage/deserted-island-manager';
 import { NormalIslandManager } from 'src/domain/components/islands/normal-storage/normal-island-manager';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
@@ -18,13 +23,18 @@ import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { PlayerMemoryStorage } from 'src/infrastructure/storages/player-memory-storage';
 import { GameIslandServiceModule } from 'src/modules/game/game-island.service.module';
+import { IslandActiveObjectComponentModule } from 'src/modules/island-spawn-objects/island-active-object-component.module';
+import { IslandObjectComponentModule } from 'src/modules/island-spawn-objects/island-object-component.module';
 import {
+    generateActiveObject,
     generateDesertedIslandModel,
     generateIsland,
     generateNormalIslandModel,
+    generatePersistentObject,
     generatePlayerModel,
     generateUserEntityV2,
 } from 'test/helper/generators';
+import { v4 } from 'uuid';
 
 describe('GameIslandService', () => {
     let app: TestingModule;
@@ -35,6 +45,11 @@ describe('GameIslandService', () => {
     let desertedIslandStorage: DesertedIslandStorage;
     let gameIslandService: GameIslandService;
 
+    let islandObjectReader: IslandObjectReader;
+    let islandActiveObjectReader: IslandActiveObjectReader;
+    let islandObjectWriter: IslandObjectWriter;
+    let islandActiveObjectWriter: IslandActiveObjectWriter;
+
     let normalIslandManager: NormalIslandManager;
     let desertedIslandManager: DesertedIslandManager;
 
@@ -44,6 +59,8 @@ describe('GameIslandService', () => {
                 GameIslandServiceModule,
                 PrismaModule,
                 ClsModule.forRoot(clsOptions),
+                IslandObjectComponentModule,
+                IslandActiveObjectComponentModule,
             ],
         }).compile();
 
@@ -59,6 +76,14 @@ describe('GameIslandService', () => {
         desertedIslandManager = app.get<DesertedIslandManager>(
             DesertedIslandManager,
         );
+        islandObjectReader = app.get<IslandObjectReader>(IslandObjectReader);
+        islandActiveObjectReader = app.get<IslandActiveObjectReader>(
+            IslandActiveObjectReader,
+        );
+        islandObjectWriter = app.get<IslandObjectWriter>(IslandObjectWriter);
+        islandActiveObjectWriter = app.get<IslandActiveObjectWriter>(
+            IslandActiveObjectWriter,
+        );
     });
 
     afterAll(async () => {
@@ -68,47 +93,71 @@ describe('GameIslandService', () => {
     afterEach(async () => {
         await redis.flushall();
         await db.islandJoin.deleteMany();
+        await db.playerSpawnPoint.deleteMany();
         await db.island.deleteMany();
+        await db.map.deleteMany();
         await db.user.deleteMany();
     });
 
     describe('일반 섬 참여', () => {
         const user = generateUserEntityV2();
         const clientId = 'test-client-id';
+        let map: Map;
 
         beforeEach(async () => {
             await db.user.create({ data: user });
+            map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'island',
+                    name: '섬',
+                    description: '섬 설명',
+                    image: 'https://example.com/image.png',
+                    createdAt: new Date(),
+                },
+            });
+            await db.playerSpawnPoint.create({
+                data: {
+                    id: v4(),
+                    mapId: map.id,
+                    x: 0,
+                    y: 0,
+                    createdAt: new Date(),
+                },
+            });
         });
 
         it('일반 섬 참여 정상 동작', async () => {
             const clientId = 'test-client-id';
 
-            const island = generateNormalIslandModel();
+            const island = generateNormalIslandModel({ mapKey: map.key });
             await normalIslandStorage.createIsland(island);
 
             const result = await gameIslandService.joinNormalIsland(
                 user.id,
                 clientId,
                 island.id,
-                0,
-                0,
             );
 
             const joinedIsland = await normalIslandStorage.getIsland(
-                result.joinedIslandId,
+                result.joinedIsland.id,
             );
 
             expect(joinedIsland?.players.size).toEqual(1);
             expect(joinedIsland?.players.has(user.id)).toEqual(true);
             expect(result.activePlayers.length).toEqual(0);
-            expect(result.joinedIslandId).toEqual(island.id);
+            expect(result.joinedIsland.id).toEqual(island.id);
             expect(result.joinedPlayer.id).toEqual(user.id);
         });
 
         it('참여 인원이 가득찬 섬에 참여 시도 시 예외가 발생한다', async () => {
             const joinedPlayer = generatePlayerModel();
 
-            const island = generateNormalIslandModel({ max: 1 });
+            const island = generateNormalIslandModel({
+                max: 1,
+                mapKey: map.key,
+            });
+
             await normalIslandStorage.createIsland(island);
             await normalIslandStorage.addPlayerToIsland(
                 island.id,
@@ -120,8 +169,6 @@ describe('GameIslandService', () => {
                     user.id,
                     clientId,
                     island.id,
-                    0,
-                    0,
                 ),
             ).rejects.toThrow(
                 new DomainException(
@@ -136,30 +183,48 @@ describe('GameIslandService', () => {
     describe('무인도 참여', () => {
         const user = generateUserEntityV2();
         const clientId = 'test-client-id';
+        let map: Map;
 
         beforeEach(async () => {
             await db.user.create({ data: user });
+            map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'island',
+                    name: '섬',
+                    description: '섬 설명',
+                    image: 'https://example.com/image.png',
+                    createdAt: new Date(),
+                },
+            });
+            await db.playerSpawnPoint.create({
+                data: {
+                    id: v4(),
+                    mapId: map.id,
+                    x: 0,
+                    y: 0,
+                    createdAt: new Date(),
+                },
+            });
         });
 
         it('무인도 참여 정상 동작', async () => {
-            const island = generateDesertedIslandModel();
+            const island = generateDesertedIslandModel({ mapKey: map.key });
             await desertedIslandStorage.createIsland(island);
 
             const result = await gameIslandService.joinDesertedIsland(
                 user.id,
                 clientId,
-                0,
-                0,
             );
 
             const joinedIsland = await desertedIslandStorage.getIsland(
-                result.joinedIslandId,
+                result.joinedIsland.id,
             );
 
             expect(joinedIsland?.players.size).toEqual(1);
             expect(joinedIsland?.players.has(user.id)).toEqual(true);
             expect(result.activePlayers.length).toEqual(0);
-            expect(result.joinedIslandId).toEqual(island.id);
+            expect(result.joinedIsland.id).toEqual(island.id);
             expect(result.joinedPlayer.id).toEqual(user.id);
         });
 
@@ -169,12 +234,10 @@ describe('GameIslandService', () => {
             const result = await gameIslandService.joinDesertedIsland(
                 user.id,
                 clientId,
-                0,
-                0,
             );
 
             const joinedIsland = await desertedIslandStorage.getIsland(
-                result.joinedIslandId,
+                result.joinedIsland.id,
             );
 
             expect(joinedIsland?.players.size).toEqual(1);
@@ -225,7 +288,13 @@ describe('GameIslandService', () => {
             expect(islandAfterLeave?.players.has(me.id)).toEqual(false);
         });
 
-        it('섬 이탈 시 참여 인원이 0명일 경우 섬을 삭제한다', async () => {
+        it('섬 이탈 시 참여 인원이 0명일 경우 모든 오브젝트를 제거하고 섬을 삭제한다', async () => {
+            // redis에 영속화된 object, memory에 캐싱된 object 생성
+            const object = generatePersistentObject(liveIsland.id);
+            const activeObject = generateActiveObject(liveIsland.id);
+            await islandObjectWriter.createMany([object]);
+            islandActiveObjectWriter.createMany([activeObject]);
+
             // 플레이어 생성 및 섬 참여
             const me = generatePlayerModel({ roomId: liveIsland.id });
 
@@ -238,9 +307,17 @@ describe('GameIslandService', () => {
             const islandAfterLeave = await normalIslandStorage.getIsland(
                 liveIsland.id,
             );
+            const deletedObject = await islandObjectReader.readAllByIslandId(
+                liveIsland.id,
+            );
+            const deletedActiveObject = islandActiveObjectReader.readAll(
+                liveIsland.id,
+            );
 
             expect(leavedPlayer).toBeNull();
             expect(islandAfterLeave).toBeNull();
+            expect(deletedObject.length).toEqual(0);
+            expect(deletedActiveObject.length).toEqual(0);
         });
 
         it('섬 이탈 중 예외가 발생하면 이전 동작이 롤백된다', async () => {

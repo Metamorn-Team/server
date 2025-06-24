@@ -34,12 +34,13 @@ export class PurchaseService {
     ) {}
 
     async purchase(buyerId: string, productIds: string[]) {
-        const products = await this.productReader.readByIds(productIds);
+        const products =
+            await this.productReader.readByIdsForPurchase(productIds);
         this.checkProductsExist(products, productIds);
         await this.checkIsPurchased(buyerId, productIds);
 
         const totalPrice = products.reduce((total, p) => {
-            if (p.discountRate !== null) {
+            if (p.discountRate > 0) {
                 return total + this.discount(p.discountRate, p.originPrice);
             }
             return total + p.originPrice;
@@ -93,9 +94,10 @@ export class PurchaseService {
         const purchases = PurchaseEntity.createBulk(
             buyerId,
             products.map((p) => ({
-                goldAmount: p.discountRate
-                    ? this.discount(p.discountRate, p.originPrice)
-                    : p.originPrice,
+                goldAmount:
+                    p.discountRate > 0
+                        ? this.discount(p.discountRate, p.originPrice)
+                        : p.originPrice,
                 productId: p.id,
             })),
             v4,

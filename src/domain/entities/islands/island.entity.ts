@@ -7,11 +7,13 @@ export interface NormalIslandPrototype {
     readonly description: string;
     readonly coverImage: string;
     readonly ownerId: string;
+    readonly mapKey: string;
     readonly deletedAt?: Date;
 }
 
 export interface IslandPrototype {
     readonly maxMembers: number;
+    readonly mapId: string;
     readonly tag?: string;
     readonly type: IslandTypeEnum;
     readonly name?: string;
@@ -28,6 +30,7 @@ export class IslandEntity {
         readonly type: IslandTypeEnum,
         readonly createdAt: Date,
         readonly updatedAt: Date,
+        readonly mapId: string,
         readonly ownerId?: string,
         readonly tag?: string,
         readonly name?: string,
@@ -48,6 +51,7 @@ export class IslandEntity {
             proto.type,
             stdDate,
             updatedAt ?? stdDate,
+            proto.mapId,
             proto.ownerId,
             proto.tag,
             proto.name,

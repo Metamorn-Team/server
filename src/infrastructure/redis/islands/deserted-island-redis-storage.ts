@@ -36,6 +36,7 @@ export class DesertedIslandRedisStorage implements DesertedIslandStorage {
             max: Number(islandInfo.max),
             type: Number(islandInfo.type),
             players: new Set(players),
+            mapKey: islandInfo.mapKey,
         };
     }
 

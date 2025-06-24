@@ -76,7 +76,10 @@ export class ProductPrismaRepository implements ProductRepository {
         });
     }
 
-    async findByIds(ids: string[]): Promise<ProductForPurchase[]> {
+    async findByIdsForPurchase(
+        ids: string[],
+        now = new Date(),
+    ): Promise<ProductForPurchase[]> {
         const result = await this.prisma.product.findMany({
             select: {
                 id: true,
@@ -85,6 +88,12 @@ export class ProductPrismaRepository implements ProductRepository {
                 promotionProducts: {
                     select: {
                         discountRate: true,
+                        promotion: {
+                            select: {
+                                startedAt: true,
+                                endedAt: true,
+                            },
+                        },
                     },
                 },
             },
@@ -96,14 +105,20 @@ export class ProductPrismaRepository implements ProductRepository {
         });
 
         return result.map((row) => {
+            let discountRate = 0;
+
+            if (row.promotionProducts && row.promotionProducts.promotion) {
+                const { startedAt, endedAt } = row.promotionProducts.promotion;
+                if (startedAt <= now && endedAt > now) {
+                    discountRate = row.promotionProducts.discountRate ?? 0;
+                }
+            }
+
             return {
                 id: row.id,
                 itemId: row.itemId,
                 originPrice: row.price,
-                discountRate:
-                    row.promotionProducts !== null
-                        ? row.promotionProducts.discountRate
-                        : null,
+                discountRate,
             };
         });
     }

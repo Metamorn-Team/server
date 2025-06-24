@@ -13,6 +13,8 @@ import { Transactional } from '@nestjs-cls/transactional';
 import { IslandTagWriter } from 'src/domain/components/island-tags/island-tag-writer';
 import { NormalIslandStorageWriter } from 'src/domain/components/islands/normal-storage/normal-island-storage-writer';
 import { UserReader } from 'src/domain/components/users/user-reader';
+import { MapReader } from 'src/domain/components/map/map-reader';
+import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 
 @Injectable()
 export class GameIslandCreateService {
@@ -22,11 +24,17 @@ export class GameIslandCreateService {
         private readonly islandWriter: IslandWriter,
         private readonly tagReader: TagReader,
         private readonly islandTagWriter: IslandTagWriter,
+        private readonly mapReader: MapReader,
+        private readonly islandActiveObjectSpawner: IslandActiveObjectSpawner,
     ) {}
 
-    async create(prototype: NormalIslandPrototype, tagNames: string[]) {
+    async create(input: NormalIslandPrototype, tagNames: string[]) {
+        const { mapKey, ...prototype } = input;
         const owner = await this.userReader.readProfile(prototype.ownerId);
         const tags = await this.tagReader.readByNames(tagNames);
+
+        // TODO map 필수 값으로 바꾸면 제거
+        const map = await this.mapReader.readByKey(mapKey || 'island');
 
         if (tags.length < 1) {
             throw new DomainException(
@@ -37,7 +45,7 @@ export class GameIslandCreateService {
         }
 
         const { island } = await this.createTransaction(
-            prototype,
+            { ...prototype, mapId: map.id },
             tags.map((tag) => tag.id),
         );
 
@@ -52,7 +60,12 @@ export class GameIslandCreateService {
             name: island.name || '알 수 없는 섬',
             tags: tagNames,
             ownerId: owner.id,
+            mapKey,
         });
+        await this.islandActiveObjectSpawner.spawnInitialObjects(
+            island.id,
+            map.id,
+        );
 
         return island.id;
     }

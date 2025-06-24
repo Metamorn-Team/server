@@ -21,6 +21,12 @@ import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
 import { ProductTypeEnum } from 'src/domain/types/product.types';
 import { PromotionTypeEnum } from 'src/domain/types/promotion.types';
 import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
+import {
+    ActiveObject,
+    ActiveObjectPrototype,
+    PersistentObject,
+    PersistentObjectPrototype,
+} from 'src/domain/types/spawn-object/active-object';
 import { Provider } from 'src/shared/types';
 import { v4 } from 'uuid';
 
@@ -69,6 +75,7 @@ export const generateIsland = (
         partial?.type ?? IslandTypeEnum.DESERTED,
         partial?.createdAt || stdDate,
         partial?.updatedAt || stdDate,
+        partial?.mapId || v4(),
         partial?.ownerId,
         partial?.tag || 'dev',
         partial?.name,
@@ -164,21 +171,21 @@ export const generateTag = (name: string) => {
 
 export const generatePlayerModel = (partial?: Partial<Player>) => {
     const now = Date.now();
-    return new Player(
-        partial?.id || v4(),
-        partial?.clientId || v4(),
-        partial?.roomId || 'island-id',
-        partial?.islandType ?? IslandTypeEnum.NORMAL,
-        partial?.nickname || 'nick',
-        partial?.tag || 'tag',
-        partial?.avatarKey || 'purple_pawn',
-        partial?.x ?? 0,
-        partial?.y ?? 0,
-        partial?.radius || PLAYER_HIT_BOX.PAWN.RADIUS,
-        partial?.isFacingRight || true,
-        partial?.lastMoved || now,
-        partial?.lastActivity || now,
-    );
+    return new Player({
+        id: partial?.id || v4(),
+        clientId: partial?.clientId || v4(),
+        roomId: partial?.roomId || 'island-id',
+        islandType: partial?.islandType ?? IslandTypeEnum.NORMAL,
+        nickname: partial?.nickname || 'nick',
+        tag: partial?.tag || 'tag',
+        avatarKey: partial?.avatarKey || 'purple_pawn',
+        x: partial?.x ?? 0,
+        y: partial?.y ?? 0,
+        radius: partial?.radius || PLAYER_HIT_BOX.PAWN.RADIUS,
+        isFacingRight: partial?.isFacingRight ?? true,
+        lastMoved: partial?.lastMoved || now,
+        lastActivity: partial?.lastActivity || now,
+    });
 };
 
 export const generateDesertedIslandModel = (
@@ -189,6 +196,7 @@ export const generateDesertedIslandModel = (
         max: partial?.max || 4,
         players: partial?.players || new Set(),
         type: IslandTypeEnum.DESERTED,
+        mapKey: partial?.mapKey || 'island',
     };
 };
 
@@ -206,6 +214,7 @@ export const generateNormalIslandModel = (
         name: partial?.name || 'Island name',
         tags: partial?.tags || ['tag1', 'tag2'],
         ownerId: partial?.ownerId || v4(),
+        mapKey: partial?.mapKey || 'island',
     };
 };
 
@@ -240,4 +249,35 @@ export const generatePromotion = (
             // 1달
             new Date(stdDate.getTime() + 1000 * 60 * 60 * 24 * 30),
     );
+};
+
+export const generatePersistentObject = (
+    islandId: string,
+    partial?: Partial<Omit<PersistentObjectPrototype, 'islandId'>>,
+): PersistentObject => {
+    return new PersistentObject({
+        id: partial?.id || v4(),
+        islandId,
+        type: partial?.type || 'TREE',
+        status: partial?.status || 'ALIVE',
+        maxHp: partial?.maxHp || 100,
+        respawnTime: partial?.respawnTime || 10000,
+        x: partial?.x || 0,
+        y: partial?.y || 0,
+    });
+};
+
+export const generateActiveObject = (
+    islandId: string,
+    partial?: Partial<Omit<ActiveObjectPrototype, 'islandId'>>,
+): ActiveObject => {
+    return new ActiveObject({
+        id: partial?.id || v4(),
+        islandId,
+        type: partial?.type || 'TREE',
+        x: partial?.x || 0,
+        y: partial?.y || 0,
+        respawnTime: partial?.respawnTime || 10000,
+        hp: partial?.hp || 100,
+    });
 };
