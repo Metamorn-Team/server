@@ -1,7 +1,9 @@
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
+import { PLAYER_STATS } from 'src/constants/game/stats';
 import { EquipmentState } from 'src/domain/types/equipments/equiment-state';
 import { Circle, Rectangle } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { random } from 'test/unit/utils/random';
 
 export interface PlayerPrototype {
     readonly id: string;
@@ -50,6 +52,13 @@ export class Player {
 
     static create(proto: PlayerPrototype, now = Date.now()): Player {
         return new Player(proto, now);
+    }
+
+    get damage(): number {
+        return random.between(
+            PLAYER_STATS.PAWN.MIN_DAMAGE,
+            PLAYER_STATS.PAWN.MAX_DAMAGE,
+        );
     }
 
     public getHitBox(): Circle {
