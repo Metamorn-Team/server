@@ -11,4 +11,8 @@ export class IslandActiveObjectReader {
     readAll(islandId: string): ActiveObject[] {
         return this.islandSpawnObjectMemoryStorage.readAll(islandId);
     }
+
+    readByIds(islandId: string, ids: string[]): ActiveObject[] {
+        return this.islandSpawnObjectMemoryStorage.readByIds(islandId, ids);
+    }
 }
