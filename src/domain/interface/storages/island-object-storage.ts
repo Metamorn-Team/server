@@ -6,6 +6,8 @@ export interface IslandObjectStorage {
     readAll(): Promise<PersistentObject[]>;
     readAllByIslandId(islandId: string): Promise<PersistentObject[]>;
     deleteAllByIslandId(islandId: string): Promise<void>;
+    markAsDead(islandId: string, ids: string[]): Promise<void>;
+    markAsAlive(islandId: string, ids: string[]): Promise<void>;
 }
 
 export const IslandObjectStorage = Symbol('IslandObjectStorage');

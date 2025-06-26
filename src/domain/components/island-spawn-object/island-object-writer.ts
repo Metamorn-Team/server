@@ -16,4 +16,12 @@ export class IslandObjectWriter {
     async deleteAllByIslandId(islandId: string): Promise<void> {
         await this.islandObjectStorage.deleteAllByIslandId(islandId);
     }
+
+    markAsDead(islandId: string, ids: string[]): Promise<void> {
+        return this.islandObjectStorage.markAsDead(islandId, ids);
+    }
+
+    markAsAlive(islandId: string, ids: string[]): Promise<void> {
+        return this.islandObjectStorage.markAsAlive(islandId, ids);
+    }
 }
