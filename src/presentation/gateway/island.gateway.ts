@@ -28,6 +28,7 @@ import { PlayerStorageReader } from 'src/domain/components/users/player-storage-
 import { checkAppVersion } from 'test/unit/utils/check-app-version';
 import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
 import { IslandActiveObject } from 'src/presentation/dto/game/response/player-join-success.response';
+import { AttackObjectResponse } from 'src/presentation/dto/game/response/attack-object.response';
 
 type TypedSocket = Socket<
     ClientToIsland,
@@ -197,13 +198,19 @@ export class IslandGateway
     @SubscribeMessage('strongAttack')
     async handleStrongAttack(@CurrentUserFromSocket() userId: string) {
         try {
-            const { attacker, attackedPlayers } =
+            const { attacker, attackedObjects } =
                 await this.gameService.attackObject(userId);
+            const response = {
+                ...AttackObjectResponse.from({
+                    attackerId: attacker.id,
+                    attackedObjects,
+                }),
+                attackedPlayers: attackedObjects.map((object) => object.id),
+            };
 
-            this.wss.to(attacker.roomId).emit('strongAttacked', {
-                attackerId: attacker.id,
-                attackedPlayerIds: attackedPlayers.map((player) => player.id),
-            });
+            this.logger.debug(attackedObjects);
+
+            this.wss.to(attacker.roomId).emit('strongAttacked', response);
         } catch (e) {
             this.logger.error(`공격 실패: ${e as string}`);
         }

@@ -6,6 +6,7 @@ import { GameAttackManager } from 'src/domain/components/game/game-attack-manage
 import { LiveIsland } from 'src/domain/types/game.types';
 import { IslandStorageReaderFactory } from 'src/domain/components/islands/factory/island-storage-reader-factory';
 import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
+import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 
 @Injectable()
 export class GameService {
@@ -15,6 +16,7 @@ export class GameService {
         private readonly playerMemoryStorageManager: PlayerMemoryStorageManager,
         private readonly islandStorageReaderFactory: IslandStorageReaderFactory,
         private readonly islandActiveObjectReader: IslandActiveObjectReader,
+        private readonly islandActiveObjectSpawner: IslandActiveObjectSpawner,
     ) {}
 
     async move(
@@ -67,18 +69,11 @@ export class GameService {
 
     async attackObject(attackerId: string) {
         const attacker = this.playerMemoryStorageManager.readOne(attackerId);
-        const { roomId: islandId, islandType } = attacker;
-
-        const reader = this.islandStorageReaderFactory.get(islandType);
-        const island = await reader.readOne(islandId);
-
-        if (this.isIslandEmpty(island)) {
-            return { attacker, attackedPlayers: [] };
-        }
+        const { roomId: islandId } = attacker;
 
         const objects = this.islandActiveObjectReader.readAll(islandId);
 
-        const attackedPlayers = this.gameAttackManager.findCollidingObjects(
+        const collidingObjects = this.gameAttackManager.findCollidingObjects(
             attackerId,
             attacker.getAttackBox(),
             objects.map((object) => ({
@@ -86,16 +81,29 @@ export class GameService {
                 hitBox: object.getHitBox(),
             })),
         );
+        const attackedObjects = this.gameAttackManager.applyAttack(
+            attacker,
+            collidingObjects.map((object) => object.id),
+        );
+
+        const deadObjects = attackedObjects.filter((object) => object.isDead());
+        if (deadObjects.length > 0) {
+            await this.islandActiveObjectSpawner.registerForRespawn(
+                deadObjects,
+            );
+        }
+
         await this.gamePlayerManager.updateLastActivity(attacker);
 
         return {
             attacker,
-            attackedPlayers,
+            attackedPlayers: attackedObjects,
+            attackedObjects,
         };
     }
 
     private isIslandEmpty(island: LiveIsland): boolean {
-        return island.players.size === 0;
+        return island.players.size - 1 === 0;
     }
 
     async hearbeatFromIsland(

@@ -19,6 +19,7 @@ import { GetLiveIslandListResponse } from '../../island/response/get-live-island
 import { WsErrorBody } from './known-exception';
 import { SendFriendRequest } from '../../friends/request/send-friend.request';
 import { UpdateIslandInfoRequest } from 'src/presentation/dto/island/request/update-island-info.request';
+import { AttackObjectResponse } from 'src/presentation/dto/game/response/attack-object.response';
 
 export type ClientToLoby = {
     createIsland: (data: CreateIslandRequest) => void;
@@ -60,7 +61,7 @@ export type IslandToClient = {
     playerMoved: (data: PlayerMovedResponse) => void;
     activePlayers: (data: ActivePlayerResponse) => void;
     attacked: (data: AttackedResponse) => void;
-    strongAttacked: (data: AttackedResponse) => void;
+    strongAttacked: (data: AttackObjectResponse) => void;
     islandHearbeat: (data: IslandHeartbeatResponse) => void;
     jump: (userId: string) => void;
     invalidVersion: () => void;

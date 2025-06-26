@@ -34,4 +34,12 @@ export class IslandActiveObjectSpawner {
 
         return activeObjects;
     }
+
+    async registerForRespawn(objects: ActiveObject[]): Promise<void> {
+        // 한 번에 들어오는 오브젝트는 항상 같은 섬임
+        const islandId = objects[0].islandId;
+        const ids = objects.map((object) => object.id);
+
+        await this.islandObjectWriter.markAsDead(islandId, ids);
+    }
 }
