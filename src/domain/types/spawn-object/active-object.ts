@@ -2,7 +2,10 @@ import { OBJECT_HIT_BOX } from 'src/constants/game/hit-box';
 import { Rectangle } from 'src/domain/types/game.types';
 import { gridToPosition } from 'src/utils/game/grid-to-position';
 
-export type ObjectStatus = 'ALIVE' | 'DEAD';
+export enum ObjectStatus {
+    ALIVE = 'ALIVE',
+    DEAD = 'DEAD',
+}
 
 export interface PersistentObjectPrototype {
     id: string;
@@ -28,7 +31,7 @@ export class PersistentObject {
     constructor(param: PersistentObjectPrototype) {
         Object.assign(this, {
             ...param,
-            status: param.status || 'ALIVE',
+            status: param.status || ObjectStatus.ALIVE,
         });
     }
 
@@ -52,7 +55,7 @@ export class PersistentObject {
             id: idGen(),
             islandId,
             type: spawnZone.spawnObject.type,
-            status: 'ALIVE',
+            status: ObjectStatus.ALIVE,
             maxHp: spawnZone.spawnObject.maxHp,
             respawnTime: spawnZone.spawnObject.respawnTime,
             x,
@@ -69,6 +72,7 @@ export interface ActiveObjectPrototype {
     readonly y: number;
     respawnTime: number;
     hp: number;
+    status: ObjectStatus;
 }
 
 export class ActiveObject {
@@ -79,6 +83,7 @@ export class ActiveObject {
     public readonly y: number;
     public respawnTime: number;
     public hp: number;
+    public status: ObjectStatus;
 
     constructor(param: ActiveObjectPrototype) {
         Object.assign(this, param);
@@ -95,6 +100,7 @@ export class ActiveObject {
             y: persistentObject.y,
             respawnTime: persistentObject.respawnTime,
             hp: persistentObject.maxHp,
+            status: persistentObject.status,
         });
     }
 
@@ -111,5 +117,17 @@ export class ActiveObject {
             height: OBJECT_HIT_BOX[this.type as keyof typeof OBJECT_HIT_BOX]
                 .height,
         };
+    }
+
+    public hit(damage: number) {
+        this.hp -= damage;
+
+        if (this.hp <= 0) {
+            this.status = ObjectStatus.DEAD;
+        }
+    }
+
+    public isDead(): boolean {
+        return this.status === ObjectStatus.DEAD;
     }
 }
