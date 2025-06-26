@@ -119,4 +119,28 @@ export class IslandObjectRedisStorage implements IslandObjectStorage {
         keys.forEach((key) => pipeline.del(key));
         await pipeline.exec();
     }
+
+    async markAsDead(islandId: string, ids: string[]): Promise<void> {
+        await this.changeStatusByIds(islandId, ids, ObjectStatus.DEAD);
+    }
+
+    async markAsAlive(islandId: string, ids: string[]): Promise<void> {
+        await this.changeStatusByIds(islandId, ids, ObjectStatus.ALIVE);
+    }
+
+    private async changeStatusByIds(
+        islandId: string,
+        ids: string[],
+        status: ObjectStatus,
+    ): Promise<void> {
+        const client = this.redis.getClient();
+        const pipeline = client.pipeline();
+
+        for (const id of ids) {
+            const key = PERSISTENT_OBJECT_KEY(islandId, id);
+            pipeline.hset(key, 'status', status);
+        }
+
+        await pipeline.exec();
+    }
 }
