@@ -1,5 +1,6 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
+import { RespawnQueueManager } from 'src/domain/components/game/respawn-queue-manager';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
 import { IslandObjectWriter } from 'src/domain/components/island-spawn-object/island-object-writer';
@@ -30,7 +31,7 @@ export class DesertedIslandManager implements IslandManager {
         private readonly islandJoinWriter: IslandJoinWriter,
         private readonly islandActiveObjectWriter: IslandActiveObjectWriter,
         private readonly islandObjectWriter: IslandObjectWriter,
-
+        private readonly respawnQueueManager: RespawnQueueManager,
         private readonly lockManager: RedisTransactionManager,
     ) {}
 
@@ -154,6 +155,15 @@ export class DesertedIslandManager implements IslandManager {
                 this.islandActiveObjectWriter.deleteAllByIslandId(islandId);
             } catch (e) {
                 this.logger.error(`ActiveObject 제거 실패: ${islandId}`, e);
+            }
+
+            try {
+                await this.respawnQueueManager.removeAllByIslandId(islandId);
+            } catch (e) {
+                this.logger.error(
+                    `RespawnQueue 스폰 대기열 오브젝트 제거 실패: ${islandId}`,
+                    e,
+                );
             }
 
             try {

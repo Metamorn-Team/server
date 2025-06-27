@@ -102,6 +102,7 @@ export class RespawnQueueRedisStorage implements RespawnQueueStorage {
         for (const key of keys) {
             pipeline.zrem(queueKey, key);
         }
+        pipeline.del(indexKey);
 
         const results = await pipeline.exec();
         if (this.redis.isPipelineFailed(results)) {
