@@ -7,6 +7,7 @@ import { LiveIsland } from 'src/domain/types/game.types';
 import { IslandStorageReaderFactory } from 'src/domain/components/islands/factory/island-storage-reader-factory';
 import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
 import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
+import { ActiveObject } from 'src/domain/types/spawn-object/active-object';
 
 @Injectable()
 export class GameService {
@@ -85,13 +86,8 @@ export class GameService {
             attacker,
             collidingObjects.map((object) => object.id),
         );
-
-        const deadObjects = attackedObjects.filter((object) => object.isDead());
-        if (deadObjects.length > 0) {
-            await this.islandActiveObjectSpawner.registerForRespawn(
-                deadObjects,
-            );
-        }
+        const deadObjects = objects.filter((object) => object.isDead());
+        await this.registerForRespawn(deadObjects);
 
         await this.gamePlayerManager.updateLastActivity(attacker);
 
@@ -100,6 +96,12 @@ export class GameService {
             attackedPlayers: attackedObjects,
             attackedObjects,
         };
+    }
+
+    private async registerForRespawn(objects: ActiveObject[]) {
+        if (objects.length > 0) {
+            await this.islandActiveObjectSpawner.registerForRespawn(objects);
+        }
     }
 
     private isIslandEmpty(island: LiveIsland): boolean {
