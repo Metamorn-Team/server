@@ -25,6 +25,7 @@ import {
 } from 'test/helper/generators';
 import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
 import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
+import { ObjectStatus } from 'src/domain/types/spawn-object/active-object';
 
 describe('GameService', () => {
     let app: TestingModule;
@@ -282,6 +283,101 @@ describe('GameService', () => {
                 island.id,
                 attacker.id,
             );
+        });
+
+        it('여러 플레이어가 동시 공격할 때 공격력 합산만큼 HP가 감소해야한다', async () => {
+            const attackers = Array.from({ length: 100 }, (_, i) =>
+                generatePlayerModel({
+                    isFacingRight: true,
+                    roomId: island.id,
+                    islandType: IslandTypeEnum.DESERTED,
+                    tag: `attacker${i}`,
+                    minDamage: 2,
+                    maxDamage: 2, // 각자 2 데미지
+                    x: 0,
+                    y: 0,
+                }),
+            );
+            for (const attacker of attackers) {
+                playerMemoryStorage.addPlayer(attacker);
+                await desertedIslandStorage.addPlayerToIsland(
+                    island.id,
+                    attacker.id,
+                );
+            }
+
+            const tree = generateActiveObject(island.id, {
+                type: 'TREE',
+                x: PLAYER_HIT_BOX.PAWN.RADIUS + 10,
+                y: 0,
+                hp: 500, // 충분한 HP
+                maxHp: 500,
+            });
+            islandActiveObjectWriter.createMany([tree]);
+
+            // 동시 공격 실행
+            const attackPromises = attackers.map((attacker) =>
+                gameService.attackObject(attacker.id),
+            );
+
+            await Promise.all(attackPromises);
+
+            const finalObject = islandActiveObjectReader.readOne(
+                island.id,
+                tree.id,
+            );
+
+            // 레이스 컨디션이 없다면 정확히 500 - 200 = 300이어야 함
+            expect(finalObject.hp).toBe(300);
+            expect(finalObject.status).toBe(ObjectStatus.ALIVE);
+        });
+
+        it('1방이면 죽는 오브젝트를 여러 플레이어가 동시에 공격해도 한 플레이어의 공격만 적중한다', async () => {
+            const attackers = Array.from({ length: 100 }, (_, i) =>
+                generatePlayerModel({
+                    isFacingRight: true,
+                    roomId: island.id,
+                    islandType: IslandTypeEnum.DESERTED,
+                    tag: `attacker${i}`,
+                    minDamage: 1,
+                    maxDamage: 1,
+                    x: 0,
+                    y: 0,
+                }),
+            );
+            for (const attacker of attackers) {
+                playerMemoryStorage.addPlayer(attacker);
+                await desertedIslandStorage.addPlayerToIsland(
+                    island.id,
+                    attacker.id,
+                );
+            }
+
+            const tree = generateActiveObject(island.id, {
+                type: 'TREE',
+                x: PLAYER_HIT_BOX.PAWN.RADIUS + 10,
+                y: 0,
+                hp: 1, // 1방이면 죽음
+                maxHp: 1,
+            });
+            islandActiveObjectWriter.createMany([tree]);
+
+            // 동시 공격 실행
+            const attackPromises = attackers.map((attacker) =>
+                gameService.attackObject(attacker.id),
+            );
+
+            await Promise.all(attackPromises);
+
+            const finalObject = islandActiveObjectReader.readOne(
+                island.id,
+                tree.id,
+            );
+
+            // 레이스 컨디션 방어가 제대로 작동해야 함
+            // 한 명만 공격에 성공하고 나머지는 무효화되어야 함
+            expect(finalObject.hp).toBe(0);
+            expect(finalObject.status).toBe(ObjectStatus.DEAD);
         });
 
         it('공격 범위에 속하는 모든 오브젝트는 공격 대상이 된다', async () => {
