@@ -28,6 +28,11 @@ import { MapModule } from 'src/modules/map/map.module';
 import { RespawnSchedulerModule } from 'src/modules/scheduler/respawn-scheduler.module';
 import { LoaderModule } from 'src/modules/loaders/loader.module';
 
+const onlyProdModules =
+    process.env.NODE_ENV === 'test'
+        ? []
+        : [RespawnSchedulerModule, LoaderModule];
+
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true, validationSchema }),
@@ -52,9 +57,7 @@ import { LoaderModule } from 'src/modules/loaders/loader.module';
         PromotionModule,
         PromotionProductModule,
         MapModule,
-        RespawnSchedulerModule,
-
-        LoaderModule,
+        ...onlyProdModules,
     ],
     controllers: [AppController],
     providers: [AppService],
