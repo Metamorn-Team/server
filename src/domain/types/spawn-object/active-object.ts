@@ -1,5 +1,6 @@
 import { OBJECT_HIT_BOX } from 'src/constants/game/hit-box';
 import { Rectangle } from 'src/domain/types/game.types';
+import { SpawnZone } from 'src/domain/types/spawn-zone';
 import { gridToPosition } from 'src/utils/game/grid-to-position';
 
 export enum ObjectStatus {
@@ -72,6 +73,7 @@ export interface ActiveObjectPrototype {
     readonly y: number;
     respawnTime: number;
     hp: number;
+    maxHp: number;
     status: ObjectStatus;
 }
 
@@ -82,6 +84,7 @@ export class ActiveObject {
     public readonly x: number;
     public readonly y: number;
     public respawnTime: number;
+    public maxHp: number;
     public hp: number;
     public status: ObjectStatus;
 
@@ -89,22 +92,22 @@ export class ActiveObject {
         Object.assign(this, param);
     }
 
-    static fromPersistentObject(
-        persistentObject: PersistentObject,
-    ): ActiveObject {
+    static from(param: SpawnZone & { islandId: string }, idGen: () => string) {
+        const { x, y } = gridToPosition(param.gridX, param.gridY);
         return new ActiveObject({
-            id: persistentObject.id,
-            islandId: persistentObject.islandId,
-            type: persistentObject.type,
-            x: persistentObject.x,
-            y: persistentObject.y,
-            respawnTime: persistentObject.respawnTime,
-            hp: persistentObject.maxHp,
-            status: persistentObject.status,
+            id: idGen(),
+            islandId: param.islandId,
+            type: param.spawnObject.type,
+            x,
+            y,
+            hp: param.spawnObject.maxHp,
+            maxHp: param.spawnObject.maxHp,
+            respawnTime: param.spawnObject.respawnTime,
+            status: ObjectStatus.ALIVE,
         });
     }
 
-    public getHitBox(): Rectangle {
+    get hitBox(): Rectangle {
         return {
             x: this.x,
             y:
@@ -123,8 +126,17 @@ export class ActiveObject {
         this.hp -= damage;
 
         if (this.hp <= 0) {
-            this.status = ObjectStatus.DEAD;
+            this.dead();
         }
+    }
+
+    public dead() {
+        this.status = ObjectStatus.DEAD;
+    }
+
+    public revive() {
+        this.status = ObjectStatus.ALIVE;
+        this.hp = this.maxHp;
     }
 
     public isDead(): boolean {

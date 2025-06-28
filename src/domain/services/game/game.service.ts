@@ -72,22 +72,19 @@ export class GameService {
         const attacker = this.playerMemoryStorageManager.readOne(attackerId);
         const { roomId: islandId } = attacker;
 
-        const objects = this.islandActiveObjectReader.readAll(islandId);
-
-        const collidingObjects = this.gameAttackManager.findCollidingObjects(
-            attackerId,
-            attacker.getAttackBox(),
-            objects.map((object) => ({
-                id: object.id,
-                hitBox: object.getHitBox(),
-            })),
-        );
+        const aliveObjects = this.islandActiveObjectReader.readAlive(islandId);
+        const collidingObjects =
+            this.gameAttackManager.findCollidingObjects<ActiveObject>(
+                attackerId,
+                attacker.getAttackBox(),
+                aliveObjects,
+            );
         const attackedObjects = this.gameAttackManager.applyAttack(
             attacker,
-            collidingObjects.map((object) => object.id),
+            collidingObjects,
         );
-        const deadObjects = objects.filter((object) => object.isDead());
-        await this.registerForRespawn(deadObjects);
+        const deadObjects = attackedObjects.filter((object) => object.isDead());
+        this.registerForRespawn(deadObjects);
 
         await this.gamePlayerManager.updateLastActivity(attacker);
 
@@ -98,9 +95,9 @@ export class GameService {
         };
     }
 
-    private async registerForRespawn(objects: ActiveObject[]) {
+    private registerForRespawn(objects: ActiveObject[]) {
         if (objects.length > 0) {
-            await this.islandActiveObjectSpawner.registerForRespawn(objects);
+            this.islandActiveObjectSpawner.registerForRespawn(objects);
         }
     }
 
