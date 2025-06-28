@@ -31,6 +31,7 @@ import {
     generateUserEntityV2,
 } from 'test/helper/generators';
 import { v4 } from 'uuid';
+import { RespawnQueueManager } from 'src/domain/components/island-spawn-object/respawn-queue-manager';
 
 describe('GameIslandService', () => {
     let app: TestingModule;
@@ -43,6 +44,7 @@ describe('GameIslandService', () => {
 
     let islandActiveObjectReader: IslandActiveObjectReader;
     let islandActiveObjectWriter: IslandActiveObjectWriter;
+    let respawnQueueManager: RespawnQueueManager;
 
     let normalIslandManager: NormalIslandManager;
     let desertedIslandManager: DesertedIslandManager;
@@ -75,6 +77,7 @@ describe('GameIslandService', () => {
         islandActiveObjectWriter = app.get<IslandActiveObjectWriter>(
             IslandActiveObjectWriter,
         );
+        respawnQueueManager = app.get<RespawnQueueManager>(RespawnQueueManager);
     });
 
     afterAll(async () => {
@@ -372,6 +375,14 @@ describe('GameIslandService', () => {
             const activeObject = generateActiveObject(liveIsland.id);
             islandActiveObjectWriter.createMany([activeObject]);
 
+            // 리스폰 큐에 오브젝트 추가
+            const respawnQueueItem = {
+                objectId: activeObject.id,
+                islandId: liveIsland.id,
+                respawnTime: Date.now() + 60000, // 1분 후 리스폰
+            };
+            respawnQueueManager.addMany([respawnQueueItem]);
+
             // 플레이어 생성 및 섬 참여
             const me = generatePlayerModel({ roomId: liveIsland.id });
 
@@ -387,10 +398,14 @@ describe('GameIslandService', () => {
             const deletedActiveObject = islandActiveObjectReader.readAll(
                 liveIsland.id,
             );
+            const deletedRespawnQueueItems = respawnQueueManager.getByIslandId(
+                liveIsland.id,
+            );
 
             expect(leavedPlayer).toBeNull();
             expect(islandAfterLeave).toBeNull();
             expect(deletedActiveObject.length).toEqual(0);
+            expect(deletedRespawnQueueItems.length).toEqual(0);
         });
 
         it('섬 이탈 중 예외가 발생하면 이전 동작이 롤백된다', async () => {
@@ -465,6 +480,18 @@ describe('GameIslandService', () => {
         });
 
         it('섬 이탈 시 참여 인원이 0명일 경우 섬을 삭제한다', async () => {
+            // 섬에 오브젝트 생성
+            const activeObject = generateActiveObject(liveIsland.id);
+            islandActiveObjectWriter.createMany([activeObject]);
+
+            // 리스폰 큐에 오브젝트 추가
+            const respawnQueueItem = {
+                objectId: activeObject.id,
+                islandId: liveIsland.id,
+                respawnTime: Date.now() + 60000, // 1분 후 리스폰
+            };
+            respawnQueueManager.addMany([respawnQueueItem]);
+
             // 플레이어 생성 및 섬 참여
             const me = generatePlayerModel({
                 roomId: liveIsland.id,
@@ -480,9 +507,17 @@ describe('GameIslandService', () => {
             const islandAfterLeave = await desertedIslandStorage.getIsland(
                 liveIsland.id,
             );
+            const deletedActiveObject = islandActiveObjectReader.readAll(
+                liveIsland.id,
+            );
+            const deletedRespawnQueueItems = respawnQueueManager.getByIslandId(
+                liveIsland.id,
+            );
 
             expect(leavedPlayer).toBeNull();
             expect(islandAfterLeave).toBeNull();
+            expect(deletedActiveObject.length).toEqual(0);
+            expect(deletedRespawnQueueItems.length).toEqual(0);
         });
 
         it('섬 이탈 중 예외가 발생하면 이전 동작이 롤백된다', async () => {
