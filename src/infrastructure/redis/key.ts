@@ -7,7 +7,8 @@ export const ISLAND_LOCK_KEY = (id: string) => `island-lock:${id}`;
 
 export const PLAYER_KEY = (id: string) => `player:${id}`;
 
-export const RESPAWN_OBJECT_KEY = (islandId: string, objectId: string) =>
-    `re-object:${islandId}:${objectId}`;
+export const RESPAWN_QUEUE_KEY = 'respawn-queue';
+export const RESPAWN_QUEUE_INDEX_KEY = (islandId: string) =>
+    `respawn-queue-index:${islandId}`;
 export const PERSISTENT_OBJECT_KEY = (islandId: string, objectId: string) =>
-    `pe-object:${islandId}:${objectId}`;
+    `per-object:${islandId}:${objectId}`;

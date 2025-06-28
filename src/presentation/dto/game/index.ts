@@ -11,11 +11,13 @@ export * from './response/player-join-success.response';
 export * from './response/player-left.response';
 export * from './response/player-moved.response';
 export * from './response/attacked.response';
+export * from './response/attack-object.response';
 export * from './response/receive-message';
 export * from './response/message-sent.response';
 export * from './response/island-heartbeat';
 export * from './response/created-island.response';
 export * from './response/can-join-island.response';
+export * from './response/respawn-object.response';
 
 export * from './socket/type';
 export * from './socket/known-exception';

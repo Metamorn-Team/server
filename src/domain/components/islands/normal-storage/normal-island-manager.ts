@@ -3,7 +3,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
-import { IslandObjectWriter } from 'src/domain/components/island-spawn-object/island-object-writer';
+import { RespawnQueueManager } from 'src/domain/components/island-spawn-object/respawn-queue-manager';
 import { IslandManager } from 'src/domain/components/islands/interface/island-manager';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
@@ -30,9 +30,8 @@ export class NormalIslandManager implements IslandManager {
         private readonly equipmentReader: EquipmentReader,
         private readonly islandJoinWriter: IslandJoinWriter,
         private readonly islandActiveObjectWriter: IslandActiveObjectWriter,
-        private readonly islandObjectWriter: IslandObjectWriter,
-
         private readonly lockManager: RedisTransactionManager,
+        private readonly respawnQueueManager: RespawnQueueManager,
     ) {}
 
     async canJoin(islandId: string) {
@@ -198,15 +197,18 @@ export class NormalIslandManager implements IslandManager {
             }
 
             try {
-                await this.islandObjectWriter.deleteAllByIslandId(islandId);
-            } catch (e) {
-                this.logger.error(`PersistentObject 제거 실패: ${islandId}`, e);
-            }
-
-            try {
                 this.islandActiveObjectWriter.deleteAllByIslandId(islandId);
             } catch (e) {
                 this.logger.error(`ActiveObject 제거 실패: ${islandId}`, e);
+            }
+
+            try {
+                this.respawnQueueManager.removeAllByIslandId(islandId);
+            } catch (e) {
+                this.logger.error(
+                    `RespawnQueue 스폰 대기열 오브젝트 제거 실패: ${islandId}`,
+                    e,
+                );
             }
 
             try {

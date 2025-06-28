@@ -24,6 +24,7 @@ import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
 import {
     ActiveObject,
     ActiveObjectPrototype,
+    ObjectStatus,
     PersistentObject,
     PersistentObjectPrototype,
 } from 'src/domain/types/spawn-object/active-object';
@@ -259,7 +260,7 @@ export const generatePersistentObject = (
         id: partial?.id || v4(),
         islandId,
         type: partial?.type || 'TREE',
-        status: partial?.status || 'ALIVE',
+        status: partial?.status || ObjectStatus.ALIVE,
         maxHp: partial?.maxHp || 100,
         respawnTime: partial?.respawnTime || 10000,
         x: partial?.x || 0,
@@ -278,6 +279,8 @@ export const generateActiveObject = (
         x: partial?.x || 0,
         y: partial?.y || 0,
         respawnTime: partial?.respawnTime || 10000,
+        maxHp: partial?.maxHp || 100,
         hp: partial?.hp || 100,
+        status: partial?.status || ObjectStatus.ALIVE,
     });
 };
