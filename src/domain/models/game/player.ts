@@ -19,6 +19,8 @@ export interface PlayerPrototype {
     readonly isFacingRight?: boolean;
     readonly lastMoved?: number;
     readonly lastActivity?: number;
+    readonly minDamage?: number;
+    readonly maxDamage?: number;
 }
 
 export interface CollidableObject {
@@ -40,6 +42,8 @@ export class Player {
     public isFacingRight: boolean;
     public lastMoved: number;
     public lastActivity: number;
+    public minDamage = PLAYER_STATS.PAWN.MIN_DAMAGE;
+    public maxDamage = PLAYER_STATS.PAWN.MAX_DAMAGE;
 
     constructor(param: PlayerPrototype, now = Date.now()) {
         Object.assign(this, {
@@ -55,10 +59,7 @@ export class Player {
     }
 
     get damage(): number {
-        return random.between(
-            PLAYER_STATS.PAWN.MIN_DAMAGE,
-            PLAYER_STATS.PAWN.MAX_DAMAGE,
-        );
+        return random.between(this.minDamage, this.maxDamage);
     }
 
     public getHitBox(): Circle {
