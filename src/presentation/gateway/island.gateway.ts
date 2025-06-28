@@ -88,8 +88,9 @@ export class IslandGateway
             await this.gameIslandService.joinDesertedIsland(userId, client.id);
 
         const activeObjects = this.islandActiveObjectReader
-            .readAll(joinedIsland.id)
+            .readAlive(joinedIsland.id)
             .map((object) => IslandActiveObject.fromActiveObject(object));
+        console.log(activeObjects);
 
         const { x, y } = joinedPlayer;
 

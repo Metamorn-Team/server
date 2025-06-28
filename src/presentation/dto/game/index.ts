@@ -17,6 +17,7 @@ export * from './response/message-sent.response';
 export * from './response/island-heartbeat';
 export * from './response/created-island.response';
 export * from './response/can-join-island.response';
+export * from './response/respawn-object.response';
 
 export * from './socket/type';
 export * from './socket/known-exception';

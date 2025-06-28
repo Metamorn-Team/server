@@ -18,8 +18,9 @@ import { GetLiveIslandListReqeust } from '../../island/request/get-live-island-l
 import { GetLiveIslandListResponse } from '../../island/response/get-live-island-list.response';
 import { WsErrorBody } from './known-exception';
 import { SendFriendRequest } from '../../friends/request/send-friend.request';
-import { UpdateIslandInfoRequest } from 'src/presentation/dto/island/request/update-island-info.request';
-import { AttackObjectResponse } from 'src/presentation/dto/game/response/attack-object.response';
+import { UpdateIslandInfoRequest } from '../../island/request/update-island-info.request';
+import { AttackObjectResponse } from '../response/attack-object.response';
+import { RespawnObjectResponse } from '../response/respawn-object.response';
 
 export type ClientToLoby = {
     createIsland: (data: CreateIslandRequest) => void;
@@ -65,6 +66,7 @@ export type IslandToClient = {
     islandHearbeat: (data: IslandHeartbeatResponse) => void;
     jump: (userId: string) => void;
     invalidVersion: () => void;
+    spawnObjects: (data: RespawnObjectResponse) => void;
 } & ErrorToClient;
 
 export type ClientToIslandSettings = {
