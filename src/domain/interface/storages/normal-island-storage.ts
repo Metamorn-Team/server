@@ -13,6 +13,7 @@ export interface NormalIslandStorage {
         islandId: string,
         playerId: string,
     ): Promise<string | null>;
+    getAllIsland(): Promise<LiveNormalIsland[]>;
     update(islandId: string, data: NormalIslandUpdateInput): Promise<void>;
     delete(islandId: string): Promise<void>;
 }

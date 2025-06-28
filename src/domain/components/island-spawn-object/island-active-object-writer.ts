@@ -16,4 +16,8 @@ export class IslandActiveObjectWriter {
     deleteAllByIslandId(islandId: string) {
         this.islandSpawnObjectMemoryStorage.deleteAllByIslandId(islandId);
     }
+
+    delete(islandId: string, id: string) {
+        this.islandSpawnObjectMemoryStorage.delete(islandId, id);
+    }
 }

@@ -12,7 +12,9 @@ import { Player } from 'src/domain/models/game/player';
 import { GameService } from 'src/domain/services/game/game.service';
 import { LiveDesertedIsland } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
+import { RedisModule } from 'src/infrastructure/redis/redis.module';
 import { PlayerMemoryStorage } from 'src/infrastructure/storages/player-memory-storage';
 import { DesertedIslandStorageModule } from 'src/modules/game/desert-island-storage.module';
 import { GameServiceModule } from 'src/modules/game/game-service.module';
@@ -30,7 +32,12 @@ describe('GameService', () => {
 
     beforeAll(async () => {
         app = await Test.createTestingModule({
-            imports: [GameServiceModule, DesertedIslandStorageModule],
+            imports: [
+                GameServiceModule,
+                DesertedIslandStorageModule,
+                PrismaModule,
+                RedisModule,
+            ],
         }).compile();
         redis = app.get<RedisClientService>(RedisClientService).getClient();
 

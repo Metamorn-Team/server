@@ -1,8 +1,12 @@
 import { OBJECT_HIT_BOX } from 'src/constants/game/hit-box';
 import { Rectangle } from 'src/domain/types/game.types';
+import { SpawnZone } from 'src/domain/types/spawn-zone';
 import { gridToPosition } from 'src/utils/game/grid-to-position';
 
-export type ObjectStatus = 'ALIVE' | 'DEAD';
+export enum ObjectStatus {
+    ALIVE = 'ALIVE',
+    DEAD = 'DEAD',
+}
 
 export interface PersistentObjectPrototype {
     id: string;
@@ -28,7 +32,7 @@ export class PersistentObject {
     constructor(param: PersistentObjectPrototype) {
         Object.assign(this, {
             ...param,
-            status: param.status || 'ALIVE',
+            status: param.status || ObjectStatus.ALIVE,
         });
     }
 
@@ -52,7 +56,7 @@ export class PersistentObject {
             id: idGen(),
             islandId,
             type: spawnZone.spawnObject.type,
-            status: 'ALIVE',
+            status: ObjectStatus.ALIVE,
             maxHp: spawnZone.spawnObject.maxHp,
             respawnTime: spawnZone.spawnObject.respawnTime,
             x,
@@ -69,6 +73,8 @@ export interface ActiveObjectPrototype {
     readonly y: number;
     respawnTime: number;
     hp: number;
+    maxHp: number;
+    status: ObjectStatus;
 }
 
 export class ActiveObject {
@@ -78,27 +84,30 @@ export class ActiveObject {
     public readonly x: number;
     public readonly y: number;
     public respawnTime: number;
+    public maxHp: number;
     public hp: number;
+    public status: ObjectStatus;
 
     constructor(param: ActiveObjectPrototype) {
         Object.assign(this, param);
     }
 
-    static fromPersistentObject(
-        persistentObject: PersistentObject,
-    ): ActiveObject {
+    static from(param: SpawnZone & { islandId: string }, idGen: () => string) {
+        const { x, y } = gridToPosition(param.gridX, param.gridY);
         return new ActiveObject({
-            id: persistentObject.id,
-            islandId: persistentObject.islandId,
-            type: persistentObject.type,
-            x: persistentObject.x,
-            y: persistentObject.y,
-            respawnTime: persistentObject.respawnTime,
-            hp: persistentObject.maxHp,
+            id: idGen(),
+            islandId: param.islandId,
+            type: param.spawnObject.type,
+            x,
+            y,
+            hp: param.spawnObject.maxHp,
+            maxHp: param.spawnObject.maxHp,
+            respawnTime: param.spawnObject.respawnTime,
+            status: ObjectStatus.ALIVE,
         });
     }
 
-    public getHitBox(): Rectangle {
+    get hitBox(): Rectangle {
         return {
             x: this.x,
             y:
@@ -111,5 +120,26 @@ export class ActiveObject {
             height: OBJECT_HIT_BOX[this.type as keyof typeof OBJECT_HIT_BOX]
                 .height,
         };
+    }
+
+    public hit(damage: number) {
+        this.hp -= damage;
+
+        if (this.hp <= 0) {
+            this.dead();
+        }
+    }
+
+    public dead() {
+        this.status = ObjectStatus.DEAD;
+    }
+
+    public revive() {
+        this.status = ObjectStatus.ALIVE;
+        this.hp = this.maxHp;
+    }
+
+    public isDead(): boolean {
+        return this.status === ObjectStatus.DEAD;
     }
 }

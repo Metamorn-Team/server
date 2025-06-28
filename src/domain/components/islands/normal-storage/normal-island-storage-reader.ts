@@ -13,6 +13,10 @@ export class NormalIslandStorageReader implements IslandReader {
         private readonly normalIslandStorage: NormalIslandStorage,
     ) {}
 
+    async readAll() {
+        return await this.normalIslandStorage.getAllIsland();
+    }
+
     async readOne(id: string): Promise<LiveNormalIsland> {
         const island = await this.normalIslandStorage.getIsland(id);
         if (!island)
