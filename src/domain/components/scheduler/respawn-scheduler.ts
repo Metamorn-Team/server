@@ -20,7 +20,6 @@ export class RespawnScheduler {
     }) // 3초마다 실행
     handleRespawn() {
         try {
-            this.logger.log('리스폰 스케줄 실행');
             const respawnedObjects = this.islandActiveObjectSpawner.respawn();
 
             if (respawnedObjects.length > 0) {

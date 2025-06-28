@@ -236,8 +236,6 @@ export class IslandGateway
             | undefined;
         if (!checkAppVersion(appVersion)) client.emit('invalidVersion');
 
-        this.logger.debug(appVersion);
-
         const heartbeats = await this.gameService.hearbeatFromIsland(userId);
 
         client.emit('islandHearbeat', heartbeats);

@@ -3,7 +3,11 @@ import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Namespace } from 'socket.io';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { ActiveObject } from 'src/domain/types/spawn-object/active-object';
-import { ClientToIsland, IslandActiveObject, IslandToClient } from 'types';
+import {
+    ClientToIsland,
+    IslandActiveObject,
+    IslandToClient,
+} from 'src/presentation/dto/game';
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({
