@@ -60,8 +60,13 @@ export class IslandActiveObjectSpawner {
         // 한 번에 들어오는 오브젝트는 항상 같은 섬임
         const islandId = objects[0].islandId;
 
+        // 같은 섬의 오브젝트들만 필터링
+        const sameIslandObjects = objects.filter(
+            (object) => object.islandId === islandId,
+        );
+
         this.respawnQueueManager.addMany(
-            objects.map((object) => ({
+            sameIslandObjects.map((object) => ({
                 objectId: object.id,
                 islandId,
                 respawnTime: now.getTime() + object.respawnTime * 1000 * 60,

@@ -109,4 +109,12 @@ export class RespawnQueueManager {
     private sortQueue() {
         this.queue.sort((a, b) => a.respawnTime - b.respawnTime);
     }
+
+    /**
+     * 전체 리스폰 대기열을 비웁니다.
+     */
+    clear() {
+        // 배열 length를 0으로 설정하면 배열 비워지더라..
+        this.queue.length = 0;
+    }
 }
