@@ -21,7 +21,10 @@ import { GameServiceModule } from 'src/modules/game/game-service.module';
 import {
     generateDesertedIslandModel,
     generatePlayerModel,
+    generateActiveObject,
 } from 'test/helper/generators';
+import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
+import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
 
 describe('GameService', () => {
     let app: TestingModule;
@@ -29,6 +32,8 @@ describe('GameService', () => {
     let gameService: GameService;
     let playerMemoryStorage: PlayerMemoryStorage;
     let desertedIslandStorage: DesertedIslandStorage;
+    let islandActiveObjectReader: IslandActiveObjectReader;
+    let islandActiveObjectWriter: IslandActiveObjectWriter;
 
     beforeAll(async () => {
         app = await Test.createTestingModule({
@@ -45,6 +50,12 @@ describe('GameService', () => {
         playerMemoryStorage = app.get<PlayerMemoryStorage>(PlayerMemoryStorage);
         desertedIslandStorage = app.get<DesertedIslandStorage>(
             DesertedIslandStorage,
+        );
+        islandActiveObjectReader = app.get<IslandActiveObjectReader>(
+            IslandActiveObjectReader,
+        );
+        islandActiveObjectWriter = app.get<IslandActiveObjectWriter>(
+            IslandActiveObjectWriter,
         );
     });
 
@@ -248,6 +259,157 @@ describe('GameService', () => {
                     })),
                 ]),
             );
+        });
+    });
+
+    describe('오브젝트 공격', () => {
+        let island: LiveDesertedIsland;
+        let attacker: Player;
+
+        beforeEach(async () => {
+            island = generateDesertedIslandModel();
+            attacker = generatePlayerModel({
+                isFacingRight: true,
+                roomId: island.id,
+                islandType: IslandTypeEnum.DESERTED,
+                x: 0,
+                y: 0,
+            });
+
+            await desertedIslandStorage.createIsland(island);
+            playerMemoryStorage.addPlayer(attacker);
+            await desertedIslandStorage.addPlayerToIsland(
+                island.id,
+                attacker.id,
+            );
+        });
+
+        it('공격 범위에 속하는 모든 오브젝트는 공격 대상이 된다', async () => {
+            // 공격 범위 내의 오브젝트들 생성
+            const attackedObjects = [
+                generateActiveObject(island.id, {
+                    type: 'TREE',
+                    x: PLAYER_HIT_BOX.PAWN.RADIUS + 10,
+                    y: 0,
+                    hp: 100,
+                    maxHp: 100,
+                }),
+                generateActiveObject(island.id, {
+                    type: 'TREE_TALL',
+                    x: PLAYER_HIT_BOX.PAWN.RADIUS + 20,
+                    y: 0,
+                    hp: 150,
+                    maxHp: 150,
+                }),
+            ];
+
+            islandActiveObjectWriter.createMany(attackedObjects);
+
+            const result = await gameService.attackObject(attacker.id);
+
+            expect(result.attacker.id).toEqual(attacker.id);
+            expect(result.attackedObjects.length).toEqual(2);
+            expect(result.attackedObjects.map((obj) => obj.id).sort()).toEqual(
+                attackedObjects.map((obj) => obj.id).sort(),
+            );
+
+            // 공격받은 오브젝트들의 HP가 감소했는지 확인
+            const updatedObjects = islandActiveObjectReader.readAll(island.id);
+            updatedObjects.forEach((obj) => {
+                const originalObject = attackedObjects.find(
+                    (o) => o.id === obj.id,
+                );
+                if (originalObject) {
+                    // 데미지가 0일 수 있으므로 HP가 감소했거나 같을 수 있음
+                    expect(obj.hp).toBeLessThanOrEqual(originalObject.hp);
+                }
+            });
+        });
+
+        it('공격 범위 밖의 오브젝트는 공격을 받지 않는다', async () => {
+            // 공격 범위 밖의 오브젝트 생성
+            const outOfRangeObjects = [
+                generateActiveObject(island.id, {
+                    type: 'TREE',
+                    x: -PLAYER_HIT_BOX.PAWN.RADIUS - 10,
+                    y: 0,
+                    hp: 100,
+                    maxHp: 100,
+                }),
+                generateActiveObject(island.id, {
+                    type: 'TREE_TALL',
+                    x:
+                        PLAYER_HIT_BOX.PAWN.RADIUS +
+                        ATTACK_BOX_SIZE.PAWN.width +
+                        10,
+                    y: 0,
+                    hp: 150,
+                    maxHp: 150,
+                }),
+            ];
+
+            islandActiveObjectWriter.createMany(outOfRangeObjects);
+
+            const result = await gameService.attackObject(attacker.id);
+
+            expect(result.attacker.id).toEqual(attacker.id);
+            expect(result.attackedObjects.length).toEqual(0);
+
+            // 오브젝트들의 HP가 변경되지 않았는지 확인
+            const updatedObjects = islandActiveObjectReader.readAll(island.id);
+            updatedObjects.forEach((obj) => {
+                const originalObject = outOfRangeObjects.find(
+                    (o) => o.id === obj.id,
+                );
+                if (originalObject) {
+                    expect(obj.hp).toEqual(originalObject.hp);
+                }
+            });
+        });
+
+        it('HP가 0 이하가 된 오브젝트는 죽은 상태가 된다', async () => {
+            // HP가 낮은 오브젝트 생성
+            const weakObject = generateActiveObject(island.id, {
+                type: 'TREE',
+                x: PLAYER_HIT_BOX.PAWN.RADIUS + 5,
+                y: 0,
+                hp: 1,
+                maxHp: 100,
+            });
+
+            islandActiveObjectWriter.createMany([weakObject]);
+
+            const result = await gameService.attackObject(attacker.id);
+
+            expect(result.attacker.id).toEqual(attacker.id);
+            expect(result.attackedObjects.length).toEqual(1);
+
+            // 오브젝트가 죽은 상태인지 확인
+            const updatedObjects = islandActiveObjectReader.readAll(island.id);
+            const deadObject = updatedObjects.find(
+                (obj) => obj.id === weakObject.id,
+            );
+            expect(deadObject?.status).toEqual('DEAD');
+            expect(deadObject?.hp).toBeLessThanOrEqual(0);
+        });
+
+        it('이미 죽은 오브젝트는 공격 대상이 되지 않는다', async () => {
+            // 죽은 오브젝트 생성
+            const deadObject = generateActiveObject(island.id, {
+                type: 'TREE',
+                x: PLAYER_HIT_BOX.PAWN.RADIUS + 5,
+                y: 0,
+                hp: 0,
+                maxHp: 100,
+            });
+            deadObject.dead(); // 명시적으로 죽은 상태로 설정
+
+            islandActiveObjectWriter.createMany([deadObject]);
+
+            const result = await gameService.attackObject(attacker.id);
+
+            expect(result.attacker.id).toEqual(attacker.id);
+            expect(result.attackedObjects.length).toEqual(0);
         });
     });
 });
