@@ -35,9 +35,4 @@ export class RedisClientService implements OnModuleDestroy {
     async onModuleDestroy() {
         await this.client.quit();
     }
-
-    isPipelineFailed(results: [error: Error | null, result: unknown][] | null) {
-        if (!results) return true;
-        return results.some(([err]) => err);
-    }
 }
