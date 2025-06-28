@@ -26,6 +26,7 @@ import { EquipmentModule } from 'src/modules/equipments/equipment.module';
 import { PromotionModule } from 'src/modules/promotions/promotion.module';
 import { PromotionProductModule } from 'src/modules/promotion-product/promotion-product.module';
 import { MapModule } from 'src/modules/map/map.module';
+import { RespawnSchedulerModule } from 'src/modules/scheduler/respawn-scheduler.module';
 
 @Module({
     imports: [
@@ -51,7 +52,7 @@ import { MapModule } from 'src/modules/map/map.module';
         PromotionModule,
         PromotionProductModule,
         MapModule,
-
+        RespawnSchedulerModule,
         LoaderModule,
     ],
     controllers: [AppController],
