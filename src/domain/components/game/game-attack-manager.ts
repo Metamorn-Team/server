@@ -14,10 +14,10 @@ export class GameAttackManager {
         private readonly islandActiveObjectWriter: IslandActiveObjectWriter,
     ) {}
 
-    findCollidingObjects(
+    findCollidingObjects<T extends CollidableObject>(
         attackerId: string,
         attackRangeBox: Rectangle,
-        objects: CollidableObject[],
+        objects: T[],
     ) {
         return objects.reduce((acc, object) => {
             if (object.id === attackerId) return acc;
@@ -26,22 +26,16 @@ export class GameAttackManager {
                 acc.push(object);
             }
             return acc;
-        }, [] as CollidableObject[]);
+        }, [] as T[]);
     }
 
-    applyAttack(attacker: Player, attackedObjectIds: string[]): ActiveObject[] {
-        const attackedObjects = this.islandActiveObjectReader.readByIds(
-            attacker.roomId,
-            attackedObjectIds,
-        );
-
+    applyAttack(
+        attacker: Player,
+        attackedObjects: ActiveObject[],
+    ): ActiveObject[] {
         attackedObjects.forEach((object) => {
-            object.hit(attacker.damage);
-            if (object.isDead()) {
-                this.islandActiveObjectWriter.delete(
-                    attacker.roomId,
-                    object.id,
-                );
+            if (!object.isDead()) {
+                object.hit(attacker.damage);
             }
         });
 
