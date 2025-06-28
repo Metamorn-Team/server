@@ -16,6 +16,16 @@ export class MapReader {
         return await this.mapRepository.findAll();
     }
 
+    async getMapKeyMap(): Promise<{ [key: string]: string }> {
+        const maps = await this.readAll();
+        const mapKeyMap: { [key: string]: string } = {};
+        maps.forEach((map) => {
+            mapKeyMap[map.key] = map.id;
+        });
+
+        return mapKeyMap;
+    }
+
     async readByKey(key: string): Promise<Map> {
         const map = await this.mapRepository.findByKey(key);
         if (!map) {

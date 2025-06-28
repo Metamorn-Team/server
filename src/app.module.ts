@@ -17,7 +17,6 @@ import { clsOptions } from 'src/configs/cls/cls-config';
 import { PurchaseModule } from 'src/modules/purchases/purchase.module';
 import { FileModule } from 'src/modules/files/file.module';
 import { TagModule } from 'src/modules/tags/tag.module';
-import { LoaderModule } from 'src/modules/loaders/loader.module';
 import { RedisModule } from 'src/infrastructure/redis/redis.module';
 import { validationSchema } from 'src/env-validation';
 import { IslandModule } from 'src/modules/islands/island.module';
@@ -27,6 +26,7 @@ import { PromotionModule } from 'src/modules/promotions/promotion.module';
 import { PromotionProductModule } from 'src/modules/promotion-product/promotion-product.module';
 import { MapModule } from 'src/modules/map/map.module';
 import { RespawnSchedulerModule } from 'src/modules/scheduler/respawn-scheduler.module';
+import { LoaderModule } from 'src/modules/loaders/loader.module';
 
 @Module({
     imports: [
@@ -53,6 +53,7 @@ import { RespawnSchedulerModule } from 'src/modules/scheduler/respawn-scheduler.
         PromotionProductModule,
         MapModule,
         RespawnSchedulerModule,
+
         LoaderModule,
     ],
     controllers: [AppController],
