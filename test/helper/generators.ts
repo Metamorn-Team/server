@@ -1,4 +1,5 @@
 import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
+import { PLAYER_STATS } from 'src/constants/game/stats';
 import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity';
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
@@ -186,6 +187,8 @@ export const generatePlayerModel = (partial?: Partial<Player>) => {
         isFacingRight: partial?.isFacingRight ?? true,
         lastMoved: partial?.lastMoved || now,
         lastActivity: partial?.lastActivity || now,
+        minDamage: partial?.minDamage ?? PLAYER_STATS.PAWN.MIN_DAMAGE,
+        maxDamage: partial?.maxDamage ?? PLAYER_STATS.PAWN.MAX_DAMAGE,
     });
 };
 

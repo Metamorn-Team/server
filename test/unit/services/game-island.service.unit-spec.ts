@@ -31,6 +31,7 @@ import {
     generateUserEntityV2,
 } from 'test/helper/generators';
 import { v4 } from 'uuid';
+import { RespawnQueueManager } from 'src/domain/components/island-spawn-object/respawn-queue-manager';
 
 describe('GameIslandService', () => {
     let app: TestingModule;
@@ -43,6 +44,7 @@ describe('GameIslandService', () => {
 
     let islandActiveObjectReader: IslandActiveObjectReader;
     let islandActiveObjectWriter: IslandActiveObjectWriter;
+    let respawnQueueManager: RespawnQueueManager;
 
     let normalIslandManager: NormalIslandManager;
     let desertedIslandManager: DesertedIslandManager;
@@ -75,6 +77,7 @@ describe('GameIslandService', () => {
         islandActiveObjectWriter = app.get<IslandActiveObjectWriter>(
             IslandActiveObjectWriter,
         );
+        respawnQueueManager = app.get<RespawnQueueManager>(RespawnQueueManager);
     });
 
     afterAll(async () => {
@@ -124,6 +127,10 @@ describe('GameIslandService', () => {
             const island = generateNormalIslandModel({ mapKey: map.key });
             await normalIslandStorage.createIsland(island);
 
+            // 섬에 오브젝트 생성
+            const activeObject = generateActiveObject(island.id);
+            islandActiveObjectWriter.createMany([activeObject]);
+
             const result = await gameIslandService.joinNormalIsland(
                 user.id,
                 clientId,
@@ -139,6 +146,48 @@ describe('GameIslandService', () => {
             expect(result.activePlayers.length).toEqual(0);
             expect(result.joinedIsland.id).toEqual(island.id);
             expect(result.joinedPlayer.id).toEqual(user.id);
+        });
+
+        it('일반 섬 참여 시 섬의 activeObjects를 확인할 수 있다', async () => {
+            const clientId = 'test-client-id';
+
+            const island = generateNormalIslandModel({ mapKey: map.key });
+            await normalIslandStorage.createIsland(island);
+
+            // 섬에 여러 오브젝트 생성
+            const activeObjects = [
+                generateActiveObject(island.id, {
+                    type: 'TREE',
+                    x: 100,
+                    y: 100,
+                }),
+                generateActiveObject(island.id, {
+                    type: 'TREE_TALL',
+                    x: 200,
+                    y: 200,
+                }),
+            ];
+            islandActiveObjectWriter.createMany(activeObjects);
+
+            const result = await gameIslandService.joinNormalIsland(
+                user.id,
+                clientId,
+                island.id,
+            );
+
+            // 섬의 activeObjects 확인
+            const islandActiveObjects = islandActiveObjectReader.readAll(
+                island.id,
+            );
+
+            expect(islandActiveObjects.length).toEqual(2);
+            expect(islandActiveObjects[0].type).toEqual('TREE');
+            expect(islandActiveObjects[0].x).toEqual(100);
+            expect(islandActiveObjects[0].y).toEqual(100);
+            expect(islandActiveObjects[1].type).toEqual('TREE_TALL');
+            expect(islandActiveObjects[1].x).toEqual(200);
+            expect(islandActiveObjects[1].y).toEqual(200);
+            expect(result.joinedIsland.id).toEqual(island.id);
         });
 
         it('참여 인원이 가득찬 섬에 참여 시도 시 예외가 발생한다', async () => {
@@ -203,6 +252,10 @@ describe('GameIslandService', () => {
             const island = generateDesertedIslandModel({ mapKey: map.key });
             await desertedIslandStorage.createIsland(island);
 
+            // 섬에 오브젝트 생성
+            const activeObject = generateActiveObject(island.id);
+            islandActiveObjectWriter.createMany([activeObject]);
+
             const result = await gameIslandService.joinDesertedIsland(
                 user.id,
                 clientId,
@@ -217,6 +270,45 @@ describe('GameIslandService', () => {
             expect(result.activePlayers.length).toEqual(0);
             expect(result.joinedIsland.id).toEqual(island.id);
             expect(result.joinedPlayer.id).toEqual(user.id);
+        });
+
+        it('무인도 참여 시 섬의 activeObjects를 확인할 수 있다', async () => {
+            const island = generateDesertedIslandModel({ mapKey: map.key });
+            await desertedIslandStorage.createIsland(island);
+
+            // 섬에 여러 오브젝트 생성
+            const activeObjects = [
+                generateActiveObject(island.id, {
+                    type: 'TREE',
+                    x: 150,
+                    y: 150,
+                }),
+                generateActiveObject(island.id, {
+                    type: 'TREE_TALL',
+                    x: 250,
+                    y: 250,
+                }),
+            ];
+            islandActiveObjectWriter.createMany(activeObjects);
+
+            const result = await gameIslandService.joinDesertedIsland(
+                user.id,
+                clientId,
+            );
+
+            // 섬의 activeObjects 확인
+            const islandActiveObjects = islandActiveObjectReader.readAll(
+                island.id,
+            );
+
+            expect(islandActiveObjects.length).toEqual(2);
+            expect(islandActiveObjects[0].type).toEqual('TREE');
+            expect(islandActiveObjects[0].x).toEqual(150);
+            expect(islandActiveObjects[0].y).toEqual(150);
+            expect(islandActiveObjects[1].type).toEqual('TREE_TALL');
+            expect(islandActiveObjects[1].x).toEqual(250);
+            expect(islandActiveObjects[1].y).toEqual(250);
+            expect(result.joinedIsland.id).toEqual(island.id);
         });
 
         it('빈 섬이 없다면 새로운 섬을 생성해서 참여한다', async () => {
@@ -283,6 +375,14 @@ describe('GameIslandService', () => {
             const activeObject = generateActiveObject(liveIsland.id);
             islandActiveObjectWriter.createMany([activeObject]);
 
+            // 리스폰 큐에 오브젝트 추가
+            const respawnQueueItem = {
+                objectId: activeObject.id,
+                islandId: liveIsland.id,
+                respawnTime: Date.now() + 60000, // 1분 후 리스폰
+            };
+            respawnQueueManager.addMany([respawnQueueItem]);
+
             // 플레이어 생성 및 섬 참여
             const me = generatePlayerModel({ roomId: liveIsland.id });
 
@@ -298,10 +398,14 @@ describe('GameIslandService', () => {
             const deletedActiveObject = islandActiveObjectReader.readAll(
                 liveIsland.id,
             );
+            const deletedRespawnQueueItems = respawnQueueManager.getByIslandId(
+                liveIsland.id,
+            );
 
             expect(leavedPlayer).toBeNull();
             expect(islandAfterLeave).toBeNull();
             expect(deletedActiveObject.length).toEqual(0);
+            expect(deletedRespawnQueueItems.length).toEqual(0);
         });
 
         it('섬 이탈 중 예외가 발생하면 이전 동작이 롤백된다', async () => {
@@ -376,6 +480,18 @@ describe('GameIslandService', () => {
         });
 
         it('섬 이탈 시 참여 인원이 0명일 경우 섬을 삭제한다', async () => {
+            // 섬에 오브젝트 생성
+            const activeObject = generateActiveObject(liveIsland.id);
+            islandActiveObjectWriter.createMany([activeObject]);
+
+            // 리스폰 큐에 오브젝트 추가
+            const respawnQueueItem = {
+                objectId: activeObject.id,
+                islandId: liveIsland.id,
+                respawnTime: Date.now() + 60000, // 1분 후 리스폰
+            };
+            respawnQueueManager.addMany([respawnQueueItem]);
+
             // 플레이어 생성 및 섬 참여
             const me = generatePlayerModel({
                 roomId: liveIsland.id,
@@ -391,9 +507,17 @@ describe('GameIslandService', () => {
             const islandAfterLeave = await desertedIslandStorage.getIsland(
                 liveIsland.id,
             );
+            const deletedActiveObject = islandActiveObjectReader.readAll(
+                liveIsland.id,
+            );
+            const deletedRespawnQueueItems = respawnQueueManager.getByIslandId(
+                liveIsland.id,
+            );
 
             expect(leavedPlayer).toBeNull();
             expect(islandAfterLeave).toBeNull();
+            expect(deletedActiveObject.length).toEqual(0);
+            expect(deletedRespawnQueueItems.length).toEqual(0);
         });
 
         it('섬 이탈 중 예외가 발생하면 이전 동작이 롤백된다', async () => {
