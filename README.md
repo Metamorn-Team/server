@@ -7,6 +7,13 @@
 
 <br />
 
+## 놀러가기
+<a href="https://livisland.com" target="_blank">
+  <img src="https://img.shields.io/badge/🎮_리브아일랜드_놀러가기-00e676?style=for-the-badge" alt="리브아일랜드 놀러가기" />
+</a>
+
+<br />
+
 ## 기술 스택
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
