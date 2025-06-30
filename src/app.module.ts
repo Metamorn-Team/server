@@ -27,6 +27,8 @@ import { PromotionProductModule } from 'src/modules/promotion-product/promotion-
 import { MapModule } from 'src/modules/map/map.module';
 import { RespawnSchedulerModule } from 'src/modules/scheduler/respawn-scheduler.module';
 import { LoaderModule } from 'src/modules/loaders/loader.module';
+import { WinstonModule } from 'nest-winston';
+import { windstonOptions } from 'src/configs/winston/winston-options';
 
 const onlyProdModules =
     process.env.NODE_ENV === 'test'
@@ -37,6 +39,7 @@ const onlyProdModules =
     imports: [
         ConfigModule.forRoot({ isGlobal: true, validationSchema }),
         ClsModule.forRoot(clsOptions),
+        WinstonModule.forRoot(windstonOptions),
         InterceptorsModule,
         PipeModule,
         PrismaModule,

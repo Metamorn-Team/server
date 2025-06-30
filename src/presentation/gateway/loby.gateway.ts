@@ -1,4 +1,5 @@
-import { Logger, UseFilters, UseGuards } from '@nestjs/common';
+import { UseFilters, UseGuards, Inject } from '@nestjs/common';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import {
     ConnectedSocket,
     MessageBody,
@@ -22,6 +23,7 @@ import {
     LobyToClient,
 } from 'src/presentation/dto';
 import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join.request';
+import { Logger } from 'winston';
 
 type TypedSocket = Socket<ClientToLoby, LobyToClient>;
 
@@ -35,12 +37,12 @@ type TypedSocket = Socket<ClientToLoby, LobyToClient>;
     },
 })
 export class LobyGateway {
-    private readonly logger = new Logger(LobyGateway.name);
-
     @WebSocketServer()
     private readonly wss: Namespace<ClientToLoby, LobyToClient>;
 
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
         private readonly gameIslandCreateService: GameIslandCreateService,
         private readonly gameIslandService: GameIslandService,
         private readonly islandStorageReader: NormalIslandStorageReader,

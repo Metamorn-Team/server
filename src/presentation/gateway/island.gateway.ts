@@ -1,4 +1,5 @@
-import { Logger, UseFilters } from '@nestjs/common';
+import { UseFilters, Inject } from '@nestjs/common';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Namespace, Socket } from 'socket.io';
 import {
     ConnectedSocket,
@@ -29,6 +30,7 @@ import { checkAppVersion } from 'test/unit/utils/check-app-version';
 import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
 import { IslandActiveObject } from 'src/presentation/dto/game/response/player-join-success.response';
 import { AttackObjectResponse } from 'src/presentation/dto/game/response/attack-object.response';
+import { Logger } from 'winston';
 
 type TypedSocket = Socket<
     ClientToIsland,
@@ -52,9 +54,9 @@ export class IslandGateway
         IslandToClient & IslandSettingsToClient
     >;
 
-    private readonly logger = new Logger(IslandGateway.name);
-
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
         private readonly wsConnectionAuthenticator: WsConnectionAuthenticator,
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly gameService: GameService,
@@ -82,7 +84,7 @@ export class IslandGateway
     ) {
         await this.kick(userId, client);
 
-        this.logger.log(`joined player : ${userId}`);
+        this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinDesertedIsland(userId, client.id);
@@ -90,8 +92,6 @@ export class IslandGateway
         const activeObjects = this.islandActiveObjectReader
             .readAlive(joinedIsland.id)
             .map((object) => IslandActiveObject.fromActiveObject(object));
-        console.log(activeObjects);
-
         const { x, y } = joinedPlayer;
 
         await client.join(joinedIsland.id);
@@ -117,7 +117,7 @@ export class IslandGateway
 
         const { islandId } = data;
 
-        this.logger.log(`joined player : ${userId}`);
+        this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinNormalIsland(
@@ -161,7 +161,7 @@ export class IslandGateway
             client.emit('playerLeftSuccess');
             client.to(player.roomId).emit('playerLeft', { id: player.id });
 
-            this.logger.log(`Leave cilent: ${client.id}`);
+            this.logger.info(`Leave cilent: ${client.id}`);
         }
     }
 
@@ -250,7 +250,7 @@ export class IslandGateway
     async handleConnection(client: TypedSocket) {
         try {
             await this.wsConnectionAuthenticator.authenticate(client);
-            this.logger.log(`Connected new client to Island: ${client.id}`);
+            this.logger.info(`Connected new client to Island: ${client.id}`);
         } catch (e) {
             client.emit('wsError', {
                 name: WsExceptions.INVALID_TOKEN,

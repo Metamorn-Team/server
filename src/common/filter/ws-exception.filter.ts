@@ -1,4 +1,5 @@
-import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
+import { Catch, ExceptionFilter, ArgumentsHost, Inject } from '@nestjs/common';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Socket } from 'socket.io';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
@@ -8,10 +9,14 @@ import {
     WsExceptionsType,
 } from 'src/presentation/dto/game/socket/known-exception';
 import { ErrorToClient } from 'types';
+import { Logger } from 'winston';
 
 @Catch()
 export class WsExceptionFilter implements ExceptionFilter {
-    private readonly logger = new Logger(WsExceptionFilter.name);
+    constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
+    ) {}
 
     catch(exception: Error, host: ArgumentsHost) {
         const ctx = host.switchToWs();
