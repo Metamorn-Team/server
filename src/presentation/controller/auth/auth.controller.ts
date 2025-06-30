@@ -82,8 +82,6 @@ export class AuthController {
         const { refreshToken, ...responseWithoutRefresh } = loginResponse;
 
         response.cookie('refresh_token', refreshToken, cookieOptions());
-        console.log('꾸끼', cookieOptions());
-
         return responseWithoutRefresh;
     }
 
