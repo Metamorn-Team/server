@@ -6,7 +6,6 @@ import { RespawnQueueManager } from 'src/domain/components/island-spawn-object/r
 import { IslandActiveObjectComponentModule } from 'src/modules/island-spawn-objects/island-active-object-component.module';
 import { RespawnQueueManagerModule } from 'src/modules/island-spawn-objects/respawn-queue-manager.module';
 import { SpawnZoneModule } from 'src/modules/spawn-zone/spawn-zone.module';
-import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { generateActiveObject } from 'test/helper/generators';
 import {
@@ -14,6 +13,7 @@ import {
     ObjectStatus,
 } from 'src/domain/types/spawn-object/active-object';
 import { v4 } from 'uuid';
+import { COMMON_IMPORTS } from 'test/unit/services/commom-imports';
 
 describe('IslandActiveObjectSpawner', () => {
     let app: TestingModule;
@@ -26,7 +26,7 @@ describe('IslandActiveObjectSpawner', () => {
     beforeAll(async () => {
         app = await Test.createTestingModule({
             imports: [
-                PrismaModule,
+                ...COMMON_IMPORTS,
                 SpawnZoneModule,
                 IslandActiveObjectComponentModule,
                 RespawnQueueManagerModule,

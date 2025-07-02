@@ -2,8 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Map } from '@prisma/client';
 import Redis from 'ioredis';
-import { ClsModule } from 'nestjs-cls';
-import { clsOptions } from 'src/configs/cls/cls-config';
+import { v4 } from 'uuid';
 import { NormalIslandPrototype } from 'src/domain/entities/islands/island.entity';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
@@ -11,12 +10,11 @@ import { TAG_AT_LEAST_ONE_MESSAGE } from 'src/domain/exceptions/message';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { GameIslandCreateService } from 'src/domain/services/game/game-island-create.service';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-create-service.module';
 import { generateTag, generateUserEntityV2 } from 'test/helper/generators';
-import { v4 } from 'uuid';
+import { COMMON_IMPORTS } from 'test/unit/services/commom-imports';
 
 describe('GameIslandService', () => {
     let app: TestingModule;
@@ -27,11 +25,7 @@ describe('GameIslandService', () => {
 
     beforeAll(async () => {
         app = await Test.createTestingModule({
-            imports: [
-                GameIslandCreateServiceModule,
-                PrismaModule,
-                ClsModule.forRoot(clsOptions),
-            ],
+            imports: [GameIslandCreateServiceModule, ...COMMON_IMPORTS],
         }).compile();
 
         db = app.get<PrismaService>(PrismaService);
