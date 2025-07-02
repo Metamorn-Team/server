@@ -1,4 +1,7 @@
-import { Logger, UseFilters } from '@nestjs/common';
+import { Logger } from 'winston';
+import { UseFilters, Inject } from '@nestjs/common';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Namespace, Socket } from 'socket.io';
 import {
     ConnectedSocket,
     MessageBody,
@@ -6,7 +9,6 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
-import { Namespace, Socket } from 'socket.io';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { WsValidatePipe } from 'src/common/pipe/ws-validate.pipe';
@@ -31,9 +33,11 @@ export class IslandSettingsGateway {
         IslandSettingsToClient
     >;
 
-    private readonly logger = new Logger(IslandSettingsGateway.name);
-
-    constructor(private readonly islandService: IslandService) {}
+    constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
+        private readonly islandService: IslandService,
+    ) {}
 
     @SubscribeMessage('updateIslandInfo')
     async updateIslandInfo(

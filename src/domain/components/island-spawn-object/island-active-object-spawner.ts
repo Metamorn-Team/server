@@ -1,16 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { v4 } from 'uuid';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
 import { SpawnZoneReader } from 'src/domain/components/spawn-zone/spawn-zone-reader';
 import { ActiveObject } from 'src/domain/types/spawn-object/active-object';
 import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
 import { RespawnQueueManager } from 'src/domain/components/island-spawn-object/respawn-queue-manager';
+import { Logger } from 'winston';
 
 @Injectable()
 export class IslandActiveObjectSpawner {
-    private readonly logger = new Logger(IslandActiveObjectSpawner.name);
-
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
         private readonly spawnZoneReader: SpawnZoneReader,
         private readonly islandActiveObjectWriter: IslandActiveObjectWriter,
         private readonly islandActiveObjectReader: IslandActiveObjectReader,

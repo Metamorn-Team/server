@@ -1,4 +1,6 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
 import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
@@ -18,9 +20,9 @@ import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transact
 
 @Injectable()
 export class DesertedIslandManager implements IslandManager {
-    private readonly logger = new Logger(DesertedIslandManager.name);
-
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
         private readonly playerStorageReader: PlayerStorageReader,

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { DESERTED_MAX_MEMBERS } from 'src/common/constants';
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { UserReader } from 'src/domain/components/users/user-reader';
@@ -25,12 +26,13 @@ import { EquipmentReader } from 'src/domain/components/equipments/equipment-read
 import { MapReader } from 'src/domain/components/map/map-reader';
 import { PlayerSpawnPointReader } from 'src/domain/components/player-spawn-point/player-spawn-point-reader';
 import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
+import { Logger } from 'winston';
 
 @Injectable()
 export class GameIslandService {
-    private readonly logger = new Logger(GameIslandService.name);
-
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
         private readonly equipmentReader: EquipmentReader,
         private readonly islandWriter: IslandWriter,
         private readonly islandJoinWriter: IslandJoinWriter,

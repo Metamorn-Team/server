@@ -1,13 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import Redis from 'ioredis';
-import { ClsModule } from 'nestjs-cls';
-import { clsOptions } from 'src/configs/cls/cls-config';
 import { NormalIslandManager } from 'src/domain/components/islands/normal-storage/normal-island-manager';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { SlotTypeEnum } from 'src/domain/types/equipment.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { NormalIslandManagerModule } from 'src/modules/islands/normal-island-manager.module';
@@ -18,6 +15,7 @@ import {
     generatePlayerModel,
     generateUserEntityV2,
 } from 'test/helper/generators';
+import { COMMON_IMPORTS } from 'test/unit/services/commom-imports';
 
 describe('NormalIslandManager', () => {
     let app: TestingModule;
@@ -30,11 +28,7 @@ describe('NormalIslandManager', () => {
 
     beforeAll(async () => {
         app = await Test.createTestingModule({
-            imports: [
-                NormalIslandManagerModule,
-                PrismaModule,
-                ClsModule.forRoot(clsOptions),
-            ],
+            imports: [NormalIslandManagerModule, ...COMMON_IMPORTS],
         }).compile();
 
         db = app.get<PrismaService>(PrismaService);

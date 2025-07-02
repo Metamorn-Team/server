@@ -1,13 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import Redis from 'ioredis';
-import { ClsModule } from 'nestjs-cls';
-import { clsOptions } from 'src/configs/cls/cls-config';
 import { DesertedIslandManager } from 'src/domain/components/islands/deserted-storage/deserted-island-manager';
 import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-island-storage';
 import { PlayerStorage } from 'src/domain/interface/storages/player-storage';
 import { SlotTypeEnum } from 'src/domain/types/equipment.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { DesertedIslandManagerModule } from 'src/modules/islands/deserted-island-manager.module';
@@ -18,6 +15,7 @@ import {
     generatePlayerModel,
     generateUserEntityV2,
 } from 'test/helper/generators';
+import { COMMON_IMPORTS } from 'test/unit/services/commom-imports';
 
 describe('DesertedIslandManager', () => {
     let app: TestingModule;
@@ -30,11 +28,7 @@ describe('DesertedIslandManager', () => {
 
     beforeAll(async () => {
         app = await Test.createTestingModule({
-            imports: [
-                DesertedIslandManagerModule,
-                PrismaModule,
-                ClsModule.forRoot(clsOptions),
-            ],
+            imports: [DesertedIslandManagerModule, ...COMMON_IMPORTS],
         }).compile();
 
         db = app.get<PrismaService>(PrismaService);
