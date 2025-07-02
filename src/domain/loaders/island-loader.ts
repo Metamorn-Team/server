@@ -1,14 +1,16 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { Logger } from 'winston';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { MapReader } from 'src/domain/components/map/map-reader';
 
 @Injectable()
-export class IslandLoader implements OnModuleInit {
-    private readonly logger = new Logger(IslandLoader.name);
-
+export class IslandLoader {
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
         private readonly islandActiveObjectSpawner: IslandActiveObjectSpawner,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
@@ -34,7 +36,7 @@ export class IslandLoader implements OnModuleInit {
 
         const spawnedObjects = await Promise.all(islandPromises);
 
-        this.logger.log(`${allIslands.length}개의 섬`);
-        this.logger.log(`${spawnedObjects.length}개의 오브젝트 스폰`);
+        this.logger.info(`${allIslands.length}개의 섬`);
+        this.logger.info(`${spawnedObjects.length}개의 오브젝트 스폰`);
     }
 }

@@ -1,4 +1,4 @@
-import { Logger, UseFilters, UseGuards } from '@nestjs/common';
+import { Inject, UseFilters, UseGuards } from '@nestjs/common';
 import {
     ConnectedSocket,
     MessageBody,
@@ -19,6 +19,8 @@ import { PlayerStorageReader } from 'src/domain/components/users/player-storage-
 import { FriendsService } from 'src/domain/services/friends/friends.service';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 
 type TypedSocket = Socket<ClientToFriend, FriendToClient>;
 
@@ -35,9 +37,9 @@ export class FriendGateway {
     @WebSocketServer()
     private readonly wss: Namespace<ClientToFriend, FriendToClient>;
 
-    private readonly logger = new Logger(FriendGateway.name);
-
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
         private readonly friendService: FriendsService,
         private readonly playerStorageReader: PlayerStorageReader,
     ) {}

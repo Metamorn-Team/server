@@ -36,12 +36,8 @@ if (isProduction) {
                 format.json(),
                 format.timestamp(),
                 format.ms(),
-                format.printf(({ level, message, timestamp, ...meta }) => {
-                    return `${timestamp as string} [${level.toUpperCase()}] ${JSON.stringify(
-                        message,
-                        null,
-                        2,
-                    )} ${JSON.stringify(meta)}`;
+                format.printf(({ level, timestamp, ...meta }) => {
+                    return `${timestamp as string} [${level}] ${JSON.stringify(meta)}`;
                 }),
             ),
         }),
@@ -50,7 +46,6 @@ if (isProduction) {
 
 export const windstonOptions: WinstonModuleOptions = {
     level: isProduction ? 'info' : 'silly',
-    format: format.json(),
     transports: transportList,
 };
 

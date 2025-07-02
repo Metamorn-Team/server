@@ -1,16 +1,21 @@
 import {
     CallHandler,
     ExecutionContext,
+    Inject,
     Injectable,
-    Logger,
     NestInterceptor,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Observable, tap } from 'rxjs';
+import { Logger } from 'winston';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-    private readonly logger = new Logger(LoggingInterceptor.name);
+    constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
+    ) {}
 
     intercept(
         context: ExecutionContext,
@@ -26,7 +31,7 @@ export class LoggingInterceptor implements NestInterceptor {
             tap(() => {
                 const duration = Date.now() - startTime;
                 if (process.env.NODE_ENV !== 'test') {
-                    this.logger.log({ ...message, duration: `${duration}ms` });
+                    this.logger.info({ ...message, duration: `${duration}ms` });
                 }
             }),
         );

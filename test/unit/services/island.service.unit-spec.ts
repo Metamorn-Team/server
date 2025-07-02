@@ -1,15 +1,12 @@
 import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import Redis from 'ioredis';
-import { ClsModule } from 'nestjs-cls';
-import { clsOptions } from 'src/configs/cls/cls-config';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { TOO_MANY_PARTICIPANTS_MESSAGE } from 'src/domain/exceptions/message';
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { IslandService } from 'src/domain/services/islands/island.service';
 import { NormalIslandUpdateInput } from 'src/domain/types/island.types';
-import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { IslandServiceModule } from 'src/modules/islands/island-service.module';
@@ -18,6 +15,7 @@ import {
     generateNormalIslandModel,
     generateUserEntity,
 } from 'test/helper/generators';
+import { COMMON_IMPORTS } from 'test/unit/services/commom-imports';
 
 describe('IslandService', () => {
     let app: TestingModule;
@@ -28,11 +26,7 @@ describe('IslandService', () => {
 
     beforeAll(async () => {
         app = await Test.createTestingModule({
-            imports: [
-                IslandServiceModule,
-                PrismaModule,
-                ClsModule.forRoot(clsOptions),
-            ],
+            imports: [IslandServiceModule, ...COMMON_IMPORTS],
         }).compile();
 
         islandService = app.get<IslandService>(IslandService);

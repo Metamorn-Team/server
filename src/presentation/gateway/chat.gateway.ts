@@ -1,4 +1,6 @@
-import { Logger, UseFilters, UseGuards } from '@nestjs/common';
+import { Inject, UseFilters, UseGuards } from '@nestjs/common';
+import { v4 } from 'uuid';
+import { Logger } from 'winston';
 import {
     ConnectedSocket,
     MessageBody,
@@ -6,13 +8,13 @@ import {
     WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Namespace, Socket } from 'socket.io';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
 import { ChatToClient, ClientToChat, SendMessageRequest } from 'types';
-import { v4 } from 'uuid';
 
 type TypedSocket = Socket<ClientToChat, ChatToClient>;
 
@@ -29,9 +31,11 @@ export class ChatGateway {
     @WebSocketServer()
     private readonly wss: Namespace<ClientToChat, ChatToClient>;
 
-    private readonly logger = new Logger(ChatGateway.name);
-
-    constructor(private readonly chatMessageService: ChatMessageService) {}
+    constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
+        private readonly chatMessageService: ChatMessageService,
+    ) {}
 
     @SubscribeMessage('sendMessage')
     async handleSendMessage(

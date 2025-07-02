@@ -1,21 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IslandJoinService } from 'src/domain/services/island-join/island-join.service';
-import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { IslandJoinModule } from 'src/modules/island-joins/island-join.module';
 import { generateIsland, generateUserEntity } from 'test/helper/generators';
+import { COMMON_IMPORTS } from 'test/unit/services/commom-imports';
 
 describe('IslandJoinService', () => {
+    let app: TestingModule;
     let islandJoinService: IslandJoinService;
     let db: PrismaService;
 
     beforeAll(async () => {
-        const app: TestingModule = await Test.createTestingModule({
-            imports: [IslandJoinModule, PrismaModule],
+        app = await Test.createTestingModule({
+            imports: [IslandJoinModule, ...COMMON_IMPORTS],
         }).compile();
 
         islandJoinService = app.get<IslandJoinService>(IslandJoinService);
         db = app.get<PrismaService>(PrismaService);
+    });
+
+    afterAll(async () => {
+        await app.close();
     });
 
     afterEach(async () => {

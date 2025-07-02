@@ -2,8 +2,6 @@ import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Map } from '@prisma/client';
 import Redis from 'ioredis';
-import { ClsModule } from 'nestjs-cls';
-import { clsOptions } from 'src/configs/cls/cls-config';
 import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-object/island-active-object-reader';
 import { IslandActiveObjectWriter } from 'src/domain/components/island-spawn-object/island-active-object-writer';
 import { DesertedIslandManager } from 'src/domain/components/islands/deserted-storage/deserted-island-manager';
@@ -16,7 +14,6 @@ import { DesertedIslandStorage } from 'src/domain/interface/storages/deserted-is
 import { NormalIslandStorage } from 'src/domain/interface/storages/normal-island-storage';
 import { GameIslandService } from 'src/domain/services/game/game-island.service';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { PlayerMemoryStorage } from 'src/infrastructure/storages/player-memory-storage';
@@ -32,6 +29,7 @@ import {
 } from 'test/helper/generators';
 import { v4 } from 'uuid';
 import { RespawnQueueManager } from 'src/domain/components/island-spawn-object/respawn-queue-manager';
+import { COMMON_IMPORTS } from 'test/unit/services/commom-imports';
 
 describe('GameIslandService', () => {
     let app: TestingModule;
@@ -53,9 +51,8 @@ describe('GameIslandService', () => {
         app = await Test.createTestingModule({
             imports: [
                 GameIslandServiceModule,
-                PrismaModule,
-                ClsModule.forRoot(clsOptions),
                 IslandActiveObjectComponentModule,
+                ...COMMON_IMPORTS,
             ],
         }).compile();
 

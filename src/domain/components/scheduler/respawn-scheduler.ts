@@ -1,16 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 import { ActiveObject } from 'src/domain/types/spawn-object/active-object';
 import { RespawnGateway } from 'src/presentation/gateway/respawn.gateway';
+import { Logger } from 'winston';
 
 type RespawnedObjectsByIslandId = Record<string, ActiveObject[]>;
 
 @Injectable()
 export class RespawnScheduler {
-    private readonly logger = new Logger(RespawnScheduler.name);
-
     constructor(
+        @Inject(WINSTON_MODULE_PROVIDER)
+        private readonly logger: Logger,
         private readonly islandActiveObjectSpawner: IslandActiveObjectSpawner,
         private readonly respawnGateway: RespawnGateway,
     ) {}
