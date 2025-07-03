@@ -5,7 +5,7 @@ import {
     Injectable,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import { LiaRequest } from 'src/common/types';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { INVALID_TOKEN_MESSAGE } from 'src/domain/exceptions/message';
@@ -15,9 +15,7 @@ export class AuthGuard implements CanActivate {
     constructor(private readonly jwtService: JwtService) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        const req = context
-            .switchToHttp()
-            .getRequest<Request & { userId?: string }>();
+        const req = context.switchToHttp().getRequest<LiaRequest>();
         const accessToken = this.extractAccessTokenFromHeader(req);
 
         const payload = await this.verifyAccessToken(accessToken);
@@ -41,7 +39,7 @@ export class AuthGuard implements CanActivate {
         }
     }
 
-    private extractAccessTokenFromHeader(request: Request) {
+    private extractAccessTokenFromHeader(request: LiaRequest) {
         const { authorization } = request.headers;
         if (!authorization || authorization.trim() === '') {
             throw new DomainException(
