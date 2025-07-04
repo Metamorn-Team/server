@@ -44,6 +44,7 @@ describe('AppController (e2e)', () => {
 
     afterEach(async () => {
         await redis.flushall();
+        await db.refreshToken.deleteMany();
         await db.island.deleteMany();
         await db.user.deleteMany();
     });

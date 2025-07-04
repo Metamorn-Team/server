@@ -19,7 +19,7 @@ export class UserEntity {
     static create(
         input: UserPrototype,
         idGen: () => string,
-        stdDate: Date,
+        stdDate = new Date(),
         updatedAt?: Date,
     ): UserEntity {
         return new UserEntity(

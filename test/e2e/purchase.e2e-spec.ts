@@ -29,6 +29,7 @@ describe('PurchaseController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await db.refreshToken.deleteMany();
         await db.promotionProduct.deleteMany();
         await db.promotion.deleteMany();
 

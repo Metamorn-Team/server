@@ -46,6 +46,7 @@ describe('UserController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await prisma.refreshToken.deleteMany();
         await prisma.friendRequest.deleteMany();
         await prisma.user.deleteMany();
     });

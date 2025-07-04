@@ -55,6 +55,7 @@ describe('IslandSettingsGateway (e2e)', () => {
     afterEach(async () => {
         socket.disconnect();
         await redis.flushall();
+        await db.refreshToken.deleteMany();
         await db.islandTag.deleteMany();
         await db.island.deleteMany();
         await db.tag.deleteMany();

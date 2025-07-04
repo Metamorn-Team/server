@@ -3,9 +3,11 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
 import { login } from 'test/helper/login';
+import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 
 describe('Items Input Validation (e2e)', () => {
     let app: INestApplication;
+    let db: PrismaService;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -13,11 +15,18 @@ describe('Items Input Validation (e2e)', () => {
         }).compile();
 
         app = moduleFixture.createNestApplication();
+        db = moduleFixture.get<PrismaService>(PrismaService);
         await app.init();
     });
 
     afterAll(async () => {
         await app.close();
+    });
+
+    afterEach(async () => {
+        await db.refreshToken.deleteMany();
+        await db.item.deleteMany();
+        await db.user.deleteMany();
     });
 
     describe('GET /items/owned 입력 값 검증', () => {

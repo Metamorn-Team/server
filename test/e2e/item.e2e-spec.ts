@@ -29,6 +29,7 @@ describe('ItemController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await db.refreshToken.deleteMany();
         await db.userOwnedItem.deleteMany();
         await db.item.deleteMany();
         await db.user.deleteMany();

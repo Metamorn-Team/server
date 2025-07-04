@@ -53,6 +53,7 @@ describe('LobyGateway (e2e)', () => {
 
     afterEach(async () => {
         await redis.flushall();
+        await db.refreshToken.deleteMany();
         await db.islandTag.deleteMany();
         await db.playerSpawnPoint.deleteMany();
         await db.island.deleteMany();

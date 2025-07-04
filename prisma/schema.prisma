@@ -26,6 +26,12 @@ enum OAuthProvider {
   NAVER
 }
 
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model Admin {
   id       String @id @db.Uuid
   username String @unique
@@ -56,6 +62,7 @@ model User {
   userOwnedItems         UserOwnedItem[]
   islands                Island[]
   equippedItems          Equipment[]
+  refreshTokens          RefreshToken[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -64,10 +71,23 @@ model User {
   @@map("user")
 }
 
-enum FriendRequestStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
+model RefreshToken {
+  id String @id @db.Uuid
+  token String @unique @map("token")
+  userId String @db.Uuid @map("user_id")
+  sessionId String @db.Uuid @map("session_id")
+  browser String? @db.VarChar(100)
+  model String @db.VarChar(100)
+  os String @db.VarChar(100)
+  ip String @db.VarChar(20)
+  createdAt DateTime @map("created_at")
+  lastUsedAt DateTime @map("last_used_at")
+  expiredAt DateTime? @map("expired_at")
+
+  user User @relation(fields: [userId], references: [id])
+  
+  @@map("refresh_token")
+  @@index([userId])
 }
 
 model FriendRequest {

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from 'src/app.controller';
 import { AppService } from 'src/app.service';
@@ -29,6 +29,7 @@ import { RespawnSchedulerModule } from 'src/modules/scheduler/respawn-scheduler.
 import { LoaderModule } from 'src/modules/loaders/loader.module';
 import { WinstonModule } from 'nest-winston';
 import { windstonOptions } from 'src/configs/winston/winston-options';
+import { AgentMiddleware } from 'src/common/middleware/agent.middleware';
 
 const onlyProdModules =
     process.env.NODE_ENV === 'test'
@@ -65,4 +66,8 @@ const onlyProdModules =
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(AgentMiddleware).forRoutes('*');
+    }
+}
