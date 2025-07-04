@@ -68,6 +68,6 @@ const onlyProdModules =
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AgentMiddleware).forRoutes('auth');
+        consumer.apply(AgentMiddleware).forRoutes('*');
     }
 }

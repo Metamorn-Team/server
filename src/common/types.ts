@@ -1,6 +1,7 @@
 import { Request } from 'express';
 
 export interface UserAgent {
+    sessionId: string;
     browser?: string;
     device?: string;
     os?: string;
@@ -9,6 +10,6 @@ export interface UserAgent {
 }
 
 export interface LiaRequest extends Request {
-    userId?: string;
-    agent?: UserAgent;
+    userId: string;
+    agent: UserAgent;
 }
