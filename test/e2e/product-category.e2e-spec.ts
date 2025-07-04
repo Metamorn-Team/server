@@ -23,6 +23,7 @@ describe('ProductCategotyController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await db.refreshToken.deleteMany();
         await db.productCategory.deleteMany();
         await db.user.deleteMany();
     });
