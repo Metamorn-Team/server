@@ -22,7 +22,7 @@ import { RefreshTokenWriter } from 'src/domain/components/refresh-token/refresh-
 import { UserAgent } from 'src/common/types';
 import { RefreshTokenReader } from 'src/domain/components/refresh-token/refresh-token-reader';
 import { RefreshToken } from 'src/domain/types/refresh-token.types';
-import { generateRandomString } from 'test/unit/utils/random';
+import { generateRandomString } from 'src/utils/random';
 
 interface TokenPayload {
     sub: string;
