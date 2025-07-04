@@ -7,7 +7,10 @@ import { v4 } from 'uuid';
 @Injectable()
 export class AgentMiddleware implements NestMiddleware {
     use(req: LiaRequest, _: Response, next: NextFunction) {
-        const sessionId = String(req.cookies['sessionId']) || v4();
+        const sessionId = req.cookies?.['sessionId']
+            ? String(req.cookies?.['sessionId'])
+            : v4();
+
         const ip = this.getClientIp(req);
         const userAgent = this.extractUserAgent(req);
 
@@ -16,7 +19,6 @@ export class AgentMiddleware implements NestMiddleware {
             ...userAgent,
             ip,
         };
-        console.log(req.agent);
 
         next();
     }
