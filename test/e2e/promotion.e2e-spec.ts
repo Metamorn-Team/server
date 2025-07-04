@@ -26,6 +26,7 @@ describe('PromotionController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await db.refreshToken.deleteMany();
         await db.promotion.deleteMany();
     });
 

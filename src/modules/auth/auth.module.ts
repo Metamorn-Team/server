@@ -7,6 +7,7 @@ import { OauthContext } from 'src/infrastructure/auth/context/auth-context';
 import { GoogleStrategy } from 'src/infrastructure/auth/strategy/google.strategy';
 import { KakaoStrategy } from 'src/infrastructure/auth/strategy/kakao.strategy';
 import { UserComponentModule } from '../users/users-component.module';
+import { RefreshTokenComponentModule } from 'src/modules/refresh-token/refresh-token-component.module';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { UserComponentModule } from '../users/users-component.module';
             },
         }),
         UserComponentModule,
+        RefreshTokenComponentModule,
     ],
     controllers: [AuthController],
     providers: [AuthService, OauthContext, GoogleStrategy, KakaoStrategy],

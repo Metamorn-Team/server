@@ -2,6 +2,7 @@ import {
     Body,
     Controller,
     Delete,
+    HttpCode,
     Param,
     Post,
     Res,
@@ -27,8 +28,12 @@ import {
 } from '@nestjs/swagger';
 import { HttpExceptionFilter } from 'src/common/filter/http-exception.filter';
 import { cookieOptions } from 'src/configs/cookie-options';
-import { RefreshTokenGuard } from 'src/common/guard/refresh-token.guard';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
+import { CurrentUserAgent } from 'src/common/decorator/user-agent.decorator';
+import { UserAgent } from 'src/common/types';
+import { CurrentRefreshToken } from 'src/common/decorator/refresh-token.decorator';
+import { SessionId } from 'src/common/decorator/session-id.decorator';
+import { AuthGuard } from 'src/common/guard/auth.guard';
 
 @ApiTags('auth')
 @UseFilters(HttpExceptionFilter)
@@ -52,7 +57,7 @@ export class AuthController {
     })
     @ApiParam({
         name: 'provider',
-        enum: ['GOOGLE', 'KAKAO', 'NAMVER'],
+        enum: ['GOOGLE', 'KAKAO', 'NAVER'],
         description: '소셜 로그인 제공자',
     })
     @ApiBody({ type: LoginRequest })
@@ -71,12 +76,14 @@ export class AuthController {
         @Param('provider') provider: Provider,
         @Body() dto: LoginRequest,
         @Res({ passthrough: true }) response: Response,
+        @CurrentUserAgent() agent: UserAgent,
     ): Promise<LoginResponse> {
         const { accessToken } = dto;
 
         const loginResponse = await this.authService.login(
             provider,
             accessToken,
+            agent,
         );
 
         const { refreshToken, ...responseWithoutRefresh } = loginResponse;
@@ -101,8 +108,9 @@ export class AuthController {
     async register(
         @Body() dto: RegisterRequest,
         @Res({ passthrough: true }) response: Response,
+        @CurrentUserAgent() agent: UserAgent,
     ): Promise<RegisterResponse> {
-        const registerResponse = await this.authService.register(dto);
+        const registerResponse = await this.authService.register(dto, agent);
 
         const { refreshToken, ...responseWithoutRefresh } = registerResponse;
 
@@ -118,19 +126,20 @@ export class AuthController {
     })
     @ApiCookieAuth('refresh_token')
     @ApiResponse({
-        status: 201,
+        status: 200,
         description: '토큰 갱신 성공',
         type: RefreshTokenResponse,
     })
     @ApiResponse({ status: 401, description: '유효하지 않은 Refresh Token' })
-    @UseGuards(RefreshTokenGuard)
+    @HttpCode(200)
     @Post('token')
     async refreshToken(
         @Res({ passthrough: true }) response: Response,
-        @CurrentUser('userId') userId: string,
+        @CurrentUserAgent() agent: UserAgent,
+        @CurrentRefreshToken() token: string,
     ): Promise<RefreshTokenResponse> {
         const { accessToken, refreshToken } =
-            await this.authService.refresToken(userId);
+            await this.authService.refreshToken(token, agent);
 
         response.cookie('refresh_token', refreshToken, cookieOptions());
 
@@ -150,8 +159,16 @@ export class AuthController {
         status: 409,
         description: '다른 플랫폼으로 가입한 이력 존재',
     })
+    @HttpCode(204)
+    @UseGuards(AuthGuard)
     @Delete('logout')
-    logout(@Res({ passthrough: true }) response: Response): void {
+    async logout(
+        @Res({ passthrough: true }) response: Response,
+        @CurrentUser('userId') userId: string,
+        @SessionId() sessionId: string,
+    ): Promise<void> {
+        await this.authService.logout(userId, sessionId);
+
         response.clearCookie('refresh_token', cookieOptions());
     }
 }

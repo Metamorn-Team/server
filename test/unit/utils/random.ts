@@ -1,3 +1,5 @@
+import * as crypto from 'crypto';
+
 export const random = {
     /**
      * 최소값과 최대값 사이의 랜덤 정수를 반환합니다.
@@ -12,3 +14,7 @@ export const random = {
         return Math.floor(Math.random() * (high - low + 1)) + low;
     },
 };
+
+export function generateRandomString(length: number) {
+    return crypto.randomBytes(length).toString('hex');
+}

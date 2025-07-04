@@ -26,6 +26,7 @@ describe('EquipmentController (e2e)', () => {
     });
 
     afterEach(async () => {
+        await db.refreshToken.deleteMany();
         await db.equipment.deleteMany();
         await db.item.deleteMany();
         await db.user.deleteMany();
