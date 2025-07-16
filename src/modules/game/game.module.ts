@@ -17,6 +17,7 @@ import { GameIslandCreateServiceModule } from 'src/modules/game/game-island-crea
 import { IslandSettingsGateway } from 'src/presentation/gateway/island-settings.gateway';
 import { IslandServiceModule } from 'src/modules/islands/island-service.module';
 import { IslandActiveObjectComponentModule } from 'src/modules/island-spawn-objects/island-active-object-component.module';
+import { SocketClientComponentModule } from 'src/modules/socket-client/socket-client-componenet.module';
 
 @Module({
     imports: [
@@ -33,6 +34,8 @@ import { IslandActiveObjectComponentModule } from 'src/modules/island-spawn-obje
         GameServiceModule,
         GameIslandServiceModule,
         IslandActiveObjectComponentModule,
+
+        SocketClientComponentModule,
     ],
     providers: [
         LobyGateway,

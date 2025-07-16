@@ -11,10 +11,13 @@ export type AuthenticatedSocket = Socket & { userId?: string };
 export class WsConnectionAuthenticator {
     constructor(private readonly jwtService: JwtService) {}
 
-    async authenticate(client: AuthenticatedSocket): Promise<void> {
+    async authenticate(client: AuthenticatedSocket): Promise<string> {
         const token = this.extractAccessToken(client);
         const payload = await this.verifyToken(token);
-        client.userId = payload.sub;
+        const userId = payload.sub;
+        client.userId = userId;
+
+        return userId;
     }
 
     private extractAccessToken(client: Socket): string {
