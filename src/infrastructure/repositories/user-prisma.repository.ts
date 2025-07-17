@@ -3,6 +3,7 @@ import { UserRepository } from 'src/domain/interface/user.repository';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { PaginatedUsers, UserInfo } from 'src/domain/types/uesr.types';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { toKyselyUuid } from 'test/unit/utils/to-kysely-uuid';
 
 @Injectable()
 export class UserPrismaRepository implements UserRepository {
@@ -156,6 +157,19 @@ export class UserPrismaRepository implements UserRepository {
                 id,
             },
         });
+    }
+
+    async findUserGoldByIdForUpdate(
+        id: string,
+    ): Promise<{ gold: number } | null> {
+        const result = await this.prisma.$kysely
+            .selectFrom('user')
+            .select('gold')
+            .forUpdate()
+            .where('id', '=', toKyselyUuid(id))
+            .executeTakeFirst();
+
+        return result || null;
     }
 
     async update(id: string, data: Partial<UserEntity>): Promise<void> {
