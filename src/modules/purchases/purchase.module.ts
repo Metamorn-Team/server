@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PurchaseService } from 'src/domain/services/purchases/purchase.service';
+import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-transaction-manger.module';
 import { GoldTransactionComponentModule } from 'src/modules/gold-transactions/gold-transaction-component.module';
 import { ProductComponentModule } from 'src/modules/products/product-component.module';
 import { PurchaseComponentModule } from 'src/modules/purchases/purchase-component.module';
@@ -15,6 +16,7 @@ import { PurchaseController } from 'src/presentation/controller/purchases/purcha
         ProductComponentModule,
         GoldTransactionComponentModule,
         UserOwnedItemComponentModule,
+        RedisTransactionManagerModule,
     ],
     providers: [PurchaseService],
     exports: [PurchaseService],
