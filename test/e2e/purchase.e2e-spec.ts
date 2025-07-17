@@ -272,5 +272,41 @@ describe('PurchaseController (e2e)', () => {
 
             expect(status).toEqual(409);
         });
+
+        it('동시에 구매 요청을 받아도 하나의 요청만 처리한다', async () => {
+            const { userId, accessToken } = await login(app);
+
+            const product = products[0];
+            const totalPrice = product.price;
+
+            await db.user.update({
+                data: { gold: totalPrice },
+                where: { id: userId },
+            });
+
+            const dto: PurchaseRequest = {
+                productIds: [product.id],
+            };
+
+            const promises = Array.from({ length: 30 }, async () => {
+                const response = await request(app.getHttpServer())
+                    .post('/purchases')
+                    .send(dto)
+                    .set('Authorization', accessToken);
+                return response;
+            });
+
+            await Promise.all(promises);
+
+            const afterPurchases = await db.purchase.findMany();
+            const afterGoldTransactions = await db.goldTransaction.findMany();
+            const afterUser = await db.user.findUnique({
+                where: { id: userId },
+            });
+
+            expect(afterPurchases.length).toEqual(1);
+            expect(afterGoldTransactions.length).toEqual(1);
+            expect(afterUser?.gold).toEqual(0);
+        }, 10000);
     });
 });
