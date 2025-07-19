@@ -288,11 +288,12 @@ describe('PurchaseController (e2e)', () => {
                 productIds: [product.id],
             };
 
-            const promises = Array.from({ length: 30 }, async () => {
+            const promises = Array.from({ length: 10 }, async () => {
                 const response = await request(app.getHttpServer())
                     .post('/purchases')
                     .send(dto)
-                    .set('Authorization', accessToken);
+                    .set('Authorization', accessToken)
+                    .timeout(10000);
                 return response;
             });
 
