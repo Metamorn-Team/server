@@ -61,8 +61,28 @@ export class UserReader {
         return user;
     }
 
-    async getGoldBalanceById(id: string) {
+    async getGoldBalanceById(id: string, isForUpdate = false) {
+        return isForUpdate
+            ? this.getGoldBalanceByIdForUpdate(id)
+            : this.getGoldBalanceByIdCommon(id);
+    }
+
+    private async getGoldBalanceByIdCommon(id: string) {
         const user = await this.userRepository.findUserGoldById(id);
+
+        if (!user) {
+            throw new DomainException(
+                DomainExceptionType.USER_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        return user.gold;
+    }
+
+    private async getGoldBalanceByIdForUpdate(id: string) {
+        const user = await this.userRepository.findUserGoldByIdForUpdate(id);
 
         if (!user) {
             throw new DomainException(
