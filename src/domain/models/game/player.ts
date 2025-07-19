@@ -3,7 +3,7 @@ import { PLAYER_STATS } from 'src/constants/game/stats';
 import { EquipmentState } from 'src/domain/types/equipments/equiment-state';
 import { Circle, Rectangle } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
-import { random } from 'test/unit/utils/random';
+import { random } from 'src/utils/random';
 
 export interface PlayerPrototype {
     readonly id: string;

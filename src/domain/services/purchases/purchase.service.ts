@@ -20,6 +20,8 @@ import { ProductForPurchase } from 'src/domain/types/product.types';
 import { UserOwnedItemWriter } from 'src/domain/components/user-owned-items/user-owned-item-writer';
 import { UserOwnedItemEntity } from 'src/domain/entities/user-owned-items/user-owned-item.entity';
 import { PurchaseReader } from 'src/domain/components/purchases/purchase-reader';
+import { discount } from 'test/unit/utils/discount';
+import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 
 @Injectable()
 export class PurchaseService {
@@ -31,63 +33,67 @@ export class PurchaseService {
         private readonly purchaseWriter: PurchaseWriter,
         private readonly goldTransactionWriter: GoldTransactionWrtier,
         private readonly userOwnedItemWriter: UserOwnedItemWriter,
+        private readonly redisTransactionManager: RedisTransactionManager,
     ) {}
 
     async purchase(buyerId: string, productIds: string[]) {
         const products =
             await this.productReader.readByIdsForPurchase(productIds);
         this.checkProductsExist(products, productIds);
-        await this.checkIsPurchased(buyerId, productIds);
 
         const totalPrice = products.reduce((total, p) => {
             if (p.discountRate > 0) {
-                return total + this.discount(p.discountRate, p.originPrice);
+                return total + discount(p.discountRate, p.originPrice);
             }
             return total + p.originPrice;
         }, 0);
 
-        const goldBalance = await this.userReader.getGoldBalanceById(buyerId);
+        const lockKey = `purchase-lock:${buyerId}`;
+        await this.redisTransactionManager.transaction(
+            lockKey,
+            [
+                {
+                    execute: () =>
+                        this.purchaseTransaction(
+                            buyerId,
+                            totalPrice,
+                            products,
+                            productIds,
+                        ),
+                },
+            ],
+            2000,
+            0,
+        );
+    }
 
+    @Transactional()
+    private async purchaseTransaction(
+        buyerId: string,
+        totalPrice: number,
+        products: ProductForPurchase[],
+        productIds: string[],
+    ) {
+        await this.checkIsPurchased(buyerId, productIds);
+        const goldBalance = await this.userReader.getGoldBalanceById(buyerId);
         const remainingGold = this.calculateGoldBalance(
             goldBalance,
             totalPrice,
         );
 
         const { purchases, goldTransaction, userOwnedItems } =
-            this.generateEntities(buyerId, totalPrice, remainingGold, products);
+            this.generateEntities(buyerId, remainingGold, products);
 
-        await this.purchaseTransaction(
-            buyerId,
-            remainingGold,
-            goldTransaction,
-            purchases,
-            userOwnedItems,
-        );
-    }
-
-    discount(rate: number, origin: number) {
-        return Math.floor(origin * (1 - rate));
-    }
-
-    @Transactional()
-    private async purchaseTransaction(
-        userId: string,
-        goldBalance: number,
-        goldTransaction: GoldTransactionEntity,
-        purchases: PurchaseEntity[],
-        userOwnedItems: UserOwnedItemEntity[],
-    ) {
         await Promise.all([
-            this.purchaseWriter.createMany(purchases),
             this.goldTransactionWriter.create(goldTransaction),
-            this.userWriter.updateGoldBalance(userId, goldBalance),
+            this.purchaseWriter.createMany(purchases),
+            this.userWriter.updateGoldBalance(buyerId, remainingGold),
             this.userOwnedItemWriter.createMany(userOwnedItems),
         ]);
     }
 
     private generateEntities(
         buyerId: string,
-        totalPrice: number,
         remainingGold: number,
         products: ProductForPurchase[],
     ) {
@@ -96,7 +102,7 @@ export class PurchaseService {
             products.map((p) => ({
                 goldAmount:
                     p.discountRate > 0
-                        ? this.discount(p.discountRate, p.originPrice)
+                        ? discount(p.discountRate, p.originPrice)
                         : p.originPrice,
                 productId: p.id,
             })),
@@ -107,7 +113,7 @@ export class PurchaseService {
             {
                 userId: buyerId,
                 type: GoldTransactionTypeEnum.PURCHASE,
-                amount: totalPrice,
+                amount: purchases.reduce((total, p) => total + p.goldAmount, 0),
                 balance: remainingGold,
                 referenceIds: purchases.map((p) => p.id),
             },

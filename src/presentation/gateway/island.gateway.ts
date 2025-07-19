@@ -31,6 +31,8 @@ import { IslandActiveObjectReader } from 'src/domain/components/island-spawn-obj
 import { IslandActiveObject } from 'src/presentation/dto/game/response/player-join-success.response';
 import { AttackObjectResponse } from 'src/presentation/dto/game/response/attack-object.response';
 import { Logger } from 'winston';
+import { SocketClientReader } from 'src/domain/components/socket-client/socket-client-reader';
+import { SocketClientWriter } from 'src/domain/components/socket-client/socket-client-writer';
 
 type TypedSocket = Socket<
     ClientToIsland,
@@ -62,6 +64,9 @@ export class IslandGateway
         private readonly gameService: GameService,
         private readonly gameIslandService: GameIslandService,
         private readonly islandActiveObjectReader: IslandActiveObjectReader,
+
+        private readonly socketClientReader: SocketClientReader,
+        private readonly socketClientWriter: SocketClientWriter,
     ) {}
 
     async kick(userId: string, client: TypedSocket) {
@@ -249,7 +254,20 @@ export class IslandGateway
 
     async handleConnection(client: TypedSocket) {
         try {
-            await this.wsConnectionAuthenticator.authenticate(client);
+            const userId =
+                await this.wsConnectionAuthenticator.authenticate(client);
+
+            const existingClientId =
+                this.socketClientReader.readClientId(userId);
+            if (existingClientId) {
+                const existingClient = this.wss.sockets.get(existingClientId);
+                if (existingClient) {
+                    await this.kick(userId, existingClient);
+                    existingClient.disconnect(true);
+                }
+            }
+
+            this.socketClientWriter.addClientId(userId, client.id);
             this.logger.info(`Connected new client to Island: ${client.id}`);
         } catch (e) {
             client.emit('wsError', {
@@ -271,6 +289,8 @@ export class IslandGateway
                     .to(player.roomId)
                     .emit('islandInfoUpdated', { islandId: player.roomId });
             }
+
+            this.socketClientWriter.removeClientId(client.userId);
 
             await client.leave(islandId);
             client.to(islandId).emit('playerLeft', { id: player.id });
