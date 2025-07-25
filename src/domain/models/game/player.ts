@@ -1,8 +1,11 @@
 import { ATTACK_BOX_SIZE } from 'src/constants/game/attack-box';
+import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { PLAYER_STATS } from 'src/constants/game/stats';
 import { EquipmentState } from 'src/domain/types/equipments/equiment-state';
 import { Circle, Rectangle } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { PlayerSpawnPoint } from 'src/domain/types/player-spawn-point.types';
+import { UserInfo } from 'src/domain/types/uesr.types';
 import { random } from 'src/utils/random';
 
 export interface PlayerPrototype {
@@ -21,6 +24,14 @@ export interface PlayerPrototype {
     readonly lastActivity?: number;
     readonly minDamage?: number;
     readonly maxDamage?: number;
+}
+
+export interface PlayerInitData {
+    readonly islandId: string;
+    readonly clientId: string;
+    readonly user: UserInfo;
+    readonly spawnPoint: PlayerSpawnPoint;
+    readonly islandType: IslandTypeEnum;
 }
 
 export interface CollidableObject {
@@ -56,6 +67,26 @@ export class Player {
 
     static create(proto: PlayerPrototype, now = Date.now()): Player {
         return new Player(proto, now);
+    }
+
+    static from(input: PlayerInitData, now = Date.now()): Player {
+        const { user, islandId, spawnPoint, islandType, clientId } = input;
+
+        return new Player(
+            {
+                id: user.id,
+                clientId,
+                nickname: user.nickname,
+                avatarKey: user.avatarKey,
+                islandType,
+                tag: user.tag,
+                roomId: islandId,
+                x: spawnPoint.x,
+                y: spawnPoint.y,
+                radius: PLAYER_HIT_BOX.PAWN.RADIUS,
+            },
+            now,
+        );
     }
 
     get damage(): number {
