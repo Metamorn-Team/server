@@ -31,8 +31,6 @@ export function generateRandomBase62(length: number): string {
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
     let result = '';
-
-    // crypto.randomBytes를 사용하여 안전한 랜덤 생성
     const randomBytes = crypto.randomBytes(length);
 
     for (let i = 0; i < length; i++) {

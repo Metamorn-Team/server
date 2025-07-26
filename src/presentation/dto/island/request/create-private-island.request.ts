@@ -3,13 +3,13 @@ import { IsString, IsBoolean, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class CreatePrivateIslandRequest {
     @ApiProperty({
-        description: '맵 ID',
-        example: 'map-123',
+        description: '맵 Key',
+        example: 'good-island',
         type: String,
     })
     @IsString()
     @IsNotEmpty()
-    readonly mapId: string;
+    readonly mapKey: string;
 
     @ApiProperty({
         description: '섬 이름',

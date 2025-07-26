@@ -38,7 +38,7 @@ export interface IslandSummary {
 }
 
 export interface CreatePrivateIslandInput {
-    readonly mapId: string;
+    readonly mapKey: string;
     readonly ownerId: string;
     readonly name: string;
     readonly isPublic: boolean;

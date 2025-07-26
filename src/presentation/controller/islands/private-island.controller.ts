@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
 import { PrivateIslandService } from 'src/domain/services/islands/private-island.service';
-import { CreatePrivateIslandRequest } from 'src/presentation/dto/island/request/create-friend-island.request';
+import { CreatePrivateIslandRequest } from 'src/presentation/dto/island/request/create-private-island.request';
 import { CreatePrivateIslandResponse } from 'src/presentation/dto/island/response/create-private-island.response';
 
 @LivislandController('private-island')
