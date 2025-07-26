@@ -41,7 +41,7 @@ import { SocketClientComponentModule } from 'src/modules/socket-client/socket-cl
         LobyGateway,
         IslandGateway,
         IslandSettingsGateway,
-        ChatGateway,
+        // ChatGateway,
         FriendGateway,
         WsConnectionAuthenticator,
     ],
