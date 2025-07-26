@@ -214,8 +214,6 @@ export class IslandGateway
                 attackedPlayers: attackedObjects.map((object) => object.id),
             };
 
-            this.logger.debug(attackedObjects);
-
             this.wss.to(attacker.roomId).emit('strongAttacked', response);
         } catch (e) {
             this.logger.error(`공격 실패: ${e as string}`);
@@ -267,8 +265,9 @@ export class IslandGateway
                 }
             }
 
+            this.logger.debug(this.socketClientReader.readAll());
             this.socketClientWriter.addClientId(userId, client.id);
-            this.logger.info(`Connected new client to Island: ${client.id}`);
+            this.logger.info(`새로운 클라이언트 연결: ${client.id}`);
         } catch (e) {
             client.emit('wsError', {
                 name: WsExceptions.INVALID_TOKEN,
@@ -295,6 +294,7 @@ export class IslandGateway
             await client.leave(islandId);
             client.to(islandId).emit('playerLeft', { id: player.id });
 
+            this.logger.debug(this.socketClientReader.readAll());
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
             );

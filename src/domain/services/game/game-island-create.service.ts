@@ -32,9 +32,7 @@ export class GameIslandCreateService {
         const { mapKey, ...prototype } = input;
         const owner = await this.userReader.readProfile(prototype.ownerId);
         const tags = await this.tagReader.readByNames(tagNames);
-
-        // TODO map 필수 값으로 바꾸면 제거
-        const map = await this.mapReader.readByKey(mapKey || 'island');
+        const map = await this.mapReader.readByKey(mapKey);
 
         if (tags.length < 1) {
             throw new DomainException(

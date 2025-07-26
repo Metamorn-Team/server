@@ -30,6 +30,8 @@ import { LoaderModule } from 'src/modules/loaders/loader.module';
 import { WinstonModule } from 'nest-winston';
 import { windstonOptions } from 'src/configs/winston/winston-options';
 import { AgentMiddleware } from 'src/common/middleware/agent.middleware';
+import { ChatModule } from 'src/modules/chat/chat.module';
+import { PrivateIslandModule } from 'src/modules/islands/private-island.module';
 
 const onlyProdModules =
     process.env.NODE_ENV === 'test'
@@ -56,11 +58,13 @@ const onlyProdModules =
         FileModule,
         TagModule,
         IslandModule,
+        PrivateIslandModule,
         ItemModule,
         EquipmentModule,
         PromotionModule,
         PromotionProductModule,
         MapModule,
+        ChatModule,
         ...onlyProdModules,
     ],
     controllers: [AppController],

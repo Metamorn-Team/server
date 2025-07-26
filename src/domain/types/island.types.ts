@@ -5,6 +5,7 @@ export type IslandType = (typeof islandTypes)[number];
 export enum IslandTypeEnum {
     NORMAL,
     DESERTED,
+    PRIVATE,
 }
 
 export const convertNumberToIslandType = (type: number) => {
@@ -34,4 +35,12 @@ export interface IslandSummary {
     readonly type: IslandTypeEnum;
     readonly createdAt: Date;
     readonly ownerId: string | null;
+}
+
+export interface CreatePrivateIslandInput {
+    readonly mapId: string;
+    readonly ownerId: string;
+    readonly name: string;
+    readonly isPublic: boolean;
+    readonly password?: string;
 }
