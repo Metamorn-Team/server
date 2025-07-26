@@ -4,15 +4,20 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { login } from 'test/helper/login';
-import { CreatePrivateIslandRequest } from 'src/presentation/dto/island/request/create-friend-island.request';
+import { CreatePrivateIslandRequest } from 'src/presentation/dto/island/request/create-private-island.request';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { v4 } from 'uuid';
 import { CreatePrivateIslandResponse } from 'src/presentation/dto/island/response/create-private-island.response';
 import { ResponseResult } from 'test/helper/types';
+import Redis from 'ioredis';
+import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
+import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
 
 describe('PrivateIslandController (e2e)', () => {
     let app: INestApplication;
     let db: PrismaService;
+    let redis: Redis;
+    let livePrivateIslandReader: LivePrivateIslandReader;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -21,10 +26,14 @@ describe('PrivateIslandController (e2e)', () => {
 
         app = moduleFixture.createNestApplication();
         db = app.get(PrismaService);
+        redis = app.get(RedisClientService).getClient();
+        livePrivateIslandReader = app.get(LivePrivateIslandReader);
+
         await app.init();
     });
 
     afterEach(async () => {
+        await redis.flushall();
         await db.privateIsland.deleteMany();
         await db.map.deleteMany();
     });
@@ -50,7 +59,7 @@ describe('PrivateIslandController (e2e)', () => {
 
             const dto: CreatePrivateIslandRequest = {
                 isPublic: true,
-                mapId: map.id,
+                mapKey: map.key,
                 name: '테스트 친구섬',
                 coverImage: 'https://example.com/cover.jpg',
                 description: '테스트 설명',
@@ -67,9 +76,13 @@ describe('PrivateIslandController (e2e)', () => {
                 body,
             }: ResponseResult<CreatePrivateIslandResponse> = response;
 
+            const island = (await db.privateIsland.findMany())[0];
+            const liveIsland = await livePrivateIslandReader.readOne(island.id);
+
             expect(status).toBe(200);
             expect(body.id).toBeDefined();
             expect(body.urlPath).toBeDefined();
+            expect(liveIsland).toBeDefined();
         });
     });
 });
