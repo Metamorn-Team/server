@@ -16,4 +16,10 @@ export class SocketClientMemoryStorage implements SocketClientStorage {
     removeClientId(userId: string): void {
         this.clientIdMap.delete(userId);
     }
+
+    getAll(): { userId: string; clientId: string }[] {
+        return Array.from(this.clientIdMap.entries()).map(
+            ([userId, clientId]) => ({ userId, clientId }),
+        );
+    }
 }
