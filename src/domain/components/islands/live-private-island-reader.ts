@@ -20,4 +20,22 @@ export class LivePrivateIslandReader {
 
         return island;
     }
+
+    async isLive(id: string): Promise<boolean> {
+        return !!(await this.livePrivateIslandStorage.get(id));
+    }
+
+    async getIslandsLiveStatus(
+        ids: string[],
+    ): Promise<Record<string, boolean>> {
+        const result: Record<string, boolean> = {};
+
+        // NOTE pipeline으로 묶기
+        for (const id of ids) {
+            const isLive = !!(await this.livePrivateIslandStorage.get(id));
+            result[id] = isLive;
+        }
+
+        return result;
+    }
 }
