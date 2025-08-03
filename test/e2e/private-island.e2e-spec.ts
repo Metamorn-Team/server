@@ -12,6 +12,10 @@ import { ResponseResult } from 'test/helper/types';
 import Redis from 'ioredis';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
 import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
+import { generatePrivateIsland } from 'test/helper/generators';
+import { GetPrivateIslandListResponse } from 'src/presentation/dto/island/response/get-private-island-list.response';
+import { GetMyPrivateIslandRequest } from 'src/presentation/dto/island/request/get-my-private-island.request';
+import { PrivateIslandEntity } from 'src/domain/entities/islands/private-island.entity';
 
 describe('PrivateIslandController (e2e)', () => {
     let app: INestApplication;
@@ -83,6 +87,63 @@ describe('PrivateIslandController (e2e)', () => {
             expect(body.id).toBeDefined();
             expect(body.urlPath).toBeDefined();
             expect(liveIsland).toBeDefined();
+        });
+    });
+
+    describe('(GET) /private-island/my', () => {
+        let authToken: string;
+        let islands: PrivateIslandEntity[];
+
+        beforeEach(async () => {
+            const { accessToken, userId } = await login(app);
+            authToken = accessToken;
+
+            const map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'test-map',
+                    createdAt: new Date(),
+                    description: '테스트 맵',
+                    image: 'https://example.com/image.jpg',
+                    name: '테스트 맵',
+                },
+            });
+            islands = Array.from({ length: 10 }).map((_, i) =>
+                generatePrivateIsland(map.id, userId, {
+                    name: `테스트 섬 ${i}`,
+                    createdAt: new Date(Date.now() - i * 1000),
+                }),
+            );
+
+            await db.privateIsland.createMany({ data: islands });
+        });
+
+        it('내 섬 조회 생성일 기준 내림차순 조회 성공', async () => {
+            const dto: GetMyPrivateIslandRequest = {
+                limit: 20,
+                order: 'desc',
+                page: 1,
+                sortBy: 'createdAt',
+            };
+            const response = await request(app.getHttpServer())
+                .get('/private-island/my')
+                .query(dto)
+                .set('Authorization', authToken);
+
+            const {
+                status,
+                body,
+            }: ResponseResult<GetPrivateIslandListResponse> = response;
+
+            const expectedIslands = islands.sort(
+                (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+            );
+
+            expect(status).toBe(200);
+            expect(body.islands.length).toBe(10);
+            expectedIslands.forEach((island, i) => {
+                expect(island.id).toEqual(body.islands[i].id);
+            });
         });
     });
 });
