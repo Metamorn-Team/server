@@ -12,12 +12,12 @@ import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-
 import { NormalIslandStorageWriter } from 'src/domain/components/islands/normal-storage/normal-island-storage-writer';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
-import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
-import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player, PlayerWithEquippedItems } from 'src/domain/models/game/player';
 import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 
 @Injectable()
 export class NormalIslandManager implements IslandManager {
@@ -36,18 +36,9 @@ export class NormalIslandManager implements IslandManager {
         private readonly respawnQueueManager: RespawnQueueManager,
     ) {}
 
-    async canJoin(islandId: string) {
+    async canJoin(islandId: string): Promise<boolean> {
         const island = await this.normalIslandStorageReader.readOne(islandId);
-
-        const countParticipants =
-            await this.normalIslandStorageReader.countPlayer(islandId);
-        if (island.max <= countParticipants) {
-            throw new DomainException(
-                DomainExceptionType.ISLAND_FULL,
-                HttpStatus.UNPROCESSABLE_ENTITY,
-                ISLAND_FULL,
-            );
-        }
+        return island.players.size < island.max;
     }
 
     async join(player: Player) {
@@ -56,7 +47,16 @@ export class NormalIslandManager implements IslandManager {
         const key = ISLAND_LOCK_KEY(islandId);
         await this.lockManager.transaction(key, [
             {
-                execute: () => this.canJoin(islandId),
+                execute: async () => {
+                    const canJoin = await this.canJoin(islandId);
+                    if (!canJoin) {
+                        throw new DomainException(
+                            DomainExceptionType.ISLAND_FULL,
+                            HttpStatus.UNPROCESSABLE_ENTITY,
+                            ISLAND_FULL,
+                        );
+                    }
+                },
             },
             {
                 execute: () => this.playerStorageWriter.create(player),

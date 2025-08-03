@@ -228,19 +228,20 @@ export class GameIslandService {
         reason?: string;
     }> {
         try {
-            await this.islandManagerFactory
+            const canJoin = await this.islandManagerFactory
                 .get(IslandTypeEnum.NORMAL)
                 .canJoin(islandId);
 
-            return { islandId, canJoin: true };
+            if (!canJoin) {
+                return {
+                    canJoin,
+                    reason: ISLAND_FULL,
+                };
+            }
+
+            return { islandId, canJoin };
         } catch (e: unknown) {
             if (e instanceof DomainException) {
-                if (e.errorType === DomainExceptionType.ISLAND_FULL) {
-                    return {
-                        canJoin: false,
-                        reason: ISLAND_FULL,
-                    };
-                }
                 if (
                     e.errorType ===
                     DomainExceptionType.ISLAND_NOT_FOUND_IN_STORAGE
