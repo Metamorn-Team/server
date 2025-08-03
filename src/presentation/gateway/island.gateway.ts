@@ -8,7 +8,6 @@ import {
     OnGatewayDisconnect,
     OnGatewayInit,
     SubscribeMessage,
-    WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
@@ -33,6 +32,7 @@ import { AttackObjectResponse } from 'src/presentation/dto/game/response/attack-
 import { Logger } from 'winston';
 import { SocketClientReader } from 'src/domain/components/socket-client/socket-client-reader';
 import { SocketClientWriter } from 'src/domain/components/socket-client/socket-client-writer';
+import { LivislandGateway } from 'src/common/decorator/island-gateway.decorator';
 
 type TypedSocket = Socket<
     ClientToIsland,
@@ -40,13 +40,7 @@ type TypedSocket = Socket<
 >;
 
 @UseFilters(WsExceptionFilter)
-@WebSocketGateway({
-    path: '/game',
-    namespace: 'island',
-    cors: {
-        origin: true,
-    },
-})
+@LivislandGateway()
 export class IslandGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {

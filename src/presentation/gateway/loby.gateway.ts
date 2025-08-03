@@ -4,7 +4,6 @@ import {
     ConnectedSocket,
     MessageBody,
     SubscribeMessage,
-    WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
@@ -24,18 +23,13 @@ import {
 } from 'src/presentation/dto';
 import { CanJoinIslandRequest } from 'src/presentation/dto/game/request/can-join.request';
 import { Logger } from 'winston';
+import { LivislandGateway } from 'src/common/decorator/island-gateway.decorator';
 
 type TypedSocket = Socket<ClientToLoby, LobyToClient>;
 
 @UseFilters(WsExceptionFilter)
 @UseGuards(WsAuthGuard)
-@WebSocketGateway({
-    path: '/game',
-    namespace: 'island',
-    cors: {
-        origin: true,
-    },
-})
+@LivislandGateway()
 export class LobyGateway {
     @WebSocketServer()
     private readonly wss: Namespace<ClientToLoby, LobyToClient>;

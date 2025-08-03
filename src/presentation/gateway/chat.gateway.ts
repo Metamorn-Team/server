@@ -4,7 +4,6 @@ import {
     ConnectedSocket,
     MessageBody,
     SubscribeMessage,
-    WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
@@ -15,18 +14,13 @@ import { WsAuthGuard } from 'src/common/guard/ws-auth.guard';
 import { ChatMessageService } from 'src/domain/services/chat-messages/chat-message.service';
 import { ChatToClient, ClientToChat, SendMessageRequest } from 'types';
 import { Player } from 'src/domain/models/game/player';
+import { LivislandGateway } from 'src/common/decorator/island-gateway.decorator';
 
 type TypedSocket = Socket<ClientToChat, ChatToClient>;
 
 @UseFilters(WsExceptionFilter)
 @UseGuards(WsAuthGuard)
-@WebSocketGateway({
-    path: '/game',
-    namespace: 'island',
-    cors: {
-        origin: true,
-    },
-})
+@LivislandGateway()
 export class ChatGateway {
     @WebSocketServer()
     private readonly wss: Namespace<ClientToChat, ChatToClient>;
