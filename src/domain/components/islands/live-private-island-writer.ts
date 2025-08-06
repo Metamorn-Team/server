@@ -12,4 +12,16 @@ export class LivePrivateIslandWriter {
     async create(island: CreateLivePrivateIsland): Promise<void> {
         await this.privateIslandStorage.create(island);
     }
+
+    async addPlayer(islandId: string, playerId: string): Promise<void> {
+        await this.privateIslandStorage.addPlayer(islandId, playerId);
+    }
+
+    async removePlayer(islandId: string, playerId: string): Promise<void> {
+        await this.privateIslandStorage.removePlayer(islandId, playerId);
+    }
+
+    async remove(islandId: string): Promise<void> {
+        await this.privateIslandStorage.delete(islandId);
+    }
 }

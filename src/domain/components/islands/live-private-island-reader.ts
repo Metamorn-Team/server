@@ -38,4 +38,8 @@ export class LivePrivateIslandReader {
 
         return result;
     }
+
+    async countPlayer(islandId: string) {
+        return await this.livePrivateIslandStorage.countPlayer(islandId);
+    }
 }
