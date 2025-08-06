@@ -14,6 +14,8 @@ export const convertNumberToIslandType = (type: number) => {
             return IslandTypeEnum.NORMAL;
         case 1:
             return IslandTypeEnum.DESERTED;
+        case 2:
+            return IslandTypeEnum.PRIVATE;
         default:
             return IslandTypeEnum.DESERTED;
     }
