@@ -10,6 +10,7 @@ export interface PrivateIslandRepository {
     findPaginatedMine(
         input: GetPaginatedMyIslandsInput,
     ): Promise<PrivateIsland[]>;
+    countByOwner(ownerId: string): Promise<number>;
 }
 
 export const PrivateIslandRepository = Symbol('PrivateIslandRepository');

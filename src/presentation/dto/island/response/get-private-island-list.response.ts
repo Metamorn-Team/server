@@ -49,4 +49,7 @@ export class PrivateIslandItem {
 export class GetPrivateIslandListResponse {
     @ApiProperty({ type: [PrivateIslandItem] })
     readonly islands: PrivateIslandItem[];
+
+    @ApiProperty({ description: '전체 섬 개수', example: 10 })
+    readonly count: number;
 }

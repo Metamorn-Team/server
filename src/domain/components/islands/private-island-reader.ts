@@ -16,4 +16,8 @@ export class PrivateIslandReader {
     async readMyIslands(input: GetPaginatedMyIslandsInput) {
         return await this.privateIslandRepository.findPaginatedMine(input);
     }
+
+    async countByOwner(ownerId: string): Promise<number> {
+        return await this.privateIslandRepository.countByOwner(ownerId);
+    }
 }

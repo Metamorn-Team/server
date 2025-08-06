@@ -68,4 +68,10 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
             };
         });
     }
+
+    async countByOwner(ownerId: string): Promise<number> {
+        return await this.txHost.tx.privateIsland.count({
+            where: { ownerId },
+        });
+    }
 }

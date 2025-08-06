@@ -11,7 +11,7 @@ import { GetMyPrivateIslandRequest } from 'src/presentation/dto/island/request/g
 import { CreatePrivateIslandResponse } from 'src/presentation/dto/island/response/create-private-island.response';
 import { GetPrivateIslandListResponse } from 'src/presentation/dto/island/response/get-private-island-list.response';
 
-@LivislandController('private-island')
+@LivislandController('private-islands')
 export class PrivateIslandController {
     constructor(
         private readonly friendIslandService: PrivateIslandService,
@@ -65,6 +65,7 @@ export class PrivateIslandController {
             await this.livePrivateIslandReader.getIslandsLiveStatus(
                 islands.map((i) => i.id),
             );
+        const count = await this.privateIslandReader.countByOwner(userId);
 
         // TODO 컨버터 분리해도 될듯
         return {
@@ -73,6 +74,7 @@ export class PrivateIslandController {
                 isLive: liveStatus[island.id],
                 createdAt: island.createdAt.toISOString(),
             })),
+            count,
         };
     }
 }
