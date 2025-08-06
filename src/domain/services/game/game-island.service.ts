@@ -7,7 +7,6 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player } from 'src/domain/models/game/player';
 import {
-    JoinedIslandInfo,
     LiveDesertedIsland,
     LiveIsland,
     SocketClientId,
@@ -26,6 +25,7 @@ import { MapReader } from 'src/domain/components/map/map-reader';
 import { PlayerSpawnPointReader } from 'src/domain/components/player-spawn-point/player-spawn-point-reader';
 import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 import { Logger } from 'winston';
+import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
 
 @Injectable()
 export class GameIslandService {
@@ -41,6 +41,7 @@ export class GameIslandService {
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
+        private readonly livePrivateIslandReader: LivePrivateIslandReader,
 
         private readonly islandManagerFactory: IslandManagerFactory,
         private readonly mapReader: MapReader,
@@ -101,14 +102,15 @@ export class GameIslandService {
         return this.desertedIslandStorageReader.readOne(islandId);
     }
 
-    async joinNormalIsland(
+    async joinIsland(
         playerId: string,
         clientId: string,
-        islandId: string,
-    ): Promise<JoinedIslandInfo> {
+        type: IslandTypeEnum,
+        islandId?: string,
+    ) {
         const user = await this.userReader.readProfile(playerId);
-        const island = await this.normalIslandStorageReader.readOne(islandId);
-        const manager = this.islandManagerFactory.get(IslandTypeEnum.NORMAL);
+        const island = await this.getAvailableIsland(type, islandId);
+        const manager = this.islandManagerFactory.get(type);
 
         const spawnPoint = await this.playerSpawnPointReader.readRandomPoint(
             island.mapKey,
@@ -116,7 +118,7 @@ export class GameIslandService {
 
         const player = Player.from({
             user,
-            islandId,
+            islandId: island.id,
             spawnPoint,
             islandType: island.type,
             clientId,
@@ -126,8 +128,8 @@ export class GameIslandService {
         );
         await manager.join(player);
 
-        const activePlayers = await manager.getActiveUsers(islandId, playerId);
-        void this.createIslandJoinData(islandId, playerId);
+        const activePlayers = await manager.getActiveUsers(island.id, playerId);
+        void this.createIslandJoinData(island.id, playerId);
 
         return {
             activePlayers,
@@ -139,42 +141,18 @@ export class GameIslandService {
         };
     }
 
-    async joinDesertedIsland(
-        playerId: string,
-        clientId: string,
-    ): Promise<JoinedIslandInfo> {
-        const user = await this.userReader.readProfile(playerId);
-        const manager = this.islandManagerFactory.get(IslandTypeEnum.DESERTED);
+    async getAvailableIsland(type: IslandTypeEnum, islandId?: string) {
+        if (type === IslandTypeEnum.DESERTED) {
+            return await this.getAvailableDesertedIsland();
+        }
 
-        const joinableIsland = await this.getAvailableDesertedIsland();
-        const spawnPoint = await this.playerSpawnPointReader.readRandomPoint(
-            joinableIsland.mapKey,
-        );
-
-        const { id: islandId, type } = joinableIsland;
-        const player = Player.from({
-            user,
-            islandId,
-            spawnPoint,
-            islandType: type,
-            clientId,
-        });
-        const equipmentState = await this.equipmentReader.readEquipmentState(
-            player.id,
-        );
-        await manager.join(player);
-
-        const activePlayers = await manager.getActiveUsers(islandId, playerId);
-        void this.islandJoinWriter.create({ islandId, userId: playerId });
-
-        return {
-            activePlayers,
-            joinedIsland: {
-                id: joinableIsland.id,
-                mapKey: joinableIsland.mapKey,
-            },
-            joinedPlayer: Object.assign(player, { equipmentState }),
-        };
+        if (!islandId) {
+            throw new Error('islandId is required');
+        }
+        if (type === IslandTypeEnum.NORMAL) {
+            return await this.normalIslandStorageReader.readOne(islandId);
+        }
+        return await this.livePrivateIslandReader.readOne(islandId);
     }
 
     createIslandJoinData(islandId: string, userId: string) {

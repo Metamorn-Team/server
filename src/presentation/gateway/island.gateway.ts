@@ -33,6 +33,7 @@ import { Logger } from 'winston';
 import { SocketClientReader } from 'src/domain/components/socket-client/socket-client-reader';
 import { SocketClientWriter } from 'src/domain/components/socket-client/socket-client-writer';
 import { LivislandGateway } from 'src/common/decorator/island-gateway.decorator';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 type TypedSocket = Socket<
     ClientToIsland,
@@ -86,7 +87,11 @@ export class IslandGateway
         this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
-            await this.gameIslandService.joinDesertedIsland(userId, client.id);
+            await this.gameIslandService.joinIsland(
+                userId,
+                client.id,
+                IslandTypeEnum.DESERTED,
+            );
 
         const activeObjects = this.islandActiveObjectReader
             .readAlive(joinedIsland.id)
@@ -119,9 +124,43 @@ export class IslandGateway
         this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
-            await this.gameIslandService.joinNormalIsland(
+            await this.gameIslandService.joinIsland(
                 userId,
                 client.id,
+                IslandTypeEnum.NORMAL,
+                islandId,
+            );
+        const activeObjects = this.islandActiveObjectReader
+            .readAll(joinedIsland.id)
+            .map((object) => IslandActiveObject.fromActiveObject(object));
+        const { x, y } = joinedPlayer;
+
+        await client.join(joinedIsland.id);
+        client.emit('playerJoinSuccess', {
+            x,
+            y,
+            mapKey: joinedIsland.mapKey,
+            activeObjects,
+        });
+        client.emit('activePlayers', activePlayers);
+        client
+            .to(joinedIsland.id)
+            .emit('playerJoin', { ...joinedPlayer, x, y });
+    }
+
+    @SubscribeMessage('joinPrivateIsland')
+    async handleJoinPrivateIsland(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody() data: PlayerJoinRequest,
+        @CurrentUserFromSocket() userId: string,
+    ) {
+        const { islandId } = data;
+
+        const { activePlayers, joinedIsland, joinedPlayer } =
+            await this.gameIslandService.joinIsland(
+                userId,
+                client.id,
+                IslandTypeEnum.PRIVATE,
                 islandId,
             );
         const activeObjects = this.islandActiveObjectReader
