@@ -4,6 +4,7 @@ import { EquipmentEntity } from 'src/domain/entities/equipments/equipment.entity
 import { FriendEntity } from 'src/domain/entities/friend/friend.entity';
 import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.entity';
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
+import { PrivateIslandEntity } from 'src/domain/entities/islands/private-island.entity';
 import { ItemEntity } from 'src/domain/entities/item/item.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { PromotionEntity } from 'src/domain/entities/promotion/promotion.entity';
@@ -30,6 +31,7 @@ import {
     PersistentObjectPrototype,
 } from 'src/domain/types/spawn-object/active-object';
 import { Provider } from 'src/shared/types';
+import { generateRandomBase62 } from 'src/utils/random';
 import { v4 } from 'uuid';
 
 export const generateUserEntity = (
@@ -286,4 +288,26 @@ export const generateActiveObject = (
         hp: partial?.hp || 100,
         status: partial?.status || ObjectStatus.ALIVE,
     });
+};
+
+export const generatePrivateIsland = (
+    mapId: string,
+    ownerId: string,
+    partial?: Partial<Omit<PrivateIslandEntity, 'mapId' | 'ownerId'>>,
+): PrivateIslandEntity => {
+    return new PrivateIslandEntity(
+        partial?.id || v4(),
+        mapId,
+        ownerId,
+        partial?.urlPath || generateRandomBase62(8),
+        partial?.name || 'Private Island',
+        partial?.isPublic || true,
+        partial?.maxMembers || 4,
+        partial?.password || 'password',
+        partial?.description || 'Private Island description',
+        partial?.coverImage || 'https://example.com/cover.jpg',
+        partial?.createdAt || new Date(),
+        partial?.updatedAt || new Date(),
+        partial?.deletedAt || null,
+    );
 };
