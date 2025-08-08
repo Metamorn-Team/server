@@ -1,13 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import {
-    CreatePrivateIslandInput,
-    IslandTypeEnum,
-} from 'src/domain/types/island.types';
+import { CreatePrivateIslandInput } from 'src/domain/types/island.types';
 import { generateRandomBase62 } from 'src/utils/random';
 import { PrivateIslandWriter } from 'src/domain/components/islands/private-island-writer';
 import { PrivateIslandReader } from 'src/domain/components/islands/private-island-reader';
 import { PRIVATE_ISLAND_MAX_MEMBERS } from 'src/common/constants';
-import { LivePrivateIslandWriter } from 'src/domain/components/islands/live-private-island-writer';
 import { MapReader } from 'src/domain/components/map/map-reader';
 import { UserReader } from 'src/domain/components/users/user-reader';
 
@@ -16,7 +12,6 @@ export class PrivateIslandService {
     constructor(
         private readonly privateIslandWriter: PrivateIslandWriter,
         private readonly privateIslandReader: PrivateIslandReader,
-        private readonly livePrivateIslandWriter: LivePrivateIslandWriter,
         private readonly mapReader: MapReader,
         private readonly userReader: UserReader,
     ) {}
@@ -33,21 +28,6 @@ export class PrivateIslandService {
             mapId: map.id,
             urlPath,
             maxMembers: PRIVATE_ISLAND_MAX_MEMBERS,
-        });
-
-        await this.livePrivateIslandWriter.create({
-            id: island.id,
-            coverImage: island.coverImage,
-            createdAt: island.createdAt,
-            description: island.description,
-            isPublic: island.isPublic,
-            name: island.name,
-            ownerId: island.ownerId,
-            password: island.password,
-            urlPath,
-            max: island.maxMembers,
-            mapKey: map.key,
-            type: IslandTypeEnum.PRIVATE,
         });
 
         return {
