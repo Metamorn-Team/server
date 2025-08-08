@@ -8,7 +8,9 @@ import { PrivateIslandService } from 'src/domain/services/islands/private-island
 import { OrderEnum, SortByEnum } from 'src/domain/types/private-island.types';
 import { CreatePrivateIslandRequest } from 'src/presentation/dto/island/request/create-private-island.request';
 import { GetMyPrivateIslandRequest } from 'src/presentation/dto/island/request/get-my-private-island.request';
+import { GetPrivateIslandIdRequest } from 'src/presentation/dto/island/request/get-private-island-id.request';
 import { CreatePrivateIslandResponse } from 'src/presentation/dto/island/response/create-private-island.response';
+import { GetPrivateIslandIdResponse } from 'src/presentation/dto/island/response/get-private-island-id.response';
 import { GetPrivateIslandListResponse } from 'src/presentation/dto/island/response/get-private-island-list.response';
 
 @LivislandController('private-islands')
@@ -76,5 +78,21 @@ export class PrivateIslandController {
             })),
             count,
         };
+    }
+
+    @ApiOperation({
+        summary: 'URL 경로로 섬 ID 조회',
+        description: 'URL 경로로 섬 ID 조회',
+    })
+    @ApiResponse({
+        status: 200,
+        description: '섬 ID 조회 성공',
+        type: GetPrivateIslandIdResponse,
+    })
+    @Get('id')
+    async getId(
+        @Query() dto: GetPrivateIslandIdRequest,
+    ): Promise<GetPrivateIslandIdResponse> {
+        return await this.privateIslandReader.readIdByUrlPath(dto.urlPath);
     }
 }

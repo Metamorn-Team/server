@@ -74,4 +74,11 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
             where: { ownerId },
         });
     }
+
+    async findIdByUrlPath(urlPath: string): Promise<{ id: string } | null> {
+        return await this.txHost.tx.privateIsland.findFirst({
+            select: { id: true },
+            where: { urlPath },
+        });
+    }
 }

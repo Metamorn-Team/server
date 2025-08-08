@@ -11,6 +11,7 @@ export interface PrivateIslandRepository {
         input: GetPaginatedMyIslandsInput,
     ): Promise<PrivateIsland[]>;
     countByOwner(ownerId: string): Promise<number>;
+    findIdByUrlPath(urlPath: string): Promise<{ id: string } | null>;
 }
 
 export const PrivateIslandRepository = Symbol('PrivateIslandRepository');
