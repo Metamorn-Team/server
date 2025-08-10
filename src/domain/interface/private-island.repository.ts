@@ -2,6 +2,7 @@ import { PrivateIslandEntity } from 'src/domain/entities/islands/private-island.
 import {
     GetPaginatedMyIslandsInput,
     PrivateIsland,
+    PrivateIslandForCheckPassword,
 } from 'src/domain/types/private-island.types';
 
 export interface PrivateIslandRepository {
@@ -11,7 +12,10 @@ export interface PrivateIslandRepository {
         input: GetPaginatedMyIslandsInput,
     ): Promise<PrivateIsland[]>;
     countByOwner(ownerId: string): Promise<number>;
-    findIdByUrlPath(urlPath: string): Promise<{ id: string } | null>;
+    findIdByUrlPath(
+        urlPath: string,
+    ): Promise<{ id: string; password: string | null } | null>;
+    findOneById(id: string): Promise<PrivateIslandForCheckPassword | null>;
 }
 
 export const PrivateIslandRepository = Symbol('PrivateIslandRepository');

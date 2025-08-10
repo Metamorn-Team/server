@@ -6,6 +6,7 @@ import { PrivateIslandRepository } from 'src/domain/interface/private-island.rep
 import {
     GetPaginatedMyIslandsInput,
     PrivateIsland,
+    PrivateIslandForCheckPassword,
 } from 'src/domain/types/private-island.types';
 
 @Injectable()
@@ -75,10 +76,24 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
         });
     }
 
-    async findIdByUrlPath(urlPath: string): Promise<{ id: string } | null> {
+    async findIdByUrlPath(
+        urlPath: string,
+    ): Promise<{ id: string; password: string | null } | null> {
         return await this.txHost.tx.privateIsland.findFirst({
-            select: { id: true },
+            select: { id: true, password: true },
             where: { urlPath },
+        });
+    }
+
+    async findOneById(
+        id: string,
+    ): Promise<PrivateIslandForCheckPassword | null> {
+        return await this.txHost.tx.privateIsland.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                password: true,
+            },
         });
     }
 }
