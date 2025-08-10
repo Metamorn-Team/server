@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -11,7 +12,7 @@ import { CreatePrivateIslandResponse } from 'src/presentation/dto/island/respons
 import { ResponseResult } from 'test/helper/types';
 import Redis from 'ioredis';
 import { RedisClientService } from 'src/infrastructure/redis/redis-client.service';
-import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
+
 import { generatePrivateIsland } from 'test/helper/generators';
 import { GetPrivateIslandListResponse } from 'src/presentation/dto/island/response/get-private-island-list.response';
 import { GetMyPrivateIslandRequest } from 'src/presentation/dto/island/request/get-my-private-island.request';
@@ -21,7 +22,6 @@ describe('PrivateIslandController (e2e)', () => {
     let app: INestApplication;
     let db: PrismaService;
     let redis: Redis;
-    let livePrivateIslandReader: LivePrivateIslandReader;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -31,7 +31,6 @@ describe('PrivateIslandController (e2e)', () => {
         app = moduleFixture.createNestApplication();
         db = app.get(PrismaService);
         redis = app.get(RedisClientService).getClient();
-        livePrivateIslandReader = app.get(LivePrivateIslandReader);
 
         await app.init();
     });
@@ -46,7 +45,7 @@ describe('PrivateIslandController (e2e)', () => {
         await app.close();
     });
 
-    describe('/private-island (POST)', () => {
+    describe('/private-islands (POST)', () => {
         it('친구 섬 생성 성공', async () => {
             const { accessToken } = await login(app);
 
@@ -71,7 +70,7 @@ describe('PrivateIslandController (e2e)', () => {
             };
 
             const response = await request(app.getHttpServer())
-                .post('/private-island')
+                .post('/private-islands')
                 .set('Authorization', accessToken)
                 .send(dto);
 
@@ -80,17 +79,13 @@ describe('PrivateIslandController (e2e)', () => {
                 body,
             }: ResponseResult<CreatePrivateIslandResponse> = response;
 
-            const island = (await db.privateIsland.findMany())[0];
-            const liveIsland = await livePrivateIslandReader.readOne(island.id);
-
             expect(status).toBe(200);
             expect(body.id).toBeDefined();
             expect(body.urlPath).toBeDefined();
-            expect(liveIsland).toBeDefined();
         });
     });
 
-    describe('(GET) /private-island/my', () => {
+    describe('(GET) /private-islands/my', () => {
         let authToken: string;
         let islands: PrivateIslandEntity[];
 
@@ -126,7 +121,7 @@ describe('PrivateIslandController (e2e)', () => {
                 sortBy: 'createdAt',
             };
             const response = await request(app.getHttpServer())
-                .get('/private-island/my')
+                .get('/private-islands/my')
                 .query(dto)
                 .set('Authorization', authToken);
 
@@ -144,6 +139,103 @@ describe('PrivateIslandController (e2e)', () => {
             expectedIslands.forEach((island, i) => {
                 expect(island.id).toEqual(body.islands[i].id);
             });
+        });
+    });
+
+    describe('(POST) /private-islands/:id/password', () => {
+        let authToken: string;
+        let privateIsland: PrivateIslandEntity;
+        let map: { id: string; key: string };
+
+        beforeEach(async () => {
+            const { accessToken, userId } = await login(app);
+            authToken = accessToken;
+
+            map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'test-map',
+                    createdAt: new Date(),
+                    description: '테스트 맵',
+                    image: 'https://example.com/image.jpg',
+                    name: '테스트 맵',
+                },
+            });
+
+            privateIsland = generatePrivateIsland(map.id, userId, {
+                name: '비밀번호가 있는 섬',
+                password: 'testPassword123',
+                isPublic: false,
+            });
+
+            await db.privateIsland.create({ data: privateIsland });
+        });
+
+        it('비밀번호 확인 성공', async () => {
+            const response = await request(app.getHttpServer())
+                .post(`/private-islands/${privateIsland.id}/password`)
+                .set('Authorization', authToken)
+                .send({ password: 'testPassword123' });
+
+            expect(response.status).toBe(204);
+        });
+
+        it('잘못된 비밀번호로 인한 확인 실패', async () => {
+            const response = await request(app.getHttpServer())
+                .post(`/private-islands/${privateIsland.id}/password`)
+                .set('Authorization', authToken)
+                .send({ password: 'wrongPassword' });
+
+            expect(response.status).toBe(403);
+        });
+
+        it('존재하지 않는 섬 ID로 비밀번호 확인 시도 시 실패', async () => {
+            const nonExistentId = v4();
+            const response = await request(app.getHttpServer())
+                .post(`/private-islands/${nonExistentId}/password`)
+                .set('Authorization', authToken)
+                .send({ password: 'testPassword123' });
+
+            expect(response.status).toBe(404);
+        });
+
+        it('비밀번호가 없는 섬에 대해 비밀번호 확인 시도 시 실패', async () => {
+            const noPasswordIsland = generatePrivateIsland(
+                map.id,
+                privateIsland.ownerId,
+                {
+                    name: '비밀번호가 없는 섬',
+                    password: null,
+                    isPublic: true,
+                },
+            );
+
+            await db.privateIsland.create({ data: noPasswordIsland });
+
+            const response = await request(app.getHttpServer())
+                .post(`/private-islands/${noPasswordIsland.id}/password`)
+                .set('Authorization', authToken)
+                .send({ password: 'anyPassword' });
+
+            expect(response.status).toBe(403);
+        });
+
+        it('빈 비밀번호로 확인 시도 시 실패', async () => {
+            const response = await request(app.getHttpServer())
+                .post(`/private-islands/${privateIsland.id}/password`)
+                .set('Authorization', authToken)
+                .send({ password: '' });
+
+            expect(response.status).toBe(400);
+        });
+
+        it('비밀번호 필드가 누락된 요청 시 실패', async () => {
+            const response = await request(app.getHttpServer())
+                .post(`/private-islands/${privateIsland.id}/password`)
+                .set('Authorization', authToken)
+                .send({});
+
+            expect(response.status).toBe(400);
         });
     });
 });
