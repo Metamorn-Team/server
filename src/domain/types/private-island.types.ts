@@ -45,3 +45,8 @@ export interface PrivateIsland {
     coverImage: string | null;
     createdAt: Date;
 }
+
+export interface PrivateIslandForCheckPassword {
+    id: string;
+    password: string | null;
+}

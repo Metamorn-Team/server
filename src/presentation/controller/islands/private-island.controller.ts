@@ -1,4 +1,4 @@
-import { Body, Get, HttpCode, Post, Query } from '@nestjs/common';
+import { Body, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
@@ -6,6 +6,7 @@ import { LivePrivateIslandReader } from 'src/domain/components/islands/live-priv
 import { PrivateIslandReader } from 'src/domain/components/islands/private-island-reader';
 import { PrivateIslandService } from 'src/domain/services/islands/private-island.service';
 import { OrderEnum, SortByEnum } from 'src/domain/types/private-island.types';
+import { CheckPasswordRequest } from 'src/presentation/dto/island/request/check-password.request';
 import { CreatePrivateIslandRequest } from 'src/presentation/dto/island/request/create-private-island.request';
 import { GetMyPrivateIslandRequest } from 'src/presentation/dto/island/request/get-my-private-island.request';
 import { GetPrivateIslandIdRequest } from 'src/presentation/dto/island/request/get-private-island-id.request';
@@ -19,6 +20,7 @@ export class PrivateIslandController {
         private readonly friendIslandService: PrivateIslandService,
         private readonly privateIslandReader: PrivateIslandReader,
         private readonly livePrivateIslandReader: LivePrivateIslandReader,
+        private readonly privateIslandService: PrivateIslandService,
     ) {}
 
     @ApiOperation({
@@ -81,8 +83,8 @@ export class PrivateIslandController {
     }
 
     @ApiOperation({
-        summary: 'URL 경로로 섬 ID 조회',
-        description: 'URL 경로로 섬 ID 조회',
+        summary: 'URL 경로로 섬 ID 조회 및 비밀번호 존재 유무 확인',
+        description: 'URL 경로로 섬 ID 조회 및 비밀번호 존재 유무 확인',
     })
     @ApiResponse({
         status: 200,
@@ -94,5 +96,26 @@ export class PrivateIslandController {
         @Query() dto: GetPrivateIslandIdRequest,
     ): Promise<GetPrivateIslandIdResponse> {
         return await this.privateIslandReader.readIdByUrlPath(dto.urlPath);
+    }
+
+    @ApiOperation({
+        summary: '비밀번호 확인',
+        description: '비밀번호 확인',
+    })
+    @ApiResponse({
+        status: 204,
+        description: '비밀번호 일치',
+    })
+    @ApiResponse({
+        status: 403,
+        description: '비밀번호 불일치',
+    })
+    @HttpCode(204)
+    @Post(':id/password')
+    async checkPassword(
+        @Param('id') id: string,
+        @Body() dto: CheckPasswordRequest,
+    ): Promise<void> {
+        return await this.privateIslandService.checkPassword(id, dto.password);
     }
 }

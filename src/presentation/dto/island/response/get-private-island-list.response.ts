@@ -27,6 +27,9 @@ export class PrivateIslandItem {
     @ApiProperty({ description: '라이브 상태 여부 (Y 또는 N)', example: true })
     readonly isLive: boolean;
 
+    @ApiProperty({ description: '비밀번호 설정 여부', example: false })
+    readonly hasPassword: boolean;
+
     @ApiProperty({
         description: '접속용 URL path',
         example: 'sTG2Awhf',

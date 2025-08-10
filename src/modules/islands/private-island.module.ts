@@ -5,6 +5,7 @@ import { PrivateIslandComponentModule } from 'src/modules/islands/private-island
 import { LivePrivateIslandComponentModule } from 'src/modules/islands/live-private-island-component.module';
 import { MapComponentModule } from 'src/modules/map/map-component.module';
 import { UserComponentModule } from 'src/modules/users/users-component.module';
+import { PrivateIslandPasswordCheckerModule } from 'src/modules/islands/private-island-password-checker.module';
 
 @Module({
     imports: [
@@ -12,6 +13,7 @@ import { UserComponentModule } from 'src/modules/users/users-component.module';
         LivePrivateIslandComponentModule,
         MapComponentModule,
         UserComponentModule,
+        PrivateIslandPasswordCheckerModule,
     ],
     controllers: [PrivateIslandController],
     providers: [PrivateIslandService],

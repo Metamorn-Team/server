@@ -44,6 +44,7 @@ export type ChatToClient = {
 export type ClientToIsland = {
     joinDesertedIsland: () => void;
     joinNormalIsland: (data: PlayerJoinRequest) => void;
+    joinPrivateIsland: (data: PlayerJoinRequest) => void;
     playerLeft: () => void;
     playerKicked: () => void;
     playerMoved: (data: PlayerMovedRequest) => void;

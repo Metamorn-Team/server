@@ -6,6 +6,7 @@ import { PrivateIslandReader } from 'src/domain/components/islands/private-islan
 import { PRIVATE_ISLAND_MAX_MEMBERS } from 'src/common/constants';
 import { MapReader } from 'src/domain/components/map/map-reader';
 import { UserReader } from 'src/domain/components/users/user-reader';
+import { PrivateIslandPasswordChecker } from 'src/domain/components/islands/private-storage/private-island-password-checker';
 
 @Injectable()
 export class PrivateIslandService {
@@ -14,6 +15,7 @@ export class PrivateIslandService {
         private readonly privateIslandReader: PrivateIslandReader,
         private readonly mapReader: MapReader,
         private readonly userReader: UserReader,
+        private readonly privateIslandPasswordChecker: PrivateIslandPasswordChecker,
     ) {}
 
     async create(input: CreatePrivateIslandInput) {
@@ -46,5 +48,12 @@ export class PrivateIslandService {
             return await this.generateUrlPath();
         }
         return path;
+    }
+
+    async checkPassword(id: string, password: string): Promise<void> {
+        return await this.privateIslandPasswordChecker.checkPassword(
+            id,
+            password,
+        );
     }
 }
