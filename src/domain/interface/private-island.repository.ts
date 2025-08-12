@@ -15,7 +15,7 @@ export interface PrivateIslandRepository {
     findIdByUrlPath(
         urlPath: string,
     ): Promise<{ id: string; password: string | null } | null>;
-    findOneById(id: string): Promise<PrivateIslandForCheckPassword | null>;
+    findPasswordById(id: string): Promise<PrivateIslandForCheckPassword | null>;
 }
 
 export const PrivateIslandRepository = Symbol('PrivateIslandRepository');

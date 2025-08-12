@@ -55,7 +55,8 @@ export class PrivateIslandReader {
     }
 
     async readPassword(id: string): Promise<PrivateIslandForCheckPassword> {
-        const password = await this.privateIslandRepository.findOneById(id);
+        const password =
+            await this.privateIslandRepository.findPasswordById(id);
         if (!password) {
             throw new DomainException(
                 DomainExceptionType.ISLAND_NOT_FOUND,

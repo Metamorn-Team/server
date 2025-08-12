@@ -85,7 +85,7 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
         });
     }
 
-    async findOneById(
+    async findPasswordById(
         id: string,
     ): Promise<PrivateIslandForCheckPassword | null> {
         return await this.txHost.tx.privateIsland.findUnique({
