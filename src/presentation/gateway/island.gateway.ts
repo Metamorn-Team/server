@@ -87,11 +87,11 @@ export class IslandGateway
         this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
-            await this.gameIslandService.joinIsland(
-                userId,
-                client.id,
-                IslandTypeEnum.DESERTED,
-            );
+            await this.gameIslandService.joinIsland({
+                playerId: userId,
+                clientId: client.id,
+                type: IslandTypeEnum.DESERTED,
+            });
 
         const activeObjects = this.islandActiveObjectReader
             .readAlive(joinedIsland.id)
@@ -124,12 +124,12 @@ export class IslandGateway
         this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
-            await this.gameIslandService.joinIsland(
-                userId,
-                client.id,
-                IslandTypeEnum.NORMAL,
+            await this.gameIslandService.joinIsland({
+                playerId: userId,
+                clientId: client.id,
+                type: IslandTypeEnum.NORMAL,
                 islandId,
-            );
+            });
         const activeObjects = this.islandActiveObjectReader
             .readAll(joinedIsland.id)
             .map((object) => IslandActiveObject.fromActiveObject(object));
@@ -157,12 +157,12 @@ export class IslandGateway
         const { islandId } = data;
 
         const { activePlayers, joinedIsland, joinedPlayer } =
-            await this.gameIslandService.joinIsland(
-                userId,
-                client.id,
-                IslandTypeEnum.PRIVATE,
+            await this.gameIslandService.joinIsland({
+                playerId: userId,
+                clientId: client.id,
+                type: IslandTypeEnum.PRIVATE,
                 islandId,
-            );
+            });
         const activeObjects = this.islandActiveObjectReader
             .readAll(joinedIsland.id)
             .map((object) => IslandActiveObject.fromActiveObject(object));
