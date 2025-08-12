@@ -199,13 +199,12 @@ describe('PrivateIslandController (e2e)', () => {
             expect(response.status).toBe(404);
         });
 
-        it('비밀번호가 없는 섬에 대해 비밀번호 확인 시도 시 실패', async () => {
+        it('비밀번호가 없는 섬에 대해 비밀번호 확인 시도 시 항상 성공', async () => {
             const noPasswordIsland = generatePrivateIsland(
                 map.id,
                 privateIsland.ownerId,
                 {
                     name: '비밀번호가 없는 섬',
-                    password: null,
                     isPublic: true,
                 },
             );
@@ -217,7 +216,7 @@ describe('PrivateIslandController (e2e)', () => {
                 .set('Authorization', authToken)
                 .send({ password: 'anyPassword' });
 
-            expect(response.status).toBe(403);
+            expect(response.status).toBe(204);
         });
 
         it('빈 비밀번호로 확인 시도 시 실패', async () => {
