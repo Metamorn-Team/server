@@ -2,7 +2,7 @@ import { Player, PlayerWithEquippedItems } from 'src/domain/models/game/player';
 
 export interface IslandManager {
     canJoin(islandId: string): Promise<boolean>;
-    join(player: Player): Promise<void>;
+    join(player: Player, password?: string): Promise<void>;
     getActiveUsers(
         islandId: string,
         myPlayerId: string,

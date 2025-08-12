@@ -11,7 +11,7 @@ import {
     LiveIsland,
     SocketClientId,
 } from 'src/domain/types/game.types';
-import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { IslandTypeEnum, JoinIslandInput } from 'src/domain/types/island.types';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-writer';
@@ -102,12 +102,9 @@ export class GameIslandService {
         return this.desertedIslandStorageReader.readOne(islandId);
     }
 
-    async joinIsland(
-        playerId: string,
-        clientId: string,
-        type: IslandTypeEnum,
-        islandId?: string,
-    ) {
+    async joinIsland(input: JoinIslandInput) {
+        const { playerId, clientId, type, islandId, password } = input;
+
         const user = await this.userReader.readProfile(playerId);
         const island = await this.getAvailableIsland(type, islandId);
         const manager = this.islandManagerFactory.get(type);
@@ -126,7 +123,8 @@ export class GameIslandService {
         const equipmentState = await this.equipmentReader.readEquipmentState(
             player.id,
         );
-        await manager.join(player);
+
+        await manager.join(player, password);
 
         const activePlayers = await manager.getActiveUsers(island.id, playerId);
         void this.createIslandJoinData(island.id, playerId);

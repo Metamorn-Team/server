@@ -46,3 +46,11 @@ export interface CreatePrivateIslandInput {
     readonly isPublic: boolean;
     readonly password?: string;
 }
+
+export interface JoinIslandInput {
+    playerId: string;
+    clientId: string;
+    type: IslandTypeEnum;
+    islandId?: string;
+    password?: string;
+}
