@@ -8,6 +8,7 @@ import { EquipmentComponentModule } from 'src/modules/equipments/equipment-compo
 import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
 import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-transaction-manger.module';
 import { LivePrivateIslandComponentModule } from 'src/modules/islands/live-private-island-component.module';
+import { PrivateIslandPasswordCheckerModule } from 'src/modules/islands/private-island-password-checker.module';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { LivePrivateIslandComponentModule } from 'src/modules/islands/live-priva
         IslandActiveObjectComponentModule,
         RedisTransactionManagerModule,
         RespawnQueueManagerModule,
+        PrivateIslandPasswordCheckerModule,
     ],
     providers: [PrivateIslandManager],
     exports: [PrivateIslandManager],

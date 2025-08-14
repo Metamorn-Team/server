@@ -7,6 +7,7 @@ import { IslandManager } from 'src/domain/components/islands/interface/island-ma
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
 import { LivePrivateIslandWriter } from 'src/domain/components/islands/live-private-island-writer';
+import { PrivateIslandPasswordChecker } from 'src/domain/components/islands/private-storage/private-island-password-checker';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
@@ -30,6 +31,7 @@ export class PrivateIslandManager implements IslandManager {
         private readonly islandActiveObjectWriter: IslandActiveObjectWriter,
         private readonly islandWriter: IslandWriter,
         private readonly respawnQueueManager: RespawnQueueManager,
+        private readonly privateIslandPasswordChecker: PrivateIslandPasswordChecker,
         private readonly lockManager: RedisTransactionManager,
     ) {}
 
@@ -38,8 +40,13 @@ export class PrivateIslandManager implements IslandManager {
         return island.players.size < island.max;
     }
 
-    async join(player: Player): Promise<void> {
+    async join(player: Player, password: string): Promise<void> {
         const { id: playerId, roomId: islandId } = player;
+
+        await this.privateIslandPasswordChecker.checkPassword(
+            islandId,
+            password,
+        );
 
         const key = ISLAND_LOCK_KEY(islandId);
         await this.lockManager.transaction(key, [
