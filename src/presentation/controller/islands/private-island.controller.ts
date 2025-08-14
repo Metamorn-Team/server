@@ -6,7 +6,7 @@ import { LivePrivateIslandReader } from 'src/domain/components/islands/live-priv
 import { PrivateIslandReader } from 'src/domain/components/islands/private-island-reader';
 import { PrivateIslandService } from 'src/domain/services/islands/private-island.service';
 import { OrderEnum, SortByEnum } from 'src/domain/types/private-island.types';
-import { CheckPasswordRequest } from 'src/presentation/dto/island/request/check-password.request';
+import { CheckPrivatePasswordRequest } from 'src/presentation/dto/island/request/check-private-island-password.request';
 import { CreatePrivateIslandRequest } from 'src/presentation/dto/island/request/create-private-island.request';
 import { GetMyPrivateIslandRequest } from 'src/presentation/dto/island/request/get-my-private-island.request';
 import { GetPrivateIslandIdRequest } from 'src/presentation/dto/island/request/get-private-island-id.request';
@@ -114,7 +114,7 @@ export class PrivateIslandController {
     @Post(':id/password')
     async checkPassword(
         @Param('id') id: string,
-        @Body() dto: CheckPasswordRequest,
+        @Body() dto: CheckPrivatePasswordRequest,
     ): Promise<void> {
         return await this.privateIslandService.checkPassword(id, dto.password);
     }
