@@ -96,4 +96,38 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
             },
         });
     }
+
+    async findOneById(id: string): Promise<PrivateIsland | null> {
+        const result = await this.txHost.tx.privateIsland.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                ownerId: true,
+                urlPath: true,
+                name: true,
+                isPublic: true,
+                maxMembers: true,
+                password: true,
+                description: true,
+                coverImage: true,
+                createdAt: true,
+                map: {
+                    select: {
+                        key: true,
+                    },
+                },
+            },
+        });
+
+        if (!result) {
+            return null;
+        }
+
+        const { map, ...rest } = result;
+
+        return {
+            ...rest,
+            mapKey: map.key,
+        };
+    }
 }

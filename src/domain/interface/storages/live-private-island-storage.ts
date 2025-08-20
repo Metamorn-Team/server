@@ -9,6 +9,7 @@ export interface LivePrivateIslandStorage {
     countPlayer(islandId: string): Promise<number>;
     addPlayer(islandId: string, playerId: string): Promise<void>;
     removePlayer(islandId: string, playerId: string): Promise<void>;
+    getPlayerIdsByIslandId(islandId: string): Promise<string[]>;
     delete(islandId: string): Promise<void>;
 }
 

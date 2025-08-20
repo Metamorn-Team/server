@@ -9,6 +9,7 @@ import { IslandComponentModule } from 'src/modules/islands/island-component.modu
 import { IslandManagerFactoryModule } from 'src/modules/islands/island-manager-factory.module';
 import { LivePrivateIslandComponentModule } from 'src/modules/islands/live-private-island-component.module';
 import { NormalIslandStorageComponentModule } from 'src/modules/islands/normal-island-storage-component.module';
+import { PrivateIslandComponentModule } from 'src/modules/islands/private-island-component.module';
 import { MapComponentModule } from 'src/modules/map/map-component.module';
 import { PlayerSpawnPointComponentModule } from 'src/modules/player-spawn-point/player-spawn-point-component.module';
 import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-component.module';
@@ -24,6 +25,7 @@ import { UserComponentModule } from 'src/modules/users/users-component.module';
         DesertedIslandStorageComponentModule,
         NormalIslandStorageComponentModule,
         LivePrivateIslandComponentModule,
+        PrivateIslandComponentModule,
         IslandManagerFactoryModule,
         MapComponentModule,
         PlayerSpawnPointComponentModule,

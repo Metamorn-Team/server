@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ChatMessageModule } from 'src/modules/chat-messages/chat-message.module';
 import { IslandComponentModule } from 'src/modules/islands/island-component.module';
-import { ChatGateway } from 'src/presentation/gateway/chat.gateway';
 import { IslandGateway } from 'src/presentation/gateway/island.gateway';
 import { LobyGateway } from 'src/presentation/gateway/loby.gateway';
 import { NormalIslandStorageComponentModule } from 'src/modules/islands/normal-island-storage-component.module';

@@ -5,6 +5,7 @@ import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { PrivateIslandRepository } from 'src/domain/interface/private-island.repository';
 import {
     GetPaginatedMyIslandsInput,
+    PrivateIsland,
     PrivateIslandForCheckPassword,
 } from 'src/domain/types/private-island.types';
 
@@ -34,6 +35,19 @@ export class PrivateIslandReader {
 
     async countByOwner(ownerId: string): Promise<number> {
         return await this.privateIslandRepository.countByOwner(ownerId);
+    }
+
+    async readOne(id: string): Promise<PrivateIsland> {
+        const island = await this.privateIslandRepository.findOneById(id);
+        if (!island) {
+            throw new DomainException(
+                DomainExceptionType.ISLAND_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                ISLAND_NOT_FOUND_MESSAGE,
+            );
+        }
+
+        return island;
     }
 
     async readIdByUrlPath(

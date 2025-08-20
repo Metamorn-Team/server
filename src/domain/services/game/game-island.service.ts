@@ -26,6 +26,7 @@ import { PlayerSpawnPointReader } from 'src/domain/components/player-spawn-point
 import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 import { Logger } from 'winston';
 import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
+import { PrivateIslandReader } from 'src/domain/components/islands/private-island-reader';
 
 @Injectable()
 export class GameIslandService {
@@ -42,7 +43,7 @@ export class GameIslandService {
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
         private readonly livePrivateIslandReader: LivePrivateIslandReader,
-
+        private readonly privateIslandReader: PrivateIslandReader,
         private readonly islandManagerFactory: IslandManagerFactory,
         private readonly mapReader: MapReader,
         private readonly playerSpawnPointReader: PlayerSpawnPointReader,
@@ -116,8 +117,8 @@ export class GameIslandService {
         const player = Player.from({
             user,
             islandId: island.id,
+            islandType: type,
             spawnPoint,
-            islandType: island.type,
             clientId,
         });
         const equipmentState = await this.equipmentReader.readEquipmentState(
@@ -150,7 +151,7 @@ export class GameIslandService {
         if (type === IslandTypeEnum.NORMAL) {
             return await this.normalIslandStorageReader.readOne(islandId);
         }
-        return await this.livePrivateIslandReader.readOne(islandId);
+        return await this.privateIslandReader.readOne(islandId);
     }
 
     createIslandJoinData(islandId: string, userId: string) {

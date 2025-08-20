@@ -7,6 +7,7 @@ import { IslandManager } from 'src/domain/components/islands/interface/island-ma
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
 import { LivePrivateIslandWriter } from 'src/domain/components/islands/live-private-island-writer';
+import { PrivateIslandReader } from 'src/domain/components/islands/private-island-reader';
 import { PrivateIslandPasswordChecker } from 'src/domain/components/islands/private-storage/private-island-password-checker';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
@@ -14,6 +15,7 @@ import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player, PlayerWithEquippedItems } from 'src/domain/models/game/player';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
 import { Logger } from 'winston';
@@ -25,6 +27,7 @@ export class PrivateIslandManager implements IslandManager {
         private readonly logger: Logger,
         private readonly livePrivateIslandReader: LivePrivateIslandReader,
         private readonly livePrivateIslandWriter: LivePrivateIslandWriter,
+        private readonly privateIslandReader: PrivateIslandReader,
         private readonly playerStorageWriter: PlayerStorageWriter,
         private readonly playerStorageReader: PlayerStorageReader,
         private readonly equipmentReader: EquipmentReader,
@@ -50,6 +53,32 @@ export class PrivateIslandManager implements IslandManager {
 
         const key = ISLAND_LOCK_KEY(islandId);
         await this.lockManager.transaction(key, [
+            {
+                execute: async () => {
+                    const liveIsland = await this.livePrivateIslandReader
+                        .readOne(islandId)
+                        .catch(() => null);
+                    if (!liveIsland) {
+                        const island =
+                            await this.privateIslandReader.readOne(islandId);
+                        await this.livePrivateIslandWriter.create({
+                            ownerId: playerId,
+                            urlPath: island.urlPath,
+                            name: island.name,
+                            mapKey: island.mapKey,
+                            coverImage: island.coverImage,
+                            createdAt: island.createdAt,
+                            description: island.description,
+                            id: island.id,
+                            isPublic: island.isPublic,
+                            max: island.maxMembers,
+                            password: island.password,
+                            type: IslandTypeEnum.PRIVATE,
+                        });
+                    }
+                },
+                rollback: () => this.livePrivateIslandWriter.remove(islandId),
+            },
             {
                 execute: async () => {
                     const canJoin = await this.canJoin(islandId);
