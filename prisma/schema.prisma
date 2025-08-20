@@ -129,7 +129,7 @@ model Island {
   deletedAt   DateTime? @map("deleted_at")
 
   owner       User?        @relation(fields: [ownerId], references: [id])
-  map       Map?        @relation(fields: [mapId], references: [id])
+  map       Map        @relation(fields: [mapId], references: [id])
   islandJoins IslandJoin[]
   islandTags  IslandTag[]
 
