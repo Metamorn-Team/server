@@ -9,10 +9,12 @@ import { PlayerStorageComponentModule } from 'src/modules/users/player-storage-c
 import { RedisTransactionManagerModule } from 'src/infrastructure/redis/redis-transaction-manger.module';
 import { LivePrivateIslandComponentModule } from 'src/modules/islands/live-private-island-component.module';
 import { PrivateIslandPasswordCheckerModule } from 'src/modules/islands/private-island-password-checker.module';
+import { PrivateIslandComponentModule } from 'src/modules/islands/private-island-component.module';
 
 @Module({
     imports: [
         LivePrivateIslandComponentModule,
+        PrivateIslandComponentModule,
         PlayerStorageComponentModule,
         IslandJoinComponentModule,
         IslandComponentModule,

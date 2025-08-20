@@ -154,13 +154,14 @@ export class IslandGateway
         @MessageBody() data: PlayerJoinRequest,
         @CurrentUserFromSocket() userId: string,
     ) {
-        const { islandId } = data;
+        const { islandId, password } = data;
 
         const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinIsland({
                 playerId: userId,
                 clientId: client.id,
                 type: IslandTypeEnum.PRIVATE,
+                password,
                 islandId,
             });
         const activeObjects = this.islandActiveObjectReader

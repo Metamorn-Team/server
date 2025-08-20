@@ -303,7 +303,7 @@ export const generatePrivateIsland = (
         partial?.name || 'Private Island',
         partial?.isPublic || true,
         partial?.maxMembers || 4,
-        partial?.password || 'password',
+        partial?.password || null,
         partial?.description || 'Private Island description',
         partial?.coverImage || 'https://example.com/cover.jpg',
         partial?.createdAt || new Date(),
