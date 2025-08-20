@@ -8,7 +8,6 @@ import {
     OnGatewayDisconnect,
     OnGatewayInit,
     SubscribeMessage,
-    WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
@@ -33,6 +32,8 @@ import { AttackObjectResponse } from 'src/presentation/dto/game/response/attack-
 import { Logger } from 'winston';
 import { SocketClientReader } from 'src/domain/components/socket-client/socket-client-reader';
 import { SocketClientWriter } from 'src/domain/components/socket-client/socket-client-writer';
+import { LivislandGateway } from 'src/common/decorator/island-gateway.decorator';
+import { IslandTypeEnum } from 'src/domain/types/island.types';
 
 type TypedSocket = Socket<
     ClientToIsland,
@@ -40,13 +41,7 @@ type TypedSocket = Socket<
 >;
 
 @UseFilters(WsExceptionFilter)
-@WebSocketGateway({
-    path: '/game',
-    namespace: 'island',
-    cors: {
-        origin: true,
-    },
-})
+@LivislandGateway()
 export class IslandGateway
     implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -92,7 +87,11 @@ export class IslandGateway
         this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
-            await this.gameIslandService.joinDesertedIsland(userId, client.id);
+            await this.gameIslandService.joinIsland({
+                playerId: userId,
+                clientId: client.id,
+                type: IslandTypeEnum.DESERTED,
+            });
 
         const activeObjects = this.islandActiveObjectReader
             .readAlive(joinedIsland.id)
@@ -125,11 +124,46 @@ export class IslandGateway
         this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
-            await this.gameIslandService.joinNormalIsland(
-                userId,
-                client.id,
+            await this.gameIslandService.joinIsland({
+                playerId: userId,
+                clientId: client.id,
+                type: IslandTypeEnum.NORMAL,
                 islandId,
-            );
+            });
+        const activeObjects = this.islandActiveObjectReader
+            .readAll(joinedIsland.id)
+            .map((object) => IslandActiveObject.fromActiveObject(object));
+        const { x, y } = joinedPlayer;
+
+        await client.join(joinedIsland.id);
+        client.emit('playerJoinSuccess', {
+            x,
+            y,
+            mapKey: joinedIsland.mapKey,
+            activeObjects,
+        });
+        client.emit('activePlayers', activePlayers);
+        client
+            .to(joinedIsland.id)
+            .emit('playerJoin', { ...joinedPlayer, x, y });
+    }
+
+    @SubscribeMessage('joinPrivateIsland')
+    async handleJoinPrivateIsland(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody() data: PlayerJoinRequest,
+        @CurrentUserFromSocket() userId: string,
+    ) {
+        const { islandId, password } = data;
+
+        const { activePlayers, joinedIsland, joinedPlayer } =
+            await this.gameIslandService.joinIsland({
+                playerId: userId,
+                clientId: client.id,
+                type: IslandTypeEnum.PRIVATE,
+                password,
+                islandId,
+            });
         const activeObjects = this.islandActiveObjectReader
             .readAll(joinedIsland.id)
             .map((object) => IslandActiveObject.fromActiveObject(object));
@@ -214,8 +248,6 @@ export class IslandGateway
                 attackedPlayers: attackedObjects.map((object) => object.id),
             };
 
-            this.logger.debug(attackedObjects);
-
             this.wss.to(attacker.roomId).emit('strongAttacked', response);
         } catch (e) {
             this.logger.error(`공격 실패: ${e as string}`);
@@ -267,8 +299,9 @@ export class IslandGateway
                 }
             }
 
+            this.logger.debug(this.socketClientReader.readAll());
             this.socketClientWriter.addClientId(userId, client.id);
-            this.logger.info(`Connected new client to Island: ${client.id}`);
+            this.logger.info(`새로운 클라이언트 연결: ${client.id}`);
         } catch (e) {
             client.emit('wsError', {
                 name: WsExceptions.INVALID_TOKEN,
@@ -295,6 +328,7 @@ export class IslandGateway
             await client.leave(islandId);
             client.to(islandId).emit('playerLeft', { id: player.id });
 
+            this.logger.debug(this.socketClientReader.readAll());
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
             );

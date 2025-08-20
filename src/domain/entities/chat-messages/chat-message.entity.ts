@@ -1,3 +1,10 @@
+export interface ChatMessagePrototype {
+    readonly senderId: string;
+    readonly type: string;
+    readonly contextId: string;
+    readonly message: string;
+}
+
 export class ChatMessageEntity {
     constructor(
         readonly id: string,
@@ -9,21 +16,16 @@ export class ChatMessageEntity {
     ) {}
 
     static create(
-        input: {
-            senderId: string;
-            type: string;
-            contextId: string;
-            message: string;
-        },
+        prototype: ChatMessagePrototype,
         idGen: () => string,
-        stdDate: Date,
+        stdDate = new Date(),
     ): ChatMessageEntity {
         return new ChatMessageEntity(
             idGen(),
-            input.senderId,
-            input.type,
-            input.contextId,
-            input.message,
+            prototype.senderId,
+            prototype.type,
+            prototype.contextId,
+            prototype.message,
             stdDate,
         );
     }

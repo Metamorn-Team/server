@@ -18,3 +18,24 @@ export const random = {
 export function generateRandomString(length: number) {
     return crypto.randomBytes(length).toString('hex');
 }
+
+/**
+ * Base62로 랜덤 문자열을 생성합니다.
+ *
+ * @param length 생성할 문자열 길이
+ * @returns Base62로 인코딩된 랜덤 문자열
+ */
+export function generateRandomBase62(length: number): string {
+    // Base62 문자셋 (알파벳 대소문자 + 숫자)
+    const charset =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    let result = '';
+    const randomBytes = crypto.randomBytes(length);
+
+    for (let i = 0; i < length; i++) {
+        result += charset[randomBytes[i] % charset.length];
+    }
+
+    return result;
+}

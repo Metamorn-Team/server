@@ -128,11 +128,12 @@ describe('GameIslandService', () => {
             const activeObject = generateActiveObject(island.id);
             islandActiveObjectWriter.createMany([activeObject]);
 
-            const result = await gameIslandService.joinNormalIsland(
-                user.id,
+            const result = await gameIslandService.joinIsland({
+                playerId: user.id,
                 clientId,
-                island.id,
-            );
+                type: IslandTypeEnum.NORMAL,
+                islandId: island.id,
+            });
 
             const joinedIsland = await normalIslandStorage.getIsland(
                 result.joinedIsland.id,
@@ -166,11 +167,12 @@ describe('GameIslandService', () => {
             ];
             islandActiveObjectWriter.createMany(activeObjects);
 
-            const result = await gameIslandService.joinNormalIsland(
-                user.id,
+            const result = await gameIslandService.joinIsland({
+                playerId: user.id,
                 clientId,
-                island.id,
-            );
+                type: IslandTypeEnum.NORMAL,
+                islandId: island.id,
+            });
 
             // 섬의 activeObjects 확인
             const islandActiveObjects = islandActiveObjectReader.readAll(
@@ -202,11 +204,12 @@ describe('GameIslandService', () => {
             );
 
             await expect(() =>
-                gameIslandService.joinNormalIsland(
-                    user.id,
+                gameIslandService.joinIsland({
+                    playerId: user.id,
                     clientId,
-                    island.id,
-                ),
+                    type: IslandTypeEnum.NORMAL,
+                    islandId: island.id,
+                }),
             ).rejects.toThrow(
                 new DomainException(
                     DomainExceptionType.ISLAND_FULL,
@@ -253,10 +256,11 @@ describe('GameIslandService', () => {
             const activeObject = generateActiveObject(island.id);
             islandActiveObjectWriter.createMany([activeObject]);
 
-            const result = await gameIslandService.joinDesertedIsland(
-                user.id,
+            const result = await gameIslandService.joinIsland({
+                playerId: user.id,
                 clientId,
-            );
+                type: IslandTypeEnum.DESERTED,
+            });
 
             const joinedIsland = await desertedIslandStorage.getIsland(
                 result.joinedIsland.id,
@@ -288,10 +292,11 @@ describe('GameIslandService', () => {
             ];
             islandActiveObjectWriter.createMany(activeObjects);
 
-            const result = await gameIslandService.joinDesertedIsland(
-                user.id,
+            const result = await gameIslandService.joinIsland({
+                playerId: user.id,
                 clientId,
-            );
+                type: IslandTypeEnum.DESERTED,
+            });
 
             // 섬의 activeObjects 확인
             const islandActiveObjects = islandActiveObjectReader.readAll(
@@ -311,10 +316,11 @@ describe('GameIslandService', () => {
         it('빈 섬이 없다면 새로운 섬을 생성해서 참여한다', async () => {
             const clientId = 'test-client-id';
 
-            const result = await gameIslandService.joinDesertedIsland(
-                user.id,
+            const result = await gameIslandService.joinIsland({
+                playerId: user.id,
                 clientId,
-            );
+                type: IslandTypeEnum.DESERTED,
+            });
 
             const joinedIsland = await desertedIslandStorage.getIsland(
                 result.joinedIsland.id,

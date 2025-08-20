@@ -3,7 +3,6 @@ import {
     ConnectedSocket,
     MessageBody,
     SubscribeMessage,
-    WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Namespace, Socket } from 'socket.io';
@@ -21,18 +20,13 @@ import { DomainException } from 'src/domain/exceptions/exceptions';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
+import { LivislandGateway } from 'src/common/decorator/island-gateway.decorator';
 
 type TypedSocket = Socket<ClientToFriend, FriendToClient>;
 
 @UseFilters(WsExceptionFilter)
 @UseGuards(WsAuthGuard)
-@WebSocketGateway({
-    path: '/game',
-    namespace: 'island',
-    cors: {
-        origin: true,
-    },
-})
+@LivislandGateway()
 export class FriendGateway {
     @WebSocketServer()
     private readonly wss: Namespace<ClientToFriend, FriendToClient>;

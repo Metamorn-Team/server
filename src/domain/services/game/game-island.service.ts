@@ -7,12 +7,11 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player } from 'src/domain/models/game/player';
 import {
-    JoinedIslandInfo,
     LiveDesertedIsland,
     LiveIsland,
     SocketClientId,
 } from 'src/domain/types/game.types';
-import { IslandTypeEnum } from 'src/domain/types/island.types';
+import { IslandTypeEnum, JoinIslandInput } from 'src/domain/types/island.types';
 import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 import { DesertedIslandStorageReader } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-reader';
 import { DesertedIslandStorageWriter } from 'src/domain/components/islands/deserted-storage/deserted-island-storage-writer';
@@ -20,13 +19,14 @@ import { ISLAND_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { IslandManagerFactory } from 'src/domain/components/islands/factory/island-manager-factory';
 import { IslandJoinWriter } from 'src/domain/components/island-join/island-join-writer';
-import { PLAYER_HIT_BOX } from 'src/constants/game/hit-box';
 import { NormalIslandStorageReader } from 'src/domain/components/islands/normal-storage/normal-island-storage-reader';
 import { EquipmentReader } from 'src/domain/components/equipments/equipment-reader';
 import { MapReader } from 'src/domain/components/map/map-reader';
 import { PlayerSpawnPointReader } from 'src/domain/components/player-spawn-point/player-spawn-point-reader';
 import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 import { Logger } from 'winston';
+import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
+import { PrivateIslandReader } from 'src/domain/components/islands/private-island-reader';
 
 @Injectable()
 export class GameIslandService {
@@ -42,7 +42,8 @@ export class GameIslandService {
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
-
+        private readonly livePrivateIslandReader: LivePrivateIslandReader,
+        private readonly privateIslandReader: PrivateIslandReader,
         private readonly islandManagerFactory: IslandManagerFactory,
         private readonly mapReader: MapReader,
         private readonly playerSpawnPointReader: PlayerSpawnPointReader,
@@ -102,94 +103,55 @@ export class GameIslandService {
         return this.desertedIslandStorageReader.readOne(islandId);
     }
 
-    async joinNormalIsland(
-        playerId: string,
-        clientId: string,
-        islandId: string,
-    ): Promise<JoinedIslandInfo> {
-        const user = await this.userReader.readProfile(playerId);
-        const island = await this.normalIslandStorageReader.readOne(islandId);
-        const manager = this.islandManagerFactory.get(IslandTypeEnum.NORMAL);
+    async joinIsland(input: JoinIslandInput) {
+        const { playerId, clientId, type, islandId, password } = input;
 
-        // TODO 기본 값 제거
+        const user = await this.userReader.readProfile(playerId);
+        const island = await this.getAvailableIsland(type, islandId);
+        const manager = this.islandManagerFactory.get(type);
+
         const spawnPoint = await this.playerSpawnPointReader.readRandomPoint(
-            island.mapKey || 'island',
+            island.mapKey,
         );
 
-        const player = Player.create({
-            id: user.id,
-            avatarKey: user.avatarKey,
+        const player = Player.from({
+            user,
+            islandId: island.id,
+            islandType: type,
+            spawnPoint,
             clientId,
-            nickname: user.nickname,
-            roomId: islandId,
-            islandType: island.type,
-            tag: user.tag,
-            x: spawnPoint.x,
-            y: spawnPoint.y,
-            radius: PLAYER_HIT_BOX.PAWN.RADIUS,
         });
         const equipmentState = await this.equipmentReader.readEquipmentState(
             player.id,
         );
-        await manager.join(player);
 
-        const activePlayers = await manager.getActiveUsers(islandId, playerId);
-        void this.createIslandJoinData(islandId, playerId);
+        await manager.join(player, password);
+
+        const activePlayers = await manager.getActiveUsers(island.id, playerId);
+        void this.createIslandJoinData(island.id, playerId);
 
         return {
             activePlayers,
             joinedIsland: {
                 id: island.id,
-                // TODO required로 변경되면 default 제거
-                mapKey: island.mapKey || 'island',
+                mapKey: island.mapKey,
             },
             joinedPlayer: Object.assign(player, { equipmentState }),
         };
     }
 
-    async joinDesertedIsland(
-        playerId: string,
-        clientId: string,
-    ): Promise<JoinedIslandInfo> {
-        const user = await this.userReader.readProfile(playerId);
-        const manager = this.islandManagerFactory.get(IslandTypeEnum.DESERTED);
+    async getAvailableIsland(type: IslandTypeEnum, islandId?: string) {
+        if (type === IslandTypeEnum.DESERTED) {
+            return await this.getAvailableDesertedIsland();
+        }
 
-        const joinableIsland = await this.getAvailableDesertedIsland();
-        // TODO 기본 값 제거
-        const spawnPoint = await this.playerSpawnPointReader.readRandomPoint(
-            joinableIsland.mapKey || 'island',
-        );
-
-        const { id: islandId, type } = joinableIsland;
-        const player = Player.create({
-            id: user.id,
-            clientId,
-            nickname: user.nickname,
-            avatarKey: user.avatarKey,
-            islandType: type,
-            tag: user.tag,
-            roomId: islandId,
-            x: spawnPoint.x,
-            y: spawnPoint.y,
-            radius: PLAYER_HIT_BOX.PAWN.RADIUS,
-        });
-        const equipmentState = await this.equipmentReader.readEquipmentState(
-            player.id,
-        );
-        await manager.join(player);
-
-        const activePlayers = await manager.getActiveUsers(islandId, playerId);
-        void this.islandJoinWriter.create({ islandId, userId: playerId });
-
-        return {
-            activePlayers,
-            joinedIsland: {
-                id: joinableIsland.id,
-                // TODO required로 변경되면 default 제거
-                mapKey: joinableIsland.mapKey || 'island',
-            },
-            joinedPlayer: Object.assign(player, { equipmentState }),
-        };
+        if (!islandId) {
+            throw new Error('islandId is required');
+        }
+        if (type === IslandTypeEnum.NORMAL) {
+            return await this.normalIslandStorageReader.readOne(islandId);
+        }
+        return await this.privateIslandReader.readOne(islandId);
     }
 
     createIslandJoinData(islandId: string, userId: string) {
@@ -243,19 +205,20 @@ export class GameIslandService {
         reason?: string;
     }> {
         try {
-            await this.islandManagerFactory
+            const canJoin = await this.islandManagerFactory
                 .get(IslandTypeEnum.NORMAL)
                 .canJoin(islandId);
 
-            return { islandId, canJoin: true };
+            if (!canJoin) {
+                return {
+                    canJoin,
+                    reason: ISLAND_FULL,
+                };
+            }
+
+            return { islandId, canJoin };
         } catch (e: unknown) {
             if (e instanceof DomainException) {
-                if (e.errorType === DomainExceptionType.ISLAND_FULL) {
-                    return {
-                        canJoin: false,
-                        reason: ISLAND_FULL,
-                    };
-                }
                 if (
                     e.errorType ===
                     DomainExceptionType.ISLAND_NOT_FOUND_IN_STORAGE

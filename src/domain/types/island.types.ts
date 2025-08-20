@@ -5,6 +5,7 @@ export type IslandType = (typeof islandTypes)[number];
 export enum IslandTypeEnum {
     NORMAL,
     DESERTED,
+    PRIVATE,
 }
 
 export const convertNumberToIslandType = (type: number) => {
@@ -13,6 +14,8 @@ export const convertNumberToIslandType = (type: number) => {
             return IslandTypeEnum.NORMAL;
         case 1:
             return IslandTypeEnum.DESERTED;
+        case 2:
+            return IslandTypeEnum.PRIVATE;
         default:
             return IslandTypeEnum.DESERTED;
     }
@@ -34,4 +37,20 @@ export interface IslandSummary {
     readonly type: IslandTypeEnum;
     readonly createdAt: Date;
     readonly ownerId: string | null;
+}
+
+export interface CreatePrivateIslandInput {
+    readonly mapKey: string;
+    readonly ownerId: string;
+    readonly name: string;
+    readonly isPublic: boolean;
+    readonly password?: string;
+}
+
+export interface JoinIslandInput {
+    playerId: string;
+    clientId: string;
+    type: IslandTypeEnum;
+    islandId?: string;
+    password?: string;
 }

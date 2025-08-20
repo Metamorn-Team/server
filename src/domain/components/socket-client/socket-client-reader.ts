@@ -11,4 +11,8 @@ export class SocketClientReader {
     readClientId(userId: string): string | null {
         return this.socketClientStorage.getClientId(userId);
     }
+
+    readAll() {
+        return this.socketClientStorage.getAll();
+    }
 }

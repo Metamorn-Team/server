@@ -1,6 +1,7 @@
 import { UseFilters } from '@nestjs/common';
-import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { WebSocketServer } from '@nestjs/websockets';
 import { Namespace } from 'socket.io';
+import { LivislandGateway } from 'src/common/decorator/island-gateway.decorator';
 import { WsExceptionFilter } from 'src/common/filter/ws-exception.filter';
 import { ActiveObject } from 'src/domain/types/spawn-object/active-object';
 import {
@@ -10,13 +11,7 @@ import {
 } from 'src/presentation/dto/game';
 
 @UseFilters(WsExceptionFilter)
-@WebSocketGateway({
-    path: '/game',
-    namespace: 'island',
-    cors: {
-        origin: true,
-    },
-})
+@LivislandGateway()
 export class RespawnGateway {
     @WebSocketServer()
     private readonly wss: Namespace<ClientToIsland, IslandToClient>;

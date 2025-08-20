@@ -11,12 +11,12 @@ import { IslandManager } from 'src/domain/components/islands/interface/island-ma
 import { IslandWriter } from 'src/domain/components/islands/island-writer';
 import { PlayerStorageReader } from 'src/domain/components/users/player-storage-reader';
 import { PlayerStorageWriter } from 'src/domain/components/users/player-storage-writer';
-import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
-import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
-import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Player, PlayerWithEquippedItems } from 'src/domain/models/game/player';
 import { ISLAND_LOCK_KEY } from 'src/infrastructure/redis/key';
 import { RedisTransactionManager } from 'src/infrastructure/redis/redis-transaction-manager';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { ISLAND_FULL } from 'src/domain/exceptions/client-use-messag';
 
 @Injectable()
 export class DesertedIslandManager implements IslandManager {
@@ -37,16 +37,7 @@ export class DesertedIslandManager implements IslandManager {
 
     async canJoin(islandId: string) {
         const island = await this.desertedIslandStorageReader.readOne(islandId);
-
-        const countParticipants =
-            await this.desertedIslandStorageReader.countPlayer(islandId);
-        if (island.max <= countParticipants) {
-            throw new DomainException(
-                DomainExceptionType.ISLAND_FULL,
-                HttpStatus.UNPROCESSABLE_ENTITY,
-                ISLAND_FULL,
-            );
-        }
+        return island.players.size < island.max;
     }
 
     async join(player: Player) {
@@ -55,7 +46,16 @@ export class DesertedIslandManager implements IslandManager {
         const key = ISLAND_LOCK_KEY(islandId);
         await this.lockManager.transaction(key, [
             {
-                execute: () => this.canJoin(islandId),
+                execute: async () => {
+                    const canJoin = await this.canJoin(islandId);
+                    if (!canJoin) {
+                        throw new DomainException(
+                            DomainExceptionType.ISLAND_FULL,
+                            HttpStatus.UNPROCESSABLE_ENTITY,
+                            ISLAND_FULL,
+                        );
+                    }
+                },
             },
             {
                 execute: () => this.playerStorageWriter.create(player),

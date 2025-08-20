@@ -29,7 +29,7 @@ export interface Island {
     readonly coverImage: string | null;
     readonly maxMembers: number;
     readonly type: IslandTypeEnum;
-    readonly tags: string[];
+    readonly tags?: string[];
     readonly createdAt: Date;
 }
 

@@ -6,7 +6,6 @@ import {
     ConnectedSocket,
     MessageBody,
     SubscribeMessage,
-    WebSocketGateway,
     WebSocketServer,
 } from '@nestjs/websockets';
 import { CurrentUserFromSocket } from 'src/common/decorator/current-user.decorator';
@@ -15,17 +14,12 @@ import { WsValidatePipe } from 'src/common/pipe/ws-validate.pipe';
 import { IslandService } from 'src/domain/services/islands/island.service';
 import { UpdateIslandInfoRequest } from 'src/presentation/dto/island/request/update-island-info.request';
 import { ClientToIslandSettings, IslandSettingsToClient } from 'types';
+import { LivislandGateway } from 'src/common/decorator/island-gateway.decorator';
 
 type TypedSocket = Socket<ClientToIslandSettings, IslandSettingsToClient>;
 
 @UseFilters(WsExceptionFilter)
-@WebSocketGateway({
-    path: '/game',
-    namespace: 'island',
-    cors: {
-        origin: true,
-    },
-})
+@LivislandGateway()
 export class IslandSettingsGateway {
     @WebSocketServer()
     private readonly wss: Namespace<
