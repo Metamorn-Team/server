@@ -13,3 +13,4 @@ export * from './equiptments';
 export * from './promotions';
 export * from './promotion-product';
 export * from './map';
+export * from './chat';

@@ -30,3 +30,4 @@ export const TOO_MANY_PARTICIPANTS_MESSAGE = '참여 인원이 너무 많습니�
 export const MAP_NOT_FOUND_MESSAG = '존재하지 않는 맵입니다.';
 export const OBJECT_NOT_FOUND_MESSAGE = (islandId: string) =>
     `섬 ${islandId}에 존재하지 않는 오브젝트입니다.`;
+export const PASSWORD_NOT_MATCH_MESSAGE = '비밀번호가 일치하지 않습니다.';
