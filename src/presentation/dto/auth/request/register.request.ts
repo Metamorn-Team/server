@@ -12,12 +12,13 @@ export class RegisterRequest {
     readonly nickname: string;
 
     @ApiProperty({
-        description: '사용자의 태그 4~15자 제한, 영어 소문자와 언더바만 가능',
-        example: 'tag_example',
+        description:
+            '사용자의 태그 4~15자 제한, 영어 소문자/숫자/언더바만 가능',
+        example: 'tag_123',
     })
     @Length(4, 15, { message: '태그는 4~15자여야 합니다.' })
-    @Matches(/^[a-z_]+$/m, {
-        message: '태그는 영어 소문자와 언더바만 가능합니다.',
+    @Matches(/^[a-z0-9_]+$/, {
+        message: '태그는 영어 소문자, 숫자, 언더바만 가능합니다.',
     })
     readonly tag: string;
 
