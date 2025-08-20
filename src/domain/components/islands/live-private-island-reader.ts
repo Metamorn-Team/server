@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { IslandReader } from 'src/domain/components/islands/interface/island-reader';
 import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { LivePrivateIslandStorage } from 'src/domain/interface/storages/live-private-island-storage';
 
 @Injectable()
-export class LivePrivateIslandReader {
+export class LivePrivateIslandReader implements IslandReader {
     constructor(
         @Inject(LivePrivateIslandStorage)
         private readonly livePrivateIslandStorage: LivePrivateIslandStorage,
@@ -41,5 +42,11 @@ export class LivePrivateIslandReader {
 
     async countPlayer(islandId: string) {
         return await this.livePrivateIslandStorage.countPlayer(islandId);
+    }
+
+    async getAllPlayer(islandId: string): Promise<string[]> {
+        return await this.livePrivateIslandStorage.getPlayerIdsByIslandId(
+            islandId,
+        );
     }
 }
