@@ -52,6 +52,20 @@ export type ClientToIsland = {
     strongAttack: () => void;
     islandHearbeat: () => void;
     jump: () => void;
+
+    // WebRTC
+    webrtcOffer: (data: {
+        targetUserId: string;
+        offer: RTCSessionDescriptionInit;
+    }) => void;
+    webrtcAnswer: (data: {
+        targetUserId: string;
+        answer: RTCSessionDescriptionInit;
+    }) => void;
+    webrtcIceCandidate: (data: {
+        islandId: string;
+        candidate: RTCIceCandidateInit;
+    }) => void;
 };
 
 export type IslandToClient = {
@@ -68,6 +82,15 @@ export type IslandToClient = {
     jump: (userId: string) => void;
     invalidVersion: () => void;
     spawnObjects: (data: RespawnObjectResponse) => void;
+
+    // WebRTC
+    offer: (data: { from: string; sdp: RTCSessionDescriptionInit }) => void;
+    answer: (data: { from: string; sdp: RTCSessionDescriptionInit }) => void;
+    iceCandidate: (data: {
+        from: string;
+        candidate: RTCIceCandidateInit;
+    }) => void;
+    peerJoined: (data: { userId: string; roomId: string }) => void;
 } & ErrorToClient;
 
 export type ClientToIslandSettings = {

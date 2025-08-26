@@ -180,6 +180,12 @@ export class IslandGateway
         client
             .to(joinedIsland.id)
             .emit('playerJoin', { ...joinedPlayer, x, y });
+
+        // WebRTC peer-joined 이벤트 추가
+        client.to(joinedIsland.id).emit('peerJoined', {
+            userId: joinedPlayer.id,
+            roomId: joinedIsland.id,
+        });
     }
 
     @SubscribeMessage('playerLeft')
@@ -340,5 +346,71 @@ export class IslandGateway
                 return;
             }
         }
+    }
+
+    // WebRTC 시그널링
+    @SubscribeMessage('webrtcOffer')
+    async handleWebRTCOffer(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody()
+        data: { targetUserId: string; offer: RTCSessionDescriptionInit },
+    ) {
+        const { targetUserId, offer } = data;
+        // offer를 보낼 플레이어
+        const fromPlayer = await this.playerStorageReader.readOneByClientId(
+            client.id,
+        );
+        // offer를 받을 플레이어
+        const targetPlayer =
+            await this.playerStorageReader.readOne(targetUserId);
+
+        const targetClient = this.wss.sockets.get(targetPlayer.clientId);
+
+        if (targetClient) {
+            targetClient.emit('offer', {
+                from: fromPlayer.id,
+                sdp: offer,
+            });
+        }
+    }
+
+    @SubscribeMessage('webrtcAnswer')
+    async handleWebRTCAnswer(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody()
+        data: { targetUserId: string; answer: RTCSessionDescriptionInit },
+    ) {
+        const { targetUserId, answer } = data;
+        // answer를 보낼 플레이어
+        const fromPlayer = await this.playerStorageReader.readOneByClientId(
+            client.id,
+        );
+        // answer를 받을 플레이어
+        const targetPlayer =
+            await this.playerStorageReader.readOne(targetUserId);
+
+        const targetClient = this.wss.sockets.get(targetPlayer.clientId);
+
+        if (targetClient) {
+            targetClient.emit('answer', {
+                from: fromPlayer.id,
+                sdp: answer,
+            });
+        }
+    }
+
+    // TODO 여기도 다중 user 고려하여 변경 필요 (다른 이벤트는 완료)
+    @SubscribeMessage('webrtcIceCandidate')
+    handleWebRTCIceCandidate(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody()
+        data: { islandId: string; candidate: RTCIceCandidateInit },
+    ) {
+        const { islandId, candidate } = data;
+
+        client.to(islandId).emit('iceCandidate', {
+            from: client.id,
+            candidate,
+        });
     }
 }
