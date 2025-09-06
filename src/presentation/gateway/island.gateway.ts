@@ -180,6 +180,12 @@ export class IslandGateway
         client
             .to(joinedIsland.id)
             .emit('playerJoin', { ...joinedPlayer, x, y });
+
+        // WebRTC peer-joined 이벤트 추가
+        client.to(joinedIsland.id).emit('peerJoined', {
+            userId: joinedPlayer.id,
+            roomId: joinedIsland.id,
+        });
     }
 
     @SubscribeMessage('playerLeft')
@@ -328,6 +334,11 @@ export class IslandGateway
             await client.leave(islandId);
             client.to(islandId).emit('playerLeft', { id: player.id });
 
+            // private 섬일 경우 peerLeft
+            if (player.islandType === IslandTypeEnum.PRIVATE) {
+                client.to(islandId).emit('peerLeft', { userId: player.id });
+            }
+
             this.logger.debug(this.socketClientReader.readAll());
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
@@ -340,5 +351,95 @@ export class IslandGateway
                 return;
             }
         }
+    }
+
+    // WebRTC 시그널링
+    @SubscribeMessage('offer')
+    async handleWebRTCOffer(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody()
+        data: { targetUserId: string; offer: RTCSessionDescriptionInit },
+    ) {
+        const { targetUserId, offer } = data;
+        // offer를 보낼 플레이어
+        const fromPlayer = await this.playerStorageReader.readOneByClientId(
+            client.id,
+        );
+        // offer를 받을 플레이어
+        const targetPlayer =
+            await this.playerStorageReader.readOne(targetUserId);
+
+        const targetClient = this.wss.sockets.get(targetPlayer.clientId);
+
+        if (targetClient) {
+            targetClient.emit('offer', {
+                from: fromPlayer.id,
+                sdp: offer,
+            });
+        }
+    }
+
+    @SubscribeMessage('answer')
+    async handleWebRTCAnswer(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody()
+        data: { targetUserId: string; answer: RTCSessionDescriptionInit },
+    ) {
+        const { targetUserId, answer } = data;
+        // answer를 보낼 플레이어
+        const fromPlayer = await this.playerStorageReader.readOneByClientId(
+            client.id,
+        );
+        // answer를 받을 플레이어
+        const targetPlayer =
+            await this.playerStorageReader.readOne(targetUserId);
+
+        const targetClient = this.wss.sockets.get(targetPlayer.clientId);
+
+        if (targetClient) {
+            targetClient.emit('answer', {
+                from: fromPlayer.id,
+                sdp: answer,
+            });
+        }
+    }
+
+    @SubscribeMessage('iceCandidate')
+    async handleWebRTCIceCandidate(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody()
+        data: { targetUserId: string; candidate: RTCIceCandidateInit },
+    ) {
+        const { targetUserId, candidate } = data;
+        const fromPlayer = await this.playerStorageReader.readOneByClientId(
+            client.id,
+        );
+        const targetPlayer =
+            await this.playerStorageReader.readOne(targetUserId);
+
+        const targetClient = this.wss.sockets.get(targetPlayer.clientId);
+        if (targetClient) {
+            targetClient.emit('iceCandidate', {
+                from: fromPlayer.id,
+                candidate,
+            });
+        }
+    }
+
+    @SubscribeMessage('peerLeft')
+    async handlePeerLeft(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody()
+        data: { islandId: string },
+    ) {
+        const { islandId } = data;
+
+        const user = await this.playerStorageReader.readOneByClientId(
+            client.id,
+        );
+
+        client.to(islandId).emit('peerLeft', {
+            userId: user.id,
+        });
     }
 }

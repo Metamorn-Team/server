@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.5.0';
 const version = APP_VERSION.split('.');
 
 export const MAJOR = version[0];

@@ -52,6 +52,21 @@ export type ClientToIsland = {
     strongAttack: () => void;
     islandHearbeat: () => void;
     jump: () => void;
+
+    // WebRTC
+    peerLeft: (data: { userId: string }) => void;
+    offer: (data: {
+        targetUserId: string;
+        offer: RTCSessionDescriptionInit;
+    }) => void;
+    answer: (data: {
+        targetUserId: string;
+        answer: RTCSessionDescriptionInit;
+    }) => void;
+    iceCandidate: (data: {
+        targetUserId: string;
+        candidate: RTCIceCandidateInit;
+    }) => void;
 };
 
 export type IslandToClient = {
@@ -68,6 +83,22 @@ export type IslandToClient = {
     jump: (userId: string) => void;
     invalidVersion: () => void;
     spawnObjects: (data: RespawnObjectResponse) => void;
+
+    // WebRTC
+    offer: (data: { from: string; sdp: RTCSessionDescriptionInit }) => void;
+    answer: (data: { from: string; sdp: RTCSessionDescriptionInit }) => void;
+    answerAck: (data: { from: string }) => void;
+    iceCandidate: (data: {
+        from: string;
+        candidate: RTCIceCandidateInit;
+    }) => void;
+    peerJoined: (data: { userId: string; roomId: string }) => void;
+    peerLeft: (data: { userId: string }) => void;
+    mediaToggled: (data: {
+        userId: string;
+        type: 'audio' | 'video';
+        enabled: boolean;
+    }) => void;
 } & ErrorToClient;
 
 export type ClientToIslandSettings = {
