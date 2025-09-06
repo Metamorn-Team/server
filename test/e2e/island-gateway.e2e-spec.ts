@@ -58,7 +58,7 @@ describe('IslandGateway (e2e)', () => {
     });
 
     describe('일반 섬 입장', () => {
-        it('동시에 여러 회원이 입장을 요청해도 최대 인원 이상 참여되지 않는다. (Race condition)', async () => {
+        it('동시에 여러 회원이 입장을 요청해도 최대 인원 이상 참여되지 않는다.', async () => {
             const map = await db.map.create({
                 data: {
                     id: v4(),
@@ -135,7 +135,7 @@ describe('IslandGateway (e2e)', () => {
     });
 
     describe('무인도 입장', () => {
-        it('동시에 여러 회원이 입장을 요청해도 최대 인원 이상 참여되지 않는다. (Race condition)', async () => {
+        it('동시에 여러 회원이 입장을 요청해도 최대 인원 이상 참여되지 않는다.', async () => {
             const map = await db.map.create({
                 data: {
                     id: v4(),

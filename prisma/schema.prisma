@@ -67,32 +67,32 @@ model User {
   islands                Island[]
   equippedItems          Equipment[]
   refreshTokens          RefreshToken[]
+  privateIslands         PrivateIsland[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
   @@index([nickname, id])
   @@index([tag, id])
   @@map("user")
-  privateIslands PrivateIsland[]
 }
 
 model RefreshToken {
-  id String @id @db.Uuid
-  token String @unique @map("token")
-  userId String @db.Uuid @map("user_id")
-  sessionId String @db.Uuid @map("session_id")
-  browser String? @db.VarChar(100)
-  model String @db.VarChar(100)
-  os String @db.VarChar(100)
-  ip String @db.VarChar(20)
-  createdAt DateTime @map("created_at")
-  lastUsedAt DateTime @map("last_used_at")
-  expiredAt DateTime? @map("expired_at")
+  id         String    @id @db.Uuid
+  token      String    @unique @map("token")
+  userId     String    @map("user_id") @db.Uuid
+  sessionId  String    @map("session_id") @db.Uuid
+  browser    String?   @db.VarChar(100)
+  model      String    @db.VarChar(100)
+  os         String    @db.VarChar(100)
+  ip         String    @db.VarChar(40)
+  createdAt  DateTime  @map("created_at")
+  lastUsedAt DateTime  @map("last_used_at")
+  expiredAt  DateTime? @map("expired_at")
 
   user User @relation(fields: [userId], references: [id])
-  
-  @@map("refresh_token")
+
   @@index([userId])
+  @@map("refresh_token")
 }
 
 model FriendRequest {
@@ -117,7 +117,7 @@ model FriendRequest {
 model Island {
   id          String    @id @db.Uuid
   ownerId     String?   @db.Uuid
-  mapId       String   @db.Uuid
+  mapId       String    @db.Uuid
   name        String?   @db.VarChar(50)
   description String?   @db.VarChar(200)
   coverImage  String?   @map("cover_image")
@@ -129,32 +129,32 @@ model Island {
   deletedAt   DateTime? @map("deleted_at")
 
   owner       User?        @relation(fields: [ownerId], references: [id])
-  map       Map        @relation(fields: [mapId], references: [id])
+  map         Map          @relation(fields: [mapId], references: [id])
   islandJoins IslandJoin[]
   islandTags  IslandTag[]
 
   @@index([ownerId])
-  @@map("island")
   @@index([mapId])
+  @@map("island")
 }
 
 model PrivateIsland {
-  id String @id @db.Uuid
-  mapId String @db.Uuid @map("map_id")
-  ownerId String @db.Uuid @map("owner_id")
-  urlPath String @unique @db.VarChar(50) @map("url_path")
-  name String @db.VarChar(50)
-  isPublic Boolean @default(false) @map("is_public")
-  maxMembers Int @db.SmallInt @map("max_members")
-  password String? @db.VarChar(50)
-  description String? @db.VarChar(200)
-  coverImage String? @map("cover_image")
-  createdAt DateTime @map("created_at")
-  updatedAt DateTime @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id          String    @id @db.Uuid
+  mapId       String    @map("map_id") @db.Uuid
+  ownerId     String    @map("owner_id") @db.Uuid
+  urlPath     String    @unique @map("url_path") @db.VarChar(50)
+  name        String    @db.VarChar(50)
+  isPublic    Boolean   @default(false) @map("is_public")
+  maxMembers  Int       @map("max_members") @db.SmallInt
+  password    String?   @db.VarChar(50)
+  description String?   @db.VarChar(200)
+  coverImage  String?   @map("cover_image")
+  createdAt   DateTime  @map("created_at")
+  updatedAt   DateTime  @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
 
   owner User @relation(fields: [ownerId], references: [id])
-  map Map @relation(fields: [mapId], references: [id])
+  map   Map  @relation(fields: [mapId], references: [id])
 
   @@index([urlPath])
   @@map("private_island")
@@ -350,29 +350,29 @@ model Equipment {
 }
 
 model Map {
-  id String @id @db.Uuid
-  key String @db.VarChar(50) @unique
-  name String @db.VarChar(50)
-  description String @db.VarChar(200)
-  image String
-  createdAt DateTime @map("created_at")
+  id          String   @id @db.Uuid
+  key         String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(50)
+  description String   @db.VarChar(200)
+  image       String
+  createdAt   DateTime @map("created_at")
 
-  islands Island[]
-  spawnZones SpawnZone[]
+  islands           Island[]
+  spawnZones        SpawnZone[]
   playerSpawnPoints PlayerSpawnPoint[]
-  
+  privateIslands    PrivateIsland[]
+
   @@map("map")
-  privateIslands PrivateIsland[]
 }
 
 // TODO reward는 추후 기획 후 추가
 model SpawnObject {
-  id String @id @db.Uuid
-  name String @db.VarChar(50)
-  type String @db.VarChar(50)
-  respawnTime Int @db.SmallInt @map("respawn_time")
-  maxHp Int @db.SmallInt @map("max_hp")
-  createdAt DateTime @map("created_at")
+  id          String   @id @db.Uuid
+  name        String   @db.VarChar(50)
+  type        String   @db.VarChar(50)
+  respawnTime Int      @map("respawn_time") @db.SmallInt
+  maxHp       Int      @map("max_hp") @db.SmallInt
+  createdAt   DateTime @map("created_at")
 
   spawnZones SpawnZone[]
 
@@ -380,30 +380,30 @@ model SpawnObject {
 }
 
 model SpawnZone {
-  id String @id @db.Uuid
-  gridX Int @db.SmallInt @map("grid_x")
-  gridY Int @db.SmallInt @map("grid_y")
-  mapId String @map("map_id") @db.Uuid
-  spawnObjectId String @map("spawn_object_id") @db.Uuid
-  createdAt DateTime @map("created_at")
+  id            String   @id @db.Uuid
+  gridX         Int      @map("grid_x") @db.SmallInt
+  gridY         Int      @map("grid_y") @db.SmallInt
+  mapId         String   @map("map_id") @db.Uuid
+  spawnObjectId String   @map("spawn_object_id") @db.Uuid
+  createdAt     DateTime @map("created_at")
 
-  map Map @relation(fields: [mapId], references: [id])
+  map         Map         @relation(fields: [mapId], references: [id])
   spawnObject SpawnObject @relation(fields: [spawnObjectId], references: [id])
 
-  @@map("spawn_zone")
   @@index([spawnObjectId])
   @@index([mapId])
+  @@map("spawn_zone")
 }
 
 model PlayerSpawnPoint {
-  id        String  @id @db.Uuid
-  mapId     String  @db.Uuid @map("map_id")
-  x         Int     @db.SmallInt
-  y         Int     @db.SmallInt
+  id        String   @id @db.Uuid
+  mapId     String   @map("map_id") @db.Uuid
+  x         Int      @db.SmallInt
+  y         Int      @db.SmallInt
   createdAt DateTime @map("created_at")
 
-  map       Map @relation(fields: [mapId], references: [id])
+  map Map @relation(fields: [mapId], references: [id])
 
-  @@map("player_spawn_point")
   @@index([mapId])
+  @@map("player_spawn_point")
 }
