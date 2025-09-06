@@ -334,6 +334,11 @@ export class IslandGateway
             await client.leave(islandId);
             client.to(islandId).emit('playerLeft', { id: player.id });
 
+            // private 섬일 경우 peerLeft
+            if (player.islandType === IslandTypeEnum.PRIVATE) {
+                client.to(islandId).emit('peerLeft', { userId: player.id });
+            }
+
             this.logger.debug(this.socketClientReader.readAll());
             this.logger.debug(
                 `Cliend id from Island:${player.id} disconnected`,
@@ -349,7 +354,7 @@ export class IslandGateway
     }
 
     // WebRTC 시그널링
-    @SubscribeMessage('webrtcOffer')
+    @SubscribeMessage('offer')
     async handleWebRTCOffer(
         @ConnectedSocket() client: TypedSocket,
         @MessageBody()
@@ -374,7 +379,7 @@ export class IslandGateway
         }
     }
 
-    @SubscribeMessage('webrtcAnswer')
+    @SubscribeMessage('answer')
     async handleWebRTCAnswer(
         @ConnectedSocket() client: TypedSocket,
         @MessageBody()
@@ -399,18 +404,42 @@ export class IslandGateway
         }
     }
 
-    // TODO 여기도 다중 user 고려하여 변경 필요 (다른 이벤트는 완료)
-    @SubscribeMessage('webrtcIceCandidate')
-    handleWebRTCIceCandidate(
+    @SubscribeMessage('iceCandidate')
+    async handleWebRTCIceCandidate(
         @ConnectedSocket() client: TypedSocket,
         @MessageBody()
-        data: { islandId: string; candidate: RTCIceCandidateInit },
+        data: { targetUserId: string; candidate: RTCIceCandidateInit },
     ) {
-        const { islandId, candidate } = data;
+        const { targetUserId, candidate } = data;
+        const fromPlayer = await this.playerStorageReader.readOneByClientId(
+            client.id,
+        );
+        const targetPlayer =
+            await this.playerStorageReader.readOne(targetUserId);
 
-        client.to(islandId).emit('iceCandidate', {
-            from: client.id,
-            candidate,
+        const targetClient = this.wss.sockets.get(targetPlayer.clientId);
+        if (targetClient) {
+            targetClient.emit('iceCandidate', {
+                from: fromPlayer.id,
+                candidate,
+            });
+        }
+    }
+
+    @SubscribeMessage('peerLeft')
+    async handlePeerLeft(
+        @ConnectedSocket() client: TypedSocket,
+        @MessageBody()
+        data: { islandId: string },
+    ) {
+        const { islandId } = data;
+
+        const user = await this.playerStorageReader.readOneByClientId(
+            client.id,
+        );
+
+        client.to(islandId).emit('peerLeft', {
+            userId: user.id,
         });
     }
 }
