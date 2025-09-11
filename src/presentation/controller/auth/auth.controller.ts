@@ -2,6 +2,7 @@ import {
     Body,
     Controller,
     Delete,
+    Get,
     HttpCode,
     Param,
     Post,
@@ -34,6 +35,8 @@ import { UserAgent } from 'src/common/types';
 import { CurrentRefreshToken } from 'src/common/decorator/refresh-token.decorator';
 import { SessionId } from 'src/common/decorator/session-id.decorator';
 import { AuthGuard } from 'src/common/guard/auth.guard';
+import { TurnAuthResponse } from 'src/presentation/dto/auth/response/turn-auth.response';
+import { TurnAuthService } from 'src/domain/services/auth/turn-auth.service';
 
 @ApiTags('auth')
 @UseFilters(HttpExceptionFilter)
@@ -43,6 +46,7 @@ export class AuthController {
 
     constructor(
         private readonly authService: AuthService,
+        private readonly turnAuthService: TurnAuthService,
         private readonly configService: ConfigService,
     ) {
         this.refreshCookieTime = this.configService.get<number>(
@@ -170,5 +174,20 @@ export class AuthController {
         await this.authService.logout(userId, sessionId);
 
         response.clearCookie('refresh_token', cookieOptions());
+    }
+
+    @ApiOperation({
+        summary: 'TURN 서버 인증 값 획득',
+        description: 'TURN 서버에 대한 인증 정보를 획득합니다.',
+    })
+    @ApiResponse({
+        status: 200,
+        description: '인증 정보 획득 성공',
+        type: TurnAuthResponse,
+    })
+    @UseGuards(AuthGuard)
+    @Get('turn-credentials')
+    getTurnCredentials(): TurnAuthResponse {
+        return this.turnAuthService.getTurnCredentials();
     }
 }

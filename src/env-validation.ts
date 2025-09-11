@@ -27,4 +27,7 @@ export const validationSchema = Joi.object({
     CLOUDWATCH_REGION: Joi.string().required(),
     CLOUDWATCH_KEY_ID: Joi.string().required(),
     CLOUDWATCH_SECRET_KEY: Joi.string().required(),
+
+    // TURN
+    TURN_SECRET: Joi.string().required(),
 });
