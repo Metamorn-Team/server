@@ -8,6 +8,7 @@ import { GoogleStrategy } from 'src/infrastructure/auth/strategy/google.strategy
 import { KakaoStrategy } from 'src/infrastructure/auth/strategy/kakao.strategy';
 import { UserComponentModule } from '../users/users-component.module';
 import { RefreshTokenComponentModule } from 'src/modules/refresh-token/refresh-token-component.module';
+import { TurnAuthService } from 'src/domain/services/auth/turn-auth.service';
 
 @Module({
     imports: [
@@ -24,6 +25,12 @@ import { RefreshTokenComponentModule } from 'src/modules/refresh-token/refresh-t
         RefreshTokenComponentModule,
     ],
     controllers: [AuthController],
-    providers: [AuthService, OauthContext, GoogleStrategy, KakaoStrategy],
+    providers: [
+        AuthService,
+        OauthContext,
+        GoogleStrategy,
+        KakaoStrategy,
+        TurnAuthService,
+    ],
 })
 export class AuthModule {}
