@@ -68,6 +68,7 @@ model User {
   equippedItems          Equipment[]
   refreshTokens          RefreshToken[]
   privateIslands         PrivateIsland[]
+  Payment                Payment[]
 
   @@unique([tag, deletedAt])
   @@unique([email, deletedAt])
@@ -406,4 +407,30 @@ model PlayerSpawnPoint {
 
   @@index([mapId])
   @@map("player_spawn_point")
+}
+
+model GoldChargePaymentProduct {
+  id       String @id @db.Uuid
+  amount   Int
+  price    Int
+  currency String @db.VarChar(10)
+
+  @@map("gold_charge_product")
+}
+
+model Payment {
+  id               String   @id @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  paymentProductId String   @map("payment_product_id") @db.Uuid
+  type             Int      @db.SmallInt
+  amount           Int
+  method           Int      @db.SmallInt
+  currency         String   @db.VarChar(10)
+  status           Int      @db.SmallInt
+  createdAt        DateTime @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("payment")
 }
