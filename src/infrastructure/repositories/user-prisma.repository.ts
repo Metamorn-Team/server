@@ -1,22 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from 'src/domain/interface/user.repository';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { PaginatedUsers, UserInfo } from 'src/domain/types/uesr.types';
 import { UserEntity } from 'src/domain/entities/user/user.entity';
 import { toKyselyUuid } from 'test/unit/utils/to-kysely-uuid';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 
 @Injectable()
 export class UserPrismaRepository implements UserRepository {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly txHost: TransactionHost<TransactionalAdapterPrisma>,
+    ) {}
 
     async save(data: UserEntity): Promise<void> {
-        await this.prisma.user.create({
+        await this.txHost.tx.user.create({
             data,
         });
     }
 
     async findOneById(searchUserId: string): Promise<UserInfo | null> {
-        return await this.prisma.user.findUnique({
+        return await this.txHost.tx.user.findUnique({
             select: {
                 id: true,
                 email: true,
@@ -33,7 +36,7 @@ export class UserPrismaRepository implements UserRepository {
     }
 
     async findOneByEmail(email: string): Promise<UserInfo | null> {
-        return await this.prisma.user.findFirst({
+        return await this.txHost.tx.user.findFirst({
             select: {
                 id: true,
                 email: true,
@@ -51,7 +54,7 @@ export class UserPrismaRepository implements UserRepository {
     }
 
     async findOneByTag(tag: string): Promise<UserInfo | null> {
-        return await this.prisma.user.findFirst({
+        return await this.txHost.tx.user.findFirst({
             select: {
                 id: true,
                 email: true,
@@ -76,7 +79,7 @@ export class UserPrismaRepository implements UserRepository {
     ): Promise<PaginatedUsers> {
         const cursorOption = cursor ? { id: cursor } : undefined;
 
-        const data = await this.prisma.user.findMany({
+        const data = await this.txHost.tx.user.findMany({
             select: {
                 id: true,
                 email: true,
@@ -116,7 +119,7 @@ export class UserPrismaRepository implements UserRepository {
         cursor?: string,
     ): Promise<PaginatedUsers> {
         const cursorOption = cursor ? { id: cursor } : undefined;
-        const data = await this.prisma.user.findMany({
+        const data = await this.txHost.tx.user.findMany({
             select: {
                 id: true,
                 email: true,
@@ -149,7 +152,7 @@ export class UserPrismaRepository implements UserRepository {
     }
 
     async findUserGoldById(id: string): Promise<{ gold: number } | null> {
-        return await this.prisma.user.findUnique({
+        return await this.txHost.tx.user.findUnique({
             select: {
                 gold: true,
             },
@@ -162,7 +165,7 @@ export class UserPrismaRepository implements UserRepository {
     async findUserGoldByIdForUpdate(
         id: string,
     ): Promise<{ gold: number } | null> {
-        const result = await this.prisma.$kysely
+        const result = await this.txHost.tx.$kysely
             .selectFrom('user')
             .select('gold')
             .forUpdate()
@@ -172,10 +175,23 @@ export class UserPrismaRepository implements UserRepository {
         return result || null;
     }
 
+    async increaseGold(id: string, amount: number): Promise<void> {
+        await this.txHost.tx.user.update({
+            data: {
+                gold: {
+                    increment: amount,
+                },
+            },
+            where: {
+                id,
+            },
+        });
+    }
+
     async update(id: string, data: Partial<UserEntity>): Promise<void> {
         const { nickname, tag, avatarKey, gold, bio } = data;
 
-        await this.prisma.user.update({
+        await this.txHost.tx.user.update({
             data: {
                 nickname,
                 tag,
