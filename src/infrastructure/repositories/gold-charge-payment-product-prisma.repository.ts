@@ -23,4 +23,15 @@ export class GoldChargePaymentProductPrismaRepository
             },
         });
     }
+
+    async findOneById(id: string): Promise<any> {
+        return await this.txHost.tx.goldChargePaymentProduct.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                amount: true,
+                price: true,
+            },
+        });
+    }
 }

@@ -2,6 +2,7 @@ import { GoldChargePaymentProduct } from 'src/domain/types/payment-products/gold
 
 export interface GoldChargePaymentProductRepository {
     findAll(): Promise<GoldChargePaymentProduct[]>;
+    findOneById(id: string): Promise<GoldChargePaymentProduct | null>;
 }
 
 export const GoldChargePaymentProductRepository = Symbol(
