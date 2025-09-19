@@ -36,6 +36,12 @@ enum FriendRequestStatus {
   REJECTED
 }
 
+enum PaymentStatus {
+  PENDING
+  COMPLETE
+  FAILED
+}
+
 model Admin {
   id       String @id @db.Uuid
   username String @unique
@@ -419,17 +425,17 @@ model GoldChargePaymentProduct {
 }
 
 model Payment {
-  id                String   @id @db.Uuid
-  merchantPaymentId String   @unique @map("merchant_payment_id") @db.Uuid
-  userId            String   @map("user_id") @db.Uuid
-  paymentProductId  String   @map("payment_product_id") @db.Uuid
-  type              Int      @db.SmallInt
+  id                String        @id @db.Uuid
+  merchantPaymentId String        @unique @map("merchant_payment_id") @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  paymentProductId  String        @map("payment_product_id") @db.Uuid
+  type              Int           @db.SmallInt
   amount            Int
-  method            String   @db.VarChar(50)
-  methodDetail      String?  @map("method_detail") @db.VarChar(100)
-  currency          String   @db.VarChar(30)
-  status            String   @db.VarChar(30)
-  createdAt         DateTime @map("created_at")
+  method            String        @db.VarChar(50)
+  methodDetail      String?       @map("method_detail") @db.VarChar(100)
+  currency          String        @db.VarChar(30)
+  status            PaymentStatus @default(PENDING)
+  createdAt         DateTime      @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
