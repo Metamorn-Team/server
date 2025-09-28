@@ -25,7 +25,6 @@ import { MapReader } from 'src/domain/components/map/map-reader';
 import { PlayerSpawnPointReader } from 'src/domain/components/player-spawn-point/player-spawn-point-reader';
 import { IslandActiveObjectSpawner } from 'src/domain/components/island-spawn-object/island-active-object-spawner';
 import { Logger } from 'winston';
-import { LivePrivateIslandReader } from 'src/domain/components/islands/live-private-island-reader';
 import { PrivateIslandReader } from 'src/domain/components/islands/private-island-reader';
 
 @Injectable()
@@ -42,7 +41,6 @@ export class GameIslandService {
         private readonly desertedIslandStorageReader: DesertedIslandStorageReader,
         private readonly desertedIslandStorageWriter: DesertedIslandStorageWriter,
         private readonly normalIslandStorageReader: NormalIslandStorageReader,
-        private readonly livePrivateIslandReader: LivePrivateIslandReader,
         private readonly privateIslandReader: PrivateIslandReader,
         private readonly islandManagerFactory: IslandManagerFactory,
         private readonly mapReader: MapReader,
