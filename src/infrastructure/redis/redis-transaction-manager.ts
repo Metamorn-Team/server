@@ -56,7 +56,7 @@ export class RedisTransactionManager
         key: string,
         options: TransactionOption[],
         ttl = 2000,
-        maxRetries = 3,
+        maxRetries = 5,
         timeout = 5000,
     ): Promise<void> {
         const lockKey = `lock:${key}`;
