@@ -3,7 +3,11 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { Injectable } from '@nestjs/common';
 import { PaymentEntity } from 'src/domain/entities/payments/payment.entity';
 import { PaymentRepository } from 'src/domain/interface/payment.repository';
-import { PaymentStatus } from 'src/domain/types/payments/payment.types';
+import {
+    PaymentRecord,
+    PaymentStatus,
+    UpdatePaymentInput,
+} from 'src/domain/types/payments/payment.types';
 
 @Injectable()
 export class PaymentPrismaRepository implements PaymentRepository {
@@ -19,10 +23,25 @@ export class PaymentPrismaRepository implements PaymentRepository {
 
     async findOneByMerchantPaymentId(
         merchantPaymentId: string,
-    ): Promise<{ status: PaymentStatus } | null> {
+    ): Promise<PaymentRecord | null> {
         return await this.txHost.tx.payment.findUnique({
             where: { merchantPaymentId },
-            select: { status: true },
+            select: {
+                id: true,
+                amount: true,
+                currency: true,
+                merchantPaymentId: true,
+                paymentProductId: true,
+                status: true,
+                userId: true,
+            },
+        });
+    }
+
+    async update(id: string, data: UpdatePaymentInput): Promise<void> {
+        await this.txHost.tx.payment.update({
+            where: { id },
+            data,
         });
     }
 

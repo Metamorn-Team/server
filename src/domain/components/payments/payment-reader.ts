@@ -3,7 +3,10 @@ import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { PAYMENT_NOT_FOUND_MESSAGE } from 'src/domain/exceptions/message';
 import { PaymentRepository } from 'src/domain/interface/payment.repository';
-import { PaymentStatus } from 'src/domain/types/payments/payment.types';
+import {
+    PaymentRecord,
+    PaymentStatus,
+} from 'src/domain/types/payments/payment.types';
 
 @Injectable()
 export class PaymentReader {
@@ -24,5 +27,24 @@ export class PaymentReader {
         }
 
         return payment.status;
+    }
+
+    async readOneByMerchantPaymentId(
+        merchantPaymentId: string,
+    ): Promise<PaymentRecord> {
+        const payment =
+            await this.paymentRepository.findOneByMerchantPaymentId(
+                merchantPaymentId,
+            );
+
+        if (!payment) {
+            throw new DomainException(
+                DomainExceptionType.PAYMENT_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                PAYMENT_NOT_FOUND_MESSAGE(merchantPaymentId),
+            );
+        }
+
+        return payment;
     }
 }

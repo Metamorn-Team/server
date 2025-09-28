@@ -7,9 +7,9 @@ export interface PaymentPrototype {
     type: PaymentProductTypesEnum;
     paymentProductId: string;
     amount: number;
-    method: string;
     status: PaymentStatus;
     currency: string;
+    method?: string | null;
     methodDetail?: string | null;
 }
 
@@ -21,10 +21,10 @@ export class PaymentEntity {
         public type: PaymentProductTypesEnum,
         public paymentProductId: string,
         public amount: number,
-        public method: string,
         public status: PaymentStatus,
         public currency: string,
         public createdAt: Date,
+        public method?: string | null,
         public methodDetail?: string | null,
     ) {}
 
@@ -40,10 +40,10 @@ export class PaymentEntity {
             proto.type,
             proto.paymentProductId,
             proto.amount,
-            proto.method,
             proto.status,
             proto.currency,
             stdDate,
+            proto.method,
             proto.methodDetail,
         );
     }

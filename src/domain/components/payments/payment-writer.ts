@@ -5,7 +5,11 @@ import {
     PaymentPrototype,
 } from 'src/domain/entities/payments/payment.entity';
 import { PaymentRepository } from 'src/domain/interface/payment.repository';
-import { PaymentStatus } from 'src/domain/types/payments/payment.types';
+import {
+    CreatePendingPaymentInput,
+    PaymentStatus,
+    UpdatePaymentInput,
+} from 'src/domain/types/payments/payment.types';
 
 @Injectable()
 export class PaymentWriter {
@@ -21,7 +25,25 @@ export class PaymentWriter {
         return payment;
     }
 
+    async createPendingPayment(input: CreatePendingPaymentInput) {
+        const payment = PaymentEntity.create(
+            {
+                ...input,
+                status: 'PENDING',
+                currency: 'KRW',
+            },
+            v4,
+        );
+        await this.paymentRepository.save(payment);
+
+        return payment;
+    }
+
     async updateStatus(id: string, status: PaymentStatus) {
         await this.paymentRepository.updateStatus(id, status);
+    }
+
+    async update(id: string, input: UpdatePaymentInput) {
+        await this.paymentRepository.update(id, input);
     }
 }
