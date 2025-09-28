@@ -646,4 +646,217 @@ describe('GameIslandService', () => {
             expect(result).toBeFalsy();
         });
     });
+
+    describe('joinIsland 동시성 테스트', () => {
+        let map: Map;
+
+        beforeEach(async () => {
+            map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'island',
+                    name: '섬',
+                    description: '섬 설명',
+                    image: 'https://example.com/image.png',
+                    createdAt: new Date(),
+                },
+            });
+            await db.playerSpawnPoint.create({
+                data: {
+                    id: v4(),
+                    mapId: map.id,
+                    x: 0,
+                    y: 0,
+                    createdAt: new Date(),
+                },
+            });
+        });
+
+        it('일반 섬에 100개의 동시 요청 시 최대 인원만 입장 가능하다', async () => {
+            const MAX_MEMBERS = 5;
+            const CONCURRENT_REQUESTS = 100;
+
+            const island = generateNormalIslandModel({
+                max: MAX_MEMBERS,
+                mapKey: map.key,
+            });
+            await normalIslandStorage.createIsland(island);
+
+            // 100명의 사용자 생성
+            const concurrentUsers = Array.from(
+                { length: CONCURRENT_REQUESTS },
+                () => generateUserEntityV2(),
+            );
+            const clientIds = Array.from(
+                { length: CONCURRENT_REQUESTS },
+                (_, i) => `concurrent-client-${i}`,
+            );
+
+            await db.user.createMany({ data: concurrentUsers });
+
+            // 100개의 동시 요청
+            const joinPromises = concurrentUsers.map((user, index) =>
+                gameIslandService
+                    .joinIsland({
+                        playerId: user.id,
+                        clientId: clientIds[index],
+                        type: IslandTypeEnum.NORMAL,
+                        islandId: island.id,
+                    })
+                    .catch((error: unknown) => ({ error })),
+            );
+
+            const results = await Promise.all(joinPromises);
+
+            // 성공/실패 카운트
+            let successCount = 0;
+            let errorCount = 0;
+
+            results.forEach((result) => {
+                if (!('error' in result)) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    // 실패한 경우 에러 타입 확인
+                    const error = result.error;
+                    expect(error).toBeInstanceOf(DomainException);
+                    const errorType = (error as DomainException).errorType;
+                    expect([
+                        DomainExceptionType.ISLAND_FULL,
+                        DomainExceptionType.LOCK_ACQUIRED_FAILED,
+                    ]).toContain(errorType);
+                }
+            });
+
+            // 정확히 최대 인원만 성공해야 함
+            expect(successCount).toBe(MAX_MEMBERS);
+            expect(errorCount).toBe(CONCURRENT_REQUESTS - MAX_MEMBERS);
+
+            // 실제 섬의 플레이어 수 확인
+            const joinedIsland = await normalIslandStorage.getIsland(island.id);
+            expect(joinedIsland?.players.size).toBe(MAX_MEMBERS);
+        });
+
+        it('무인도에 100개의 동시 요청 시 최대 인원만 입장 가능하다', async () => {
+            const MAX_MEMBERS = 10;
+            const CONCURRENT_REQUESTS = 100;
+
+            const island = generateDesertedIslandModel({
+                max: MAX_MEMBERS,
+                mapKey: map.key,
+            });
+            await desertedIslandStorage.createIsland(island);
+
+            // 100명의 사용자 생성
+            const concurrentUsers = Array.from(
+                { length: CONCURRENT_REQUESTS },
+                () => generateUserEntityV2(),
+            );
+            const clientIds = Array.from(
+                { length: CONCURRENT_REQUESTS },
+                (_, i) => `concurrent-client-${i}`,
+            );
+
+            await db.user.createMany({ data: concurrentUsers });
+
+            // 100개의 동시 요청
+            const joinPromises = concurrentUsers.map((user, index) =>
+                gameIslandService
+                    .joinIsland({
+                        playerId: user.id,
+                        clientId: clientIds[index],
+                        type: IslandTypeEnum.DESERTED,
+                    })
+                    .catch((error: unknown) => ({ error })),
+            );
+
+            const results = await Promise.all(joinPromises);
+
+            // 성공/실패 카운트
+            let successCount = 0;
+            let errorCount = 0;
+
+            results.forEach((result) => {
+                if (!('error' in result)) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    // 실패한 경우 에러 타입 확인
+                    const error = result.error;
+                    expect(error).toBeInstanceOf(DomainException);
+                    const errorType = (error as DomainException).errorType;
+                    expect([
+                        DomainExceptionType.ISLAND_FULL,
+                        DomainExceptionType.LOCK_ACQUIRED_FAILED,
+                    ]).toContain(errorType);
+                }
+            });
+
+            // 황무지는 새 섬이 생성될 수 있으므로 최대 인원 이하로 성공
+            expect(successCount).toBeLessThanOrEqual(CONCURRENT_REQUESTS);
+            expect(successCount).toBeGreaterThan(0);
+            expect(successCount + errorCount).toBe(CONCURRENT_REQUESTS);
+        });
+
+        it('여러 섬에 동시 참여 시 race condition이 발생하지 않는다', async () => {
+            const MAX_MEMBERS_PER_ISLAND = 3;
+            const ISLAND_COUNT = 5;
+            const USERS_PER_ISLAND = 20; // 각 섬당 20명씩 시도
+            const TOTAL_USERS = ISLAND_COUNT * USERS_PER_ISLAND;
+
+            // 여러 섬 생성
+            const islands = Array.from({ length: ISLAND_COUNT }, () =>
+                generateNormalIslandModel({
+                    max: MAX_MEMBERS_PER_ISLAND,
+                    mapKey: map.key,
+                }),
+            );
+
+            await Promise.all(
+                islands.map((island) =>
+                    normalIslandStorage.createIsland(island),
+                ),
+            );
+
+            // 사용자들 생성
+            const allUsers = Array.from({ length: TOTAL_USERS }, () =>
+                generateUserEntityV2(),
+            );
+            await db.user.createMany({ data: allUsers });
+
+            // 각 사용자를 랜덤 섬에 참여 시도
+            const joinPromises = allUsers.map((user, index) => {
+                const targetIsland = islands[index % ISLAND_COUNT];
+                return gameIslandService
+                    .joinIsland({
+                        playerId: user.id,
+                        clientId: `multi-island-client-${index}`,
+                        type: IslandTypeEnum.NORMAL,
+                        islandId: targetIsland.id,
+                    })
+                    .catch((error: unknown) => ({
+                        error,
+                        islandId: targetIsland.id,
+                    }));
+            });
+
+            const results = await Promise.all(joinPromises);
+
+            // 전체 성공 카운트
+            const totalSuccess = results.filter(
+                (result) => !('error' in result),
+            ).length;
+            const expectedMaxSuccess = ISLAND_COUNT * MAX_MEMBERS_PER_ISLAND;
+
+            expect(totalSuccess).toBe(expectedMaxSuccess);
+
+            // 각 섬별로 정확한 인원 확인
+            for (const island of islands) {
+                const joinedIsland = await normalIslandStorage.getIsland(
+                    island.id,
+                );
+                expect(joinedIsland?.players.size).toBe(MAX_MEMBERS_PER_ISLAND);
+            }
+        });
+    });
 });

@@ -84,7 +84,7 @@ export class IslandGateway
     ) {
         await this.kick(userId, client);
 
-        this.logger.info(`joined player : ${userId}`);
+        // this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinIsland({
@@ -121,7 +121,7 @@ export class IslandGateway
 
         const { islandId } = data;
 
-        this.logger.info(`joined player : ${userId}`);
+        // this.logger.info(`joined player : ${userId}`);
 
         const { activePlayers, joinedIsland, joinedPlayer } =
             await this.gameIslandService.joinIsland({
@@ -305,9 +305,9 @@ export class IslandGateway
                 }
             }
 
-            this.logger.debug(this.socketClientReader.readAll());
+            // this.logger.debug(this.socketClientReader.readAll());
+            // this.logger.info(`새로운 클라이언트 연결: ${client.id}`);
             this.socketClientWriter.addClientId(userId, client.id);
-            this.logger.info(`새로운 클라이언트 연결: ${client.id}`);
         } catch (e) {
             client.emit('wsError', {
                 name: WsExceptions.INVALID_TOKEN,
@@ -339,10 +339,10 @@ export class IslandGateway
                 client.to(islandId).emit('peerLeft', { userId: player.id });
             }
 
-            this.logger.debug(this.socketClientReader.readAll());
-            this.logger.debug(
-                `Cliend id from Island:${player.id} disconnected`,
-            );
+            // this.logger.debug(this.socketClientReader.readAll());
+            // this.logger.debug(
+            //     `Cliend id from Island:${player.id} disconnected`,
+            // );
         } catch (e) {
             if (
                 e instanceof DomainException &&

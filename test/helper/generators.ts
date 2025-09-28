@@ -6,6 +6,7 @@ import { IslandJoinEntity } from 'src/domain/entities/island-join/island-join.en
 import { IslandEntity } from 'src/domain/entities/islands/island.entity';
 import { PrivateIslandEntity } from 'src/domain/entities/islands/private-island.entity';
 import { ItemEntity } from 'src/domain/entities/item/item.entity';
+import { PaymentEntity } from 'src/domain/entities/payments/payment.entity';
 import { ProducEntity } from 'src/domain/entities/product/product.entity';
 import { PromotionEntity } from 'src/domain/entities/promotion/promotion.entity';
 import { PurchaseEntity } from 'src/domain/entities/purchase/purchase.entity';
@@ -20,8 +21,13 @@ import {
 } from 'src/domain/types/game.types';
 import { IslandTypeEnum } from 'src/domain/types/island.types';
 import { ItemGradeEnum, ItemTypeEnum } from 'src/domain/types/item.types';
+import {
+    PaymentProductTypes,
+    PaymentProductTypesEnum,
+} from 'src/domain/types/payment-products/payment-product.types';
 import { ProductTypeEnum } from 'src/domain/types/product.types';
 import { PromotionTypeEnum } from 'src/domain/types/promotion.types';
+import { CreatePaymentRequest } from 'src/presentation/dto/payments/request/create-payment.request';
 import { PurchaseStatusEnum } from 'src/domain/types/purchase.types';
 import {
     ActiveObject,
@@ -310,4 +316,58 @@ export const generatePrivateIsland = (
         partial?.updatedAt || new Date(),
         partial?.deletedAt || null,
     );
+};
+
+export const generatePayment = (
+    userId: string,
+    paymentProductId: string,
+    partial?: Partial<Omit<PaymentEntity, 'userId' | 'paymentProductId'>>,
+): PaymentEntity => {
+    return PaymentEntity.create(
+        {
+            merchantPaymentId: partial?.merchantPaymentId || v4(),
+            userId,
+            type: partial?.type || PaymentProductTypesEnum.GOLD_CHARGE,
+            paymentProductId,
+            amount: partial?.amount || 10000,
+            status: partial?.status || 'PENDING',
+            currency: partial?.currency || 'KRW',
+            method: partial?.method || null,
+            methodDetail: partial?.methodDetail || null,
+        },
+        () => partial?.id || v4(),
+        partial?.createdAt || new Date(),
+    );
+};
+
+export const generateGoldChargePaymentProduct = (
+    partial?: Partial<{
+        id: string;
+        amount: number;
+        price: number;
+        currency: string;
+    }>,
+) => {
+    return {
+        id: partial?.id || v4(),
+        amount: partial?.amount || 1000,
+        price: partial?.price || 10000,
+        currency: partial?.currency || 'KRW',
+    };
+};
+
+export const generateCreatePaymentRequest = (
+    paymentProductId: string,
+    partial?: Partial<{
+        merchantPaymentId: string;
+        type: string;
+        amount: number;
+    }>,
+): CreatePaymentRequest => {
+    return {
+        merchantPaymentId: partial?.merchantPaymentId || v4(),
+        type: (partial?.type as PaymentProductTypes) || 'GOLD_CHARGE',
+        paymentProductId,
+        amount: partial?.amount || 10000,
+    };
 };

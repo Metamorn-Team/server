@@ -32,6 +32,8 @@ import { windstonOptions } from 'src/configs/winston/winston-options';
 import { AgentMiddleware } from 'src/common/middleware/agent.middleware';
 import { ChatModule } from 'src/modules/chat/chat.module';
 import { PrivateIslandModule } from 'src/modules/islands/private-island.module';
+import { PaymentProductsModule } from 'src/modules/payment-products/payment-products.module';
+import { PaymentsModule } from 'src/modules/payments/payments.module';
 
 const onlyProdModules =
     process.env.NODE_ENV === 'test'
@@ -65,6 +67,8 @@ const onlyProdModules =
         PromotionProductModule,
         MapModule,
         ChatModule,
+        PaymentProductsModule,
+        PaymentsModule,
         ...onlyProdModules,
     ],
     controllers: [AppController],

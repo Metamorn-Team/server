@@ -18,6 +18,7 @@ export const createSocketConnection = async (
             auth: {
                 authorization: token.split(' ')[1],
             },
+            transports: ['websocket'],
         });
         socket.on('connect', () => {
             res(socket);
