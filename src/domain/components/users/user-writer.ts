@@ -32,4 +32,8 @@ export class UserWriter {
     async updateBio(id: string, bio: string | null) {
         await this.userRepository.update(id, { bio });
     }
+
+    async incrementGoldBalance(id: string, gold: number) {
+        await this.userRepository.increaseGold(id, gold);
+    }
 }

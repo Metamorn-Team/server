@@ -31,3 +31,12 @@ export const MAP_NOT_FOUND_MESSAG = '존재하지 않는 맵입니다.';
 export const OBJECT_NOT_FOUND_MESSAGE = (islandId: string) =>
     `섬 ${islandId}에 존재하지 않는 오브젝트입니다.`;
 export const PASSWORD_NOT_MATCH_MESSAGE = '비밀번호가 일치하지 않습니다.';
+export const PAYMENT_PRODUCT_NOT_FOUND_MESSAGE = (data: string) =>
+    `${data}, 존재하지 않는 결제 상품입니다.`;
+export const PAYMENT_NOT_FOUND_MESSAGE = (data: string) =>
+    `${data}, 존재하지 않는 결제입니다.`;
+export const PAYMENT_AMOUNT_MISMATCH_MESSAGE = '결제 금액이 일치하지 않습니다.';
+export const INVALID_PAYMENT_PRODUCT_TYPE_MESSAGE = (type: string) =>
+    `유효하지 않은 결제 상품 타입입니다: ${type}`;
+
+export const INVALID_DATA = (data: string) => `잘못된 데이터입니다: ${data}`;
