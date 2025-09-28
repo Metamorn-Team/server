@@ -30,4 +30,8 @@ export const validationSchema = Joi.object({
 
     // TURN
     TURN_SECRET: Joi.string().required(),
+
+    // PortOne
+    PORTONE_API_KEY: Joi.string().required(),
+    WEBHOOK_SECRET_KEY: Joi.string().required(),
 });

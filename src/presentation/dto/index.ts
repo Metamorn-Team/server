@@ -15,3 +15,4 @@ export * from './promotion-product';
 export * from './map';
 export * from './chat';
 export * from './payment-products';
+export * from './payments';
