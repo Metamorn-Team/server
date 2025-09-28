@@ -431,7 +431,7 @@ model Payment {
   paymentProductId  String        @map("payment_product_id") @db.Uuid
   type              Int           @db.SmallInt
   amount            Int
-  method            String        @db.VarChar(50)
+  method            String?       @db.VarChar(50)
   methodDetail      String?       @map("method_detail") @db.VarChar(100)
   currency          String        @db.VarChar(30)
   status            PaymentStatus @default(PENDING)
