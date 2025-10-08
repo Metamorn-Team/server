@@ -22,7 +22,7 @@ jobs:
           cache: "npm"
 
       # 3️⃣ 의존성 설치
-      - run: npm install --production
+      - run: npm install
 
       # 4️⃣ Build
       - run: npx prisma generate
