@@ -10,8 +10,8 @@ BACKUP_DIR="$APP_BASE/backup"
 echo "=== Deploy Hook Start ==="
 echo "Temporary deploy dir: $TEMP_DIR"
 
-# 1️⃣ 새 버전 이동
-mv "$TEMP_DIR" "$NEW_DIR"
+# agent로 실행하면 root 소유기 떄문에 복사
+rsync -a "$TEMP_DIR/" "$NEW_DIR/"
 
 # 2️⃣ 의존성 설치
 cd "$NEW_DIR"
