@@ -1,12 +1,12 @@
 version: 0.0
 os: linux
+
 files:
     - source: /
-      destination: /home/ec2-user/app/deploy-test
+      destination: /home/ec2-user/app/deploy-temp
 
 hooks:
-    # 수명주기마다 실행할 스크립트를 지정 가능
     AfterInstall:
-        - location: scripts/deploy-test.sh
-          timeout: 300
+        - location: scripts/deploy.sh
+          timeout: 600
           runas: ec2-user
