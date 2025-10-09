@@ -18,6 +18,6 @@ async function bootstrap() {
     app.useWebSocketAdapter(wsAdapter);
     setupSwagger(app);
 
-    await app.listen(4400);
+    await app.listen(3000);
 }
 bootstrap();
