@@ -8,11 +8,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator markdown {
-  provider = "prisma-markdown"
-  output   = "./ERD.md"
-  title    = "Metamorn-ERD"
-}
+// generator markdown {
+//   provider = "prisma-markdown"
+//   output   = "./ERD.md"
+//   title    = "Metamorn-ERD"
+// }
 
 generator kysely {
   provider = "prisma-kysely"
