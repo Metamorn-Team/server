@@ -20,13 +20,13 @@ npm install --production --unsafe-perm
 
 # 3️⃣ 새 서버 시작
 # PM2로 기존 앱 이름 그대로 새 디렉토리 환경에서 실행
-pm2 start dist/server.js --name lia-server --update-env || {
+pm2 start dist/src/main.js --name lia-server --update-env || {
     echo "=== Deploy Failed, Rolling Back ==="
     # 실패 시 기존 서버 재실행
     pm2 delete lia-server || true
     if [ -d "$BACKUP_DIR" ]; then
         mv "$BACKUP_DIR" "$CURRENT_DIR"
-        pm2 start "$CURRENT_DIR/dist/server.js" --name lia-server
+        pm2 start "$CURRENT_DIR/dist/src/main.js" --name lia-server
     fi
     exit 1
 }
