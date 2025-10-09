@@ -10,22 +10,19 @@ BACKUP_DIR="$APP_BASE/backup"
 echo "=== Deploy Hook Start ==="
 echo "Temporary deploy dir: $TEMP_DIR"
 
-# 권한 문제 예방
-mkdir -p "$APP_BASE"
-chown -R ec2-user:ec2-user "$APP_BASE"
-chmod -R 755 "$APP_BASE"
-
-# 새 버전 이동
+# 1️⃣ 새 버전 이동
 mv "$TEMP_DIR" "$NEW_DIR"
-chown -R ec2-user:ec2-user "$NEW_DIR"
 
-# 의존성 설치
+# 2️⃣ 의존성 설치
 cd "$NEW_DIR"
+# --unsafe-perm 옵션으로 root-owned 파일도 설치 가능
 npm install --production --unsafe-perm
 
-# 서버 시작
+# 3️⃣ 새 서버 시작
+# PM2로 기존 앱 이름 그대로 새 디렉토리 환경에서 실행
 pm2 start dist/server.js --name lia-server --update-env || {
     echo "=== Deploy Failed, Rolling Back ==="
+    # 실패 시 기존 서버 재실행
     pm2 delete lia-server || true
     if [ -d "$BACKUP_DIR" ]; then
         mv "$BACKUP_DIR" "$CURRENT_DIR"
