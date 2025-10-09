@@ -39,7 +39,7 @@ jobs:
       - run: zip -r app.zip dist package.json package-lock.json prisma scripts appspec.yml
 
       # 7️⃣ S3 업로드
-      - run: aws s3 cp app.zip s3//${{ secrets.S3_BUCKET_NAME }}/${{ secrets.S3_BUILD_DIRECTORY_PATH }}
+      - run: aws s3 cp app.zip s3://${{ secrets.S3_BUCKET_NAME }}/${{ secrets.S3_BUILD_DIRECTORY_PATH }}
 
       # 8️⃣ CodeDeploy 배포 생성
       - run: |
