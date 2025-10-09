@@ -28,6 +28,12 @@ jobs:
       - run: npx prisma generate
       - run: npm run build
 
+      # 5️⃣ 환경 변수 생성 (.env)
+      - name: Create .env file from secrets
+        run: |
+          echo "${{ secrets.PRODUCTION_ENV }}" > .env
+          chmod 600 .env
+
       # 5️⃣ AWS CLI 설정
       - uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -36,7 +42,7 @@ jobs:
           aws-region: ap-northeast-2
 
       # 6️⃣ 빌드 결과물 zip
-      - run: zip -r app.zip dist package.json package-lock.json prisma scripts appspec.yml
+      - run: zip -r app.zip dist package.json package-lock.json prisma scripts appspec.yml .env
 
       # 7️⃣ S3 업로드
       - run: aws s3 cp app.zip s3://${{ secrets.S3_BUCKET_NAME }}/${{ secrets.S3_BUILD_DIRECTORY_PATH }}/app.zip
