@@ -17,6 +17,7 @@ export interface PrivateIslandRepository {
     ): Promise<{ id: string; password: string | null } | null>;
     findPasswordById(id: string): Promise<PrivateIslandForCheckPassword | null>;
     findOneById(id: string): Promise<PrivateIsland | null>;
+    delete(id: string, now?: Date): Promise<void>;
 }
 
 export const PrivateIslandRepository = Symbol('PrivateIslandRepository');

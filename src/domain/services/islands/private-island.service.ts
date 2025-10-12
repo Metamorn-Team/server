@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreatePrivateIslandInput } from 'src/domain/types/island.types';
 import { generateRandomBase62 } from 'src/utils/random';
 import { PrivateIslandWriter } from 'src/domain/components/islands/private-island-writer';
@@ -7,6 +7,9 @@ import { PRIVATE_ISLAND_MAX_MEMBERS } from 'src/common/constants';
 import { MapReader } from 'src/domain/components/map/map-reader';
 import { UserReader } from 'src/domain/components/users/user-reader';
 import { PrivateIslandPasswordChecker } from 'src/domain/components/islands/private-storage/private-island-password-checker';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+import { FORBIDDEN_MESSAGE } from 'src/domain/exceptions/message';
 
 @Injectable()
 export class PrivateIslandService {
@@ -55,5 +58,22 @@ export class PrivateIslandService {
             id,
             password,
         );
+    }
+
+    async remove(id: string, userId: string, now = new Date()): Promise<void> {
+        await this.checkOwnership(id, userId);
+        await this.privateIslandWriter.delete(id, now);
+    }
+
+    async checkOwnership(islandId: string, userId: string): Promise<void> {
+        const { ownerId } = await this.privateIslandReader.readOne(islandId);
+
+        if (ownerId !== userId) {
+            throw new DomainException(
+                DomainExceptionType.FORBIDDEN,
+                HttpStatus.FORBIDDEN,
+                FORBIDDEN_MESSAGE,
+            );
+        }
     }
 }

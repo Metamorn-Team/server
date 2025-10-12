@@ -26,4 +26,8 @@ export class PrivateIslandWriter {
 
         return island;
     }
+
+    async delete(id: string, now = new Date()) {
+        await this.privateIslandRepository.delete(id, now);
+    }
 }
