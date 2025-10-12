@@ -104,11 +104,5 @@ pm2 start dist/src/main.js --name lia-server || {
 # 8️⃣ PM2 설정 저장
 pm2 save
 
-# 9️⃣ 성공 시 백업은 유지 (선택사항)
-# rm -rf "$BACKUP_DIR"
-
-# 🔟 임시 디렉토리 정리
-rm -rf "$TEMP_DIR"
-
 echo "=== Deploy Successful ==="
 echo "Running from: $CURRENT_DIR"
