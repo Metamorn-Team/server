@@ -3,50 +3,49 @@ name: Build & Deploy to EC2 via CodeDeploy
 on:
   push:
     branches:
-      ## test
-      - feat/auto-deploy-config
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ 코드 체크아웃
+      # 1. 코드 체크아웃
       - name: Checkout
         uses: actions/checkout@v4.2.2
 
-      # 2️⃣ Node.js 설치
+      # 2. Node.js 설치
       - uses: actions/setup-node@v3
         with:
           node-version: 22
           cache: "npm"
 
-      # 3️⃣ 의존성 설치
+      # 3. 의존성 설치
       - run: npm install
 
-      # 4️⃣ Build
+      # 4. Build
       - run: npx prisma generate
       - run: npm run build
 
-      # 5️⃣ 환경 변수 생성 (.env)
+      # 5. 환경 변수 생성 (.env)
       - name: Create .env file from secrets
         run: |
           echo "${{ secrets.PRODUCTION_ENV }}" > .env
 
-      # 5️⃣ AWS CLI 설정
+      # 6. AWS CLI 설정
       - uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      # 6️⃣ 빌드 결과물 zip
+      # 7. 빌드 결과물 zip
       - run: zip -r app.zip dist package.json package-lock.json prisma scripts appspec.yml .env
 
-      # 7️⃣ S3 업로드
+      # 8. S3 업로드
       - run: aws s3 cp app.zip s3://${{ secrets.S3_BUCKET_NAME }}/${{ secrets.S3_BUILD_DIRECTORY_PATH }}/app.zip
 
-      # 8️⃣ CodeDeploy 배포 생성
+      # 9. CodeDeploy 배포 생성
       - run: |
           aws deploy create-deployment \
             --application-name ${{ secrets.DEPLOY_APPLICATION_NAME }} \
