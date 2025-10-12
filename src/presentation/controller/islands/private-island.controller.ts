@@ -1,4 +1,13 @@
-import { Body, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import {
+    Body,
+    Delete,
+    Get,
+    HttpCode,
+    Param,
+    ParseUUIDPipe,
+    Post,
+    Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
@@ -117,5 +126,26 @@ export class PrivateIslandController {
         @Body() dto: CheckPrivatePasswordRequest,
     ): Promise<void> {
         return await this.privateIslandService.checkPassword(id, dto.password);
+    }
+
+    @ApiOperation({
+        summary: '비밀섬 삭제',
+        description: '비밀섬 삭제',
+    })
+    @ApiResponse({
+        status: 204,
+        description: '삭제 완료',
+    })
+    @ApiResponse({
+        status: 403,
+        description: '삭제 권한 없음',
+    })
+    @HttpCode(204)
+    @Delete(':id')
+    async remove(
+        @Param('id', ParseUUIDPipe) id: string,
+        @CurrentUser() userId: string,
+    ) {
+        await this.privateIslandService.remove(id, userId);
     }
 }

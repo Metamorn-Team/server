@@ -140,6 +140,80 @@ describe('PrivateIslandController (e2e)', () => {
                 expect(island.id).toEqual(body.islands[i].id);
             });
         });
+
+        it('삭제된 섬은 조회되지 않는다', async () => {
+            // Given: 첫 번째 섬을 삭제 처리
+            const targetIsland = islands[0];
+            await db.privateIsland.update({
+                where: { id: targetIsland.id },
+                data: { deletedAt: new Date() },
+            });
+
+            // When: 내 섬 목록을 조회
+            const dto: GetMyPrivateIslandRequest = {
+                limit: 20,
+                order: 'desc',
+                page: 1,
+                sortBy: 'createdAt',
+            };
+            const response = await request(app.getHttpServer())
+                .get('/private-islands/my')
+                .query(dto)
+                .set('Authorization', authToken);
+
+            const {
+                status,
+                body,
+            }: ResponseResult<GetPrivateIslandListResponse> = response;
+
+            // Then: 삭제된 섬은 결과에 포함되지 않아야 함
+            expect(status).toBe(200);
+            expect(body.islands.length).toBe(9); // 10개 중 1개가 삭제되어 9개
+
+            // 삭제된 섬의 ID가 결과에 포함되지 않았는지 확인
+            const returnedIslandIds = body.islands.map((island) => island.id);
+            expect(returnedIslandIds).not.toContain(targetIsland.id);
+        });
+
+        it('여러 섬이 삭제된 경우 모두 조회에서 제외된다', async () => {
+            // Given: 처음 3개 섬을 삭제 처리
+            const deletedIslands = islands.slice(0, 3);
+            await db.privateIsland.updateMany({
+                where: {
+                    id: {
+                        in: deletedIslands.map((island) => island.id),
+                    },
+                },
+                data: { deletedAt: new Date() },
+            });
+
+            // When: 내 섬 목록을 조회
+            const dto: GetMyPrivateIslandRequest = {
+                limit: 20,
+                order: 'desc',
+                page: 1,
+                sortBy: 'createdAt',
+            };
+            const response = await request(app.getHttpServer())
+                .get('/private-islands/my')
+                .query(dto)
+                .set('Authorization', authToken);
+
+            const {
+                status,
+                body,
+            }: ResponseResult<GetPrivateIslandListResponse> = response;
+
+            // Then: 삭제된 섬들은 모두 결과에 포함되지 않아야 함
+            expect(status).toBe(200);
+            expect(body.islands.length).toBe(7); // 10개 중 3개가 삭제되어 7개
+
+            // 삭제된 섬들의 ID가 결과에 포함되지 않았는지 확인
+            const returnedIslandIds = body.islands.map((island) => island.id);
+            deletedIslands.forEach((deletedIsland) => {
+                expect(returnedIslandIds).not.toContain(deletedIsland.id);
+            });
+        });
     });
 
     describe('(POST) /private-islands/:id/password', () => {
@@ -233,6 +307,103 @@ describe('PrivateIslandController (e2e)', () => {
                 .post(`/private-islands/${privateIsland.id}/password`)
                 .set('Authorization', authToken)
                 .send({});
+
+            expect(response.status).toBe(400);
+        });
+    });
+
+    describe('DELETE /private-islands/:id - 비밀섬 삭제', () => {
+        let authToken: string;
+        let userId: string;
+        let otherAuthToken: string;
+        let map: { id: string; key: string };
+        let privateIsland: PrivateIslandEntity;
+
+        beforeEach(async () => {
+            const loginResult = await login(app);
+            authToken = loginResult.accessToken;
+            userId = loginResult.userId;
+
+            const otherLoginResult = await login(app);
+            otherAuthToken = otherLoginResult.accessToken;
+
+            map = await db.map.create({
+                data: {
+                    id: v4(),
+                    key: 'test-map',
+                    createdAt: new Date(),
+                    description: '테스트 맵',
+                    image: 'https://example.com/image.jpg',
+                    name: '테스트 맵',
+                },
+            });
+
+            const privateIslandData = generatePrivateIsland(map.id, userId, {
+                name: '삭제할 섬',
+                isPublic: true,
+                description: '삭제 테스트용 섬',
+            });
+
+            privateIsland = await db.privateIsland.create({
+                data: privateIslandData,
+            });
+        });
+
+        it('정상 동작', async () => {
+            const response = await request(app.getHttpServer())
+                .delete(`/private-islands/${privateIsland.id}`)
+                .set('Authorization', authToken);
+
+            expect(response.status).toBe(204);
+
+            // soft delete되어 deletedAt이 설정되었는지 확인
+            const deletedIsland = await db.privateIsland.findUnique({
+                where: { id: privateIsland.id },
+            });
+            expect(deletedIsland).not.toBeNull();
+            expect(deletedIsland?.deletedAt).not.toBeNull();
+        });
+
+        it('섬의 주인이 아닌 회원이 삭제를 시도하는 경우 예외가 발생한다', async () => {
+            const response = await request(app.getHttpServer())
+                .delete(`/private-islands/${privateIsland.id}`)
+                .set('Authorization', otherAuthToken);
+
+            expect(response.status).toBe(403);
+
+            // 섬이 삭제되지 않았는지 확인 (deletedAt이 null인지 확인)
+            const existingIsland = await db.privateIsland.findUnique({
+                where: { id: privateIsland.id },
+            });
+            expect(existingIsland).not.toBeNull();
+            expect(existingIsland?.id).toBe(privateIsland.id);
+            expect(existingIsland?.deletedAt).toBeNull();
+        });
+
+        it('존재하지 않는 섬을 삭제 시도 시 예외가 발생한다', async () => {
+            const nonExistentIslandId = v4();
+
+            const response = await request(app.getHttpServer())
+                .delete(`/private-islands/${nonExistentIslandId}`)
+                .set('Authorization', authToken);
+
+            expect(response.status).toBe(404);
+        });
+
+        it('인증 없이 삭제 요청 시 예외가 발생한다', async () => {
+            const response = await request(app.getHttpServer()).delete(
+                `/private-islands/${privateIsland.id}`,
+            );
+
+            expect(response.status).toBe(401);
+        });
+
+        it('잘못된 UUID 형식의 ID로 삭제 시도 시 예외가 발생한다', async () => {
+            const invalidId = 'invalid-uuid';
+
+            const response = await request(app.getHttpServer())
+                .delete(`/private-islands/${invalidId}`)
+                .set('Authorization', authToken);
 
             expect(response.status).toBe(400);
         });

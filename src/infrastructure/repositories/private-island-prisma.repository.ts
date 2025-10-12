@@ -53,6 +53,7 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
             },
             where: {
                 ownerId,
+                deletedAt: null,
             },
             skip: (page - 1) * limit,
             take: limit,
@@ -72,7 +73,7 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
 
     async countByOwner(ownerId: string): Promise<number> {
         return await this.txHost.tx.privateIsland.count({
-            where: { ownerId },
+            where: { ownerId, deletedAt: null },
         });
     }
 
@@ -81,7 +82,7 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
     ): Promise<{ id: string; password: string | null } | null> {
         return await this.txHost.tx.privateIsland.findFirst({
             select: { id: true, password: true },
-            where: { urlPath },
+            where: { urlPath, deletedAt: null },
         });
     }
 
@@ -89,7 +90,7 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
         id: string,
     ): Promise<PrivateIslandForCheckPassword | null> {
         return await this.txHost.tx.privateIsland.findUnique({
-            where: { id },
+            where: { id, deletedAt: null },
             select: {
                 id: true,
                 password: true,
@@ -99,7 +100,7 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
 
     async findOneById(id: string): Promise<PrivateIsland | null> {
         const result = await this.txHost.tx.privateIsland.findUnique({
-            where: { id },
+            where: { id, deletedAt: null },
             select: {
                 id: true,
                 ownerId: true,
@@ -129,5 +130,16 @@ export class PrivateIslandPrismaRepository implements PrivateIslandRepository {
             ...rest,
             mapKey: map.key,
         };
+    }
+
+    async delete(id: string, now = new Date()): Promise<void> {
+        await this.txHost.tx.privateIsland.update({
+            where: {
+                id,
+            },
+            data: {
+                deletedAt: now,
+            },
+        });
     }
 }
