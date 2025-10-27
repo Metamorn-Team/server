@@ -1,0 +1,409 @@
+---
+alwaysApply: true
+description: Naming conventions and file structure standards
+---
+
+# Naming Conventions & File Structure
+
+## 📁 File Naming (MANDATORY)
+
+### Component Files
+
+```
+{entity}-reader.ts        # Data retrieval operations
+{entity}-writer.ts        # Data modification operations
+{entity}-checker.ts       # Validation operations
+{entity}-manager.ts       # Complex domain logic
+```
+
+**Examples:**
+
+- `user-reader.ts`, `user-writer.ts`, `user-checker.ts`
+- `island-reader.ts`, `island-writer.ts`
+- `payment-reader.ts`, `payment-writer.ts`
+
+### Service Files
+
+```
+{entity}.service.ts       # Domain service
+```
+
+**Examples:**
+
+- `user.service.ts`
+- `game.service.ts`
+- `payment.service.ts`
+
+### Repository Files
+
+```
+{entity}-prisma.repository.ts    # Prisma implementation
+{entity}.repository.ts           # Interface (in domain/interface/)
+```
+
+**Examples:**
+
+- `user-prisma.repository.ts` (implementation)
+- `user.repository.ts` (interface)
+
+### DTO Files
+
+```
+# Request DTOs
+{action}.request.ts
+change-nickname.request.ts
+create-island.request.ts
+
+# Response DTOs
+{entity}-detail.response.ts      # Single item response
+{entity}-list.response.ts        # List response
+{action}.response.ts             # Action response
+```
+
+**Examples:**
+
+- `user-detail.response.ts`
+- `island-list.response.ts`
+- `search-users.response.ts`
+- `change-nickname.request.ts`
+
+### Entity Files
+
+```
+{entity}.entity.ts
+```
+
+**Examples:**
+
+- `user.entity.ts`
+- `island.entity.ts`
+- `payment.entity.ts`
+
+### Controller/Gateway Files
+
+```
+{entity}.controller.ts    # REST API controller
+{entity}.gateway.ts       # WebSocket gateway
+```
+
+## 🏷️ Method Naming (MUST FOLLOW)
+
+### CRUD Operations
+
+#### Create Operations
+
+```typescript
+create{Entity}()      # Primary creation method
+add{Entity}()         # Adding to collection
+register{Entity}()    # Registration process
+```
+
+**Examples:**
+
+```typescript
+async createUser(data: CreateUserDto): Promise<void>
+async addFriend(userId: string, friendId: string): Promise<void>
+async registerPayment(paymentData: PaymentEntity): Promise<void>
+```
+
+#### Read Operations
+
+```typescript
+// Single item
+get{Entity}()         # Get by ID (expects to find)
+find{Entity}()        # Search (may return null)
+read{Entity}()        # General read operation
+
+// Multiple items
+get{Entity}List()     # Get list
+find{Entity}s()       # Search multiple
+search{Entity}s()     # Search with criteria
+```
+
+**Examples:**
+
+```typescript
+async getUserById(id: string): Promise<UserInfo>
+async findUserByEmail(email: string): Promise<UserInfo | null>
+async getUserList(cursor?: string): Promise<PaginatedUsers>
+async searchUsers(query: string): Promise<UserInfo[]>
+```
+
+#### Update Operations
+
+```typescript
+update{Entity}()      # General update
+modify{Entity}()      # Modification
+change{Entity}()      # Specific change
+set{Entity}()         # Setting a value
+```
+
+**Examples:**
+
+```typescript
+async updateUserProfile(id: string, data: UpdateDto): Promise<void>
+async changeNickname(id: string, nickname: string): Promise<void>
+async setUserAvatar(id: string, avatarKey: string): Promise<void>
+```
+
+#### Delete Operations
+
+```typescript
+delete{Entity}()      # Hard delete
+remove{Entity}()      # Remove from collection
+soft Delete{Entity}() # Soft delete
+```
+
+**Examples:**
+
+```typescript
+async deleteUser(id: string): Promise<void>
+async removeFriend(userId: string, friendId: string): Promise<void>
+async softDeleteIsland(id: string): Promise<void>
+```
+
+#### Validation/Check Operations (in Checker components)
+
+```typescript
+check{Condition}()    # Throws exception if invalid
+validate{Condition}() # Returns boolean
+is{Condition}()       # Returns boolean
+can{Action}()         # Returns boolean for permissions
+```
+
+**Examples:**
+
+```typescript
+async checkUserExists(id: string): Promise<void>
+async isIslandFull(islandId: string): Promise<boolean>
+async canJoinIsland(userId: string, islandId: string): Promise<boolean>
+```
+
+## 🔤 Variable Naming
+
+### Variables (camelCase)
+
+```typescript
+const userId = '123';
+const userProfile = await getUserProfile();
+const islandList = await getIslandList();
+const maxRetryCount = 3;
+```
+
+### Constants (UPPER_SNAKE_CASE)
+
+```typescript
+const MAX_RETRY_COUNT = 3;
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_ISLAND_MEMBERS = 50;
+const JWT_EXPIRATION_TIME = '7d';
+```
+
+### Private Fields (prefix with \_)
+
+```typescript
+class UserService {
+    private readonly _userRepository: UserRepository; // ❌ AVOID
+    private readonly userRepository: UserRepository; // ✅ CORRECT (no underscore)
+}
+```
+
+## 🎨 Interface & Type Naming
+
+### Interfaces (PascalCase, descriptive)
+
+```typescript
+interface UserInfo {
+    id: string;
+    email: string;
+    nickname: string;
+}
+
+interface CreateUserRequest {
+    email: string;
+    nickname: string;
+}
+
+interface PaginatedUsers {
+    data: UserInfo[];
+    nextCursor: string | null;
+}
+```
+
+### Type Aliases
+
+```typescript
+type UserId = string;
+type IslandType = 'NORMAL' | 'PRIVATE' | 'DESERTED';
+type FriendStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+```
+
+### Enums (PascalCase for enum, UPPER_CASE for values)
+
+```typescript
+enum IslandTypeEnum {
+    NORMAL = 0,
+    PRIVATE = 1,
+    DESERTED = 2,
+}
+
+enum FriendRequestStatus {
+    PENDING = 'PENDING',
+    ACCEPTED = 'ACCEPTED',
+    REJECTED = 'REJECTED',
+}
+```
+
+## 📦 Class Naming
+
+### Services (PascalCase + Service suffix)
+
+```typescript
+export class UserService {}
+export class GameService {}
+export class PaymentService {}
+```
+
+### Components (PascalCase + Reader/Writer/Checker/Manager suffix)
+
+```typescript
+export class UserReader {}
+export class UserWriter {}
+export class UserChecker {}
+export class IslandManager {}
+```
+
+### Repositories (PascalCase + Repository suffix)
+
+```typescript
+export class UserPrismaRepository implements UserRepository {}
+export class IslandPrismaRepository implements IslandRepository {}
+```
+
+### Entities (PascalCase + Entity suffix)
+
+```typescript
+export class UserEntity {}
+export class IslandEntity {}
+export class PaymentEntity {}
+```
+
+### Controllers (PascalCase + Controller suffix)
+
+```typescript
+export class UserController {}
+export class IslandController {}
+```
+
+### Gateways (PascalCase + Gateway suffix)
+
+```typescript
+export class LobyGateway {}
+export class ChatGateway {}
+export class IslandGateway {}
+```
+
+## 🚫 FORBIDDEN Naming Patterns
+
+### ❌ NEVER use generic/vague names:
+
+```typescript
+// ❌ WRONG
+async getData(): Promise<any>
+async process(data: any): Promise<void>
+async handle(input: any): Promise<void>
+const data = await fetch();
+const result = await do();
+
+// ✅ CORRECT
+async getUserProfile(): Promise<UserInfo>
+async createPayment(data: PaymentEntity): Promise<void>
+async handlePaymentWebhook(payload: WebhookPayload): Promise<void>
+const userProfile = await getUserProfile();
+const payment = await createPayment(paymentData);
+```
+
+### ❌ NEVER use abbreviations:
+
+```typescript
+// ❌ WRONG
+const usr = await getUser();
+const usrProf = await getUserProfile();
+const isld = await getIsland();
+
+// ✅ CORRECT
+const user = await getUser();
+const userProfile = await getUserProfile();
+const island = await getIsland();
+```
+
+### ❌ NEVER use Hungarian notation:
+
+```typescript
+// ❌ WRONG
+const strUserId = '123';
+const intCount = 10;
+const boolIsActive = true;
+
+// ✅ CORRECT
+const userId = '123';
+const count = 10;
+const isActive = true;
+```
+
+## 📂 Directory Structure Naming
+
+### MUST follow kebab-case for directories:
+
+```
+user-owned-items/     ✅ CORRECT
+userOwnedItems/       ❌ WRONG
+user_owned_items/     ❌ WRONG
+```
+
+### MUST group by feature, not by type:
+
+```
+✅ CORRECT:
+src/domain/components/users/
+    user-reader.ts
+    user-writer.ts
+    user-checker.ts
+
+❌ WRONG:
+src/domain/components/readers/
+    user-reader.ts
+    island-reader.ts
+```
+
+## 🎯 Boolean Variable Naming
+
+### Use clear prefixes:
+
+```typescript
+// Prefix with is/has/can/should
+const isActive = true;
+const hasPermission = false;
+const canJoin = await checkCanJoin();
+const shouldRetry = retryCount < MAX_RETRY_COUNT;
+
+// ❌ AVOID unclear names
+const active = true; // Unclear if boolean
+const permission = false; // Unclear if boolean
+```
+
+## 📝 Summary Rules
+
+1. ✅ **DO** use descriptive, clear names
+2. ✅ **DO** follow established patterns consistently
+3. ✅ **DO** use proper suffixes (Service, Controller, Entity, etc.)
+4. ✅ **DO** use kebab-case for file names
+5. ✅ **DO** use camelCase for variables
+6. ✅ **DO** use PascalCase for classes/interfaces
+7. ✅ **DO** use UPPER_SNAKE_CASE for constants
+
+8. ❌ **DON'T** use generic names (data, result, handle)
+9. ❌ **DON'T** use abbreviations
+10. ❌ **DON'T** mix naming conventions
+11. ❌ **DON'T** use unclear boolean names
+12. ❌ **DON'T** use Hungarian notation

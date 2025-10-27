@@ -1,0 +1,614 @@
+---
+alwaysApply: true
+description: Performance optimization and security best practices
+---
+
+# Performance & Security Standards
+
+## ⚡ Performance Best Practices
+
+### Database Query Optimization (CRITICAL)
+
+#### ALWAYS use select for specific fields
+
+```typescript
+// ✅ CORRECT - Select only needed fields
+async findOneById(id: string): Promise<UserInfo | null> {
+    return await this.txHost.tx.user.findUnique({
+        select: {
+            id: true,
+            email: true,
+            nickname: true,
+            tag: true,
+        },
+        where: { id },
+    });
+}
+
+// ❌ WRONG - Fetching all fields
+async findOneById(id: string): Promise<User | null> {
+    return await this.txHost.tx.user.findUnique({
+        where: { id },
+    });
+}
+```
+
+#### ALWAYS add indexes for foreign keys and frequent queries
+
+```prisma
+model Island {
+  id      String @id @db.Uuid
+  ownerId String @map("owner_id") @db.Uuid
+  mapId   String @map("map_id") @db.Uuid
+
+  owner   User   @relation(fields: [ownerId], references: [id])
+  map     Map    @relation(fields: [mapId], references: [id])
+
+  // MANDATORY: Index all foreign keys
+  @@index([ownerId])
+  @@index([mapId])
+
+  // MANDATORY: Index frequently queried fields
+  @@index([name, id])
+
+  @@map("island")
+}
+```
+
+#### Use cursor-based pagination (NOT offset-based)
+
+```typescript
+// ✅ CORRECT - Cursor-based (scalable)
+async findMany(
+    limit: number,
+    cursor?: string,
+): Promise<PaginatedResult> {
+    const data = await this.txHost.tx.user.findMany({
+        take: limit + 1,
+        ...(cursor && {
+            cursor: { id: cursor },
+            skip: 1
+        }),
+        orderBy: { createdAt: 'desc' },
+    });
+
+    const hasMore = data.length > limit;
+    const items = hasMore ? data.slice(0, limit) : data;
+
+    return {
+        data: items,
+        nextCursor: hasMore ? items[items.length - 1].id : null,
+    };
+}
+
+// ❌ WRONG - Offset-based (slow for large datasets)
+async findMany(page: number, limit: number) {
+    return await this.txHost.tx.user.findMany({
+        take: limit,
+        skip: page * limit, // Bad performance for large pages
+    });
+}
+```
+
+#### Batch queries when possible
+
+```typescript
+// ✅ CORRECT - Single query
+const users = await this.txHost.tx.user.findMany({
+    where: {
+        id: { in: userIds },
+    },
+});
+
+// ❌ WRONG - N+1 queries
+const users = await Promise.all(
+    userIds.map((id) => this.txHost.tx.user.findUnique({ where: { id } })),
+);
+```
+
+### Redis Caching Strategy
+
+#### Cache frequently accessed, rarely changed data
+
+```typescript
+@Injectable()
+export class MapReader {
+    constructor(
+        @Inject(MapRepository)
+        private readonly repository: MapRepository,
+        private readonly redis: RedisClientService,
+    ) {}
+
+    async getMapById(id: string): Promise<MapInfo> {
+        // Check cache first
+        const cacheKey = `map:${id}`;
+        const cached = await this.redis.get(cacheKey);
+
+        if (cached) {
+            return JSON.parse(cached);
+        }
+
+        // Cache miss - fetch from database
+        const map = await this.repository.findOneById(id);
+
+        if (map) {
+            // Cache for 1 hour
+            await this.redis.setex(cacheKey, 3600, JSON.stringify(map));
+        }
+
+        return map;
+    }
+}
+```
+
+#### Invalidate cache on updates
+
+```typescript
+@Injectable()
+export class MapWriter {
+    constructor(
+        @Inject(MapRepository)
+        private readonly repository: MapRepository,
+        private readonly redis: RedisClientService,
+    ) {}
+
+    async updateMap(id: string, data: Partial<MapEntity>): Promise<void> {
+        await this.repository.update(id, data);
+
+        // CRITICAL: Invalidate cache after update
+        await this.redis.del(`map:${id}`);
+    }
+}
+```
+
+### Memory Management
+
+#### AVOID storing large objects in memory
+
+```typescript
+// ❌ WRONG - Storing all users in memory
+class UserCache {
+    private users = new Map<string, User>(); // Can grow indefinitely
+}
+
+// ✅ CORRECT - Use Redis with TTL
+class UserCache {
+    async cache(userId: string, user: User): Promise<void> {
+        await this.redis.setex(
+            `user:${userId}`,
+            3600, // 1 hour TTL
+            JSON.stringify(user),
+        );
+    }
+}
+```
+
+#### Use streams for large data processing
+
+```typescript
+// ✅ CORRECT - Process large datasets in chunks
+async processAllUsers(): Promise<void> {
+    const batchSize = 100;
+    let cursor: string | undefined;
+
+    do {
+        const result = await this.userRepository.findMany(batchSize, cursor);
+
+        // Process batch
+        await this.processBatch(result.data);
+
+        cursor = result.nextCursor ?? undefined;
+    } while (cursor);
+}
+```
+
+### WebSocket Performance
+
+#### Use MessagePack for binary serialization
+
+```typescript
+// Already configured in msg-pack-adapter.ts
+// MessagePack reduces payload size by ~50% compared to JSON
+
+// ✅ CORRECT - Send only changed data
+socket.emit('playerMoved', {
+    userId,
+    x: newX,
+    y: newY,
+    timestamp: Date.now(),
+});
+
+// ❌ WRONG - Sending full player state every time
+socket.emit('playerUpdate', fullPlayerObject);
+```
+
+#### Throttle high-frequency events
+
+```typescript
+// ✅ CORRECT - Throttle position updates
+private lastPositionUpdate = 0;
+private readonly UPDATE_INTERVAL = 50; // 20 updates per second
+
+@SubscribeMessage('move')
+async handleMove(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: MoveData,
+) {
+    const now = Date.now();
+
+    if (now - this.lastPositionUpdate < this.UPDATE_INTERVAL) {
+        return; // Throttle
+    }
+
+    this.lastPositionUpdate = now;
+
+    // Process movement
+    await this.gameService.movePlayer(socket.userId, data);
+}
+```
+
+## 🔒 Security Best Practices
+
+### Authentication & Authorization (CRITICAL)
+
+#### ALWAYS use guards for protected endpoints
+
+```typescript
+// ✅ CORRECT - Guard applied
+@UseGuards(AuthGuard)
+@Get('profile')
+async getProfile(@CurrentUser() userId: string) {
+    return await this.userService.getProfile(userId);
+}
+
+// ❌ WRONG - No authentication
+@Get('profile')
+async getProfile(@Query('userId') userId: string) {
+    return await this.userService.getProfile(userId);
+}
+```
+
+#### NEVER trust client-provided user IDs
+
+```typescript
+// ❌ WRONG - Trusting client input
+@Patch('users/:id')
+async updateUser(
+    @Param('id') userId: string, // Client can change any user!
+    @Body() data: UpdateUserDto,
+) {
+    await this.userService.updateUser(userId, data);
+}
+
+// ✅ CORRECT - Use authenticated user ID
+@UseGuards(AuthGuard)
+@Patch('users/my')
+async updateUser(
+    @CurrentUser() userId: string, // From JWT token
+    @Body() data: UpdateUserDto,
+) {
+    await this.userService.updateUser(userId, data);
+}
+```
+
+#### Validate ownership for resources
+
+```typescript
+// ✅ CORRECT - Verify ownership
+@UseGuards(AuthGuard)
+@Delete('islands/:id')
+async deleteIsland(
+    @CurrentUser() userId: string,
+    @Param('id') islandId: string,
+) {
+    const island = await this.islandReader.getById(islandId);
+
+    // CRITICAL: Check if user owns the island
+    if (island.ownerId !== userId) {
+        throw new ForbiddenException('Not authorized to delete this island');
+    }
+
+    await this.islandService.deleteIsland(islandId);
+}
+```
+
+### Input Validation (MANDATORY)
+
+#### ALWAYS validate and sanitize user input
+
+```typescript
+// ✅ CORRECT - Validation decorators
+export class CreateIslandRequest {
+    @ApiProperty({ maxLength: 50 })
+    @IsString()
+    @IsNotEmpty()
+    @Length(2, 50)
+    @Matches(/^[a-zA-Z0-9가-힣\s]+$/) // Allow only alphanumeric and Korean
+    readonly name: string;
+
+    @ApiProperty({ maxLength: 200 })
+    @IsOptional()
+    @IsString()
+    @MaxLength(200)
+    readonly description?: string;
+}
+```
+
+#### Prevent SQL injection (Prisma handles this)
+
+```typescript
+// ✅ CORRECT - Prisma parameterized queries (safe)
+await this.txHost.tx.user.findUnique({
+    where: { email: userInput }, // Prisma handles sanitization
+});
+
+// ❌ FORBIDDEN - Raw SQL with interpolation
+await this.txHost.tx.$executeRawUnsafe(
+    `SELECT * FROM users WHERE email = '${userInput}'`, // SQL injection risk!
+);
+```
+
+### Sensitive Data Protection (CRITICAL)
+
+#### NEVER log sensitive information
+
+```typescript
+// ❌ WRONG - Logging sensitive data
+this.logger.log(`User login: ${email} with password ${password}`);
+this.logger.log(`JWT token: ${token}`);
+this.logger.log(`Credit card: ${creditCard}`);
+
+// ✅ CORRECT - Log only non-sensitive info
+this.logger.log(`User login attempt: ${email}`);
+this.logger.log(`Authentication successful for user ${userId}`);
+```
+
+#### NEVER store passwords in plain text
+
+```typescript
+// Already handled by OAuth providers (Google, Kakao, Naver)
+// If implementing password auth, MUST use bcrypt:
+
+import * as bcrypt from 'bcrypt';
+
+// Hash password before storing
+const hashedPassword = await bcrypt.hash(password, 10);
+
+// Verify password
+const isValid = await bcrypt.compare(password, hashedPassword);
+```
+
+#### NEVER expose internal IDs or implementation details
+
+```typescript
+// ❌ WRONG - Exposing internal error
+catch (error) {
+    throw new HttpException(
+        `Database error: ${error.message}`, // Leaks implementation
+        HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+}
+
+// ✅ CORRECT - Generic error message
+catch (error) {
+    this.logger.error('Failed to create user', error);
+    throw new HttpException(
+        'Failed to create user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+}
+```
+
+### Rate Limiting
+
+#### Implement rate limiting for sensitive endpoints
+
+```typescript
+// Use @nestjs/throttler for rate limiting
+import { Throttle } from '@nestjs/throttler';
+
+@Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
+@Post('login')
+async login(@Body() dto: LoginDto) {
+    return await this.authService.login(dto);
+}
+
+@Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 requests per minute
+@Post('payment')
+async createPayment(@Body() dto: CreatePaymentDto) {
+    return await this.paymentService.createPayment(dto);
+}
+```
+
+### CORS Configuration
+
+```typescript
+// main.ts
+app.enableCors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+});
+```
+
+### Environment Variables (CRITICAL)
+
+#### NEVER commit secrets to repository
+
+```typescript
+// ❌ WRONG - Hardcoded secrets
+const JWT_SECRET = 'my-secret-key';
+const DATABASE_URL = 'postgresql://user:password@localhost:5432/db';
+
+// ✅ CORRECT - Environment variables
+const JWT_SECRET = process.env.JWT_SECRET;
+const DATABASE_URL = process.env.DATABASE_URL;
+```
+
+#### Validate environment variables
+
+```typescript
+// env-validation.ts
+import * as Joi from 'joi';
+
+export const validationSchema = Joi.object({
+    DATABASE_URL: Joi.string().required(),
+    JWT_SECRET: Joi.string().min(32).required(),
+    AWS_ACCESS_KEY: Joi.string().required(),
+    AWS_SECRET_KEY: Joi.string().required(),
+    REDIS_URL: Joi.string().required(),
+    // ... other variables
+});
+```
+
+### Transaction Security
+
+#### ALWAYS use transactions for financial operations
+
+```typescript
+@Transactional()
+async purchaseItem(
+    userId: string,
+    itemId: string,
+    price: number,
+): Promise<void> {
+    // 1. Check user has enough gold (with lock)
+    const currentGold = await this.userReader.getGoldBalanceById(
+        userId,
+        true, // FOR UPDATE lock
+    );
+
+    if (currentGold < price) {
+        throw new InsufficientFundsException();
+    }
+
+    // 2. Deduct gold
+    await this.userWriter.updateGoldBalance(userId, currentGold - price);
+
+    // 3. Add item to user inventory
+    await this.userOwnedItemWriter.create(userId, itemId);
+
+    // 4. Record transaction
+    await this.goldTransactionWriter.create({
+        userId,
+        type: TransactionType.PURCHASE,
+        amount: -price,
+        balance: currentGold - price,
+        referenceIds: [itemId],
+    });
+
+    // All or nothing - transaction ensures consistency
+}
+```
+
+### WebSocket Security
+
+#### ALWAYS authenticate WebSocket connections
+
+```typescript
+// ws-auth.guard.ts
+@Injectable()
+export class WsAuthGuard implements CanActivate {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const client = context.switchToWs().getClient<Socket>();
+
+        try {
+            // Extract and verify JWT token
+            const token = this.extractToken(client);
+            const payload = await this.jwtService.verifyAsync(token);
+
+            // Attach user ID to socket
+            client.userId = payload.sub;
+
+            return true;
+        } catch (error) {
+            client.disconnect();
+            return false;
+        }
+    }
+}
+```
+
+#### Validate WebSocket message payloads
+
+```typescript
+// Use validation pipe
+@SubscribeMessage('createIsland')
+async createIsland(
+    @ConnectedSocket() client: Socket,
+    @MessageBody(WsValidatePipe) data: CreateIslandRequest, // Validated
+    @CurrentUserFromSocket() userId: string,
+) {
+    // Process validated data
+}
+```
+
+## 🎯 Performance Monitoring
+
+### Add logging for performance tracking
+
+```typescript
+@Injectable()
+export class UserService {
+    async getProfile(userId: string): Promise<UserProfile> {
+        const start = Date.now();
+
+        try {
+            const profile = await this.userReader.readProfile(userId);
+
+            const duration = Date.now() - start;
+            if (duration > 1000) {
+                this.logger.warn(
+                    `Slow query: getProfile took ${duration}ms for user ${userId}`,
+                );
+            }
+
+            return profile;
+        } catch (error) {
+            this.logger.error('Failed to get profile', error);
+            throw error;
+        }
+    }
+}
+```
+
+## 🚫 Security Anti-Patterns (FORBIDDEN)
+
+1. ❌ **NEVER** trust client input without validation
+2. ❌ **NEVER** expose sensitive data in responses
+3. ❌ **NEVER** log passwords or tokens
+4. ❌ **NEVER** use client-provided IDs for authorization
+5. ❌ **NEVER** commit secrets to repository
+6. ❌ **NEVER** disable CORS in production
+7. ❌ **NEVER** skip authentication on sensitive endpoints
+8. ❌ **NEVER** execute raw SQL with user input
+
+## 🎯 Summary - Critical Rules
+
+### Performance
+
+1. ✅ **ALWAYS** select only required fields
+2. ✅ **ALWAYS** add indexes for foreign keys
+3. ✅ **ALWAYS** use cursor-based pagination
+4. ✅ **ALWAYS** batch queries when possible
+5. ✅ **ALWAYS** cache frequently accessed data
+6. ✅ **ALWAYS** invalidate cache on updates
+7. ✅ **ALWAYS** use MessagePack for WebSocket
+8. ✅ **ALWAYS** throttle high-frequency events
+
+### Security
+
+1. ✅ **ALWAYS** use authentication guards
+2. ✅ **ALWAYS** validate user input
+3. ✅ **ALWAYS** verify resource ownership
+4. ✅ **ALWAYS** use environment variables for secrets
+5. ✅ **ALWAYS** use transactions for critical operations
+6. ✅ **ALWAYS** implement rate limiting
+7. ✅ **ALWAYS** authenticate WebSocket connections
+8. ✅ **ALWAYS** log security events
+
+9. ❌ **NEVER** trust client-provided user IDs
+10. ❌ **NEVER** log sensitive information
+11. ❌ **NEVER** commit secrets to repository
+12. ❌ **NEVER** skip input validation

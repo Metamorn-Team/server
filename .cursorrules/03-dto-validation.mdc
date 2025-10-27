@@ -1,0 +1,496 @@
+---
+globs: src/presentation/dto/**/*.ts
+description: DTO structure, validation, and API documentation standards
+---
+
+# DTO & Validation Standards
+
+## 📦 DTO Structure (MANDATORY)
+
+### File Organization
+
+```
+src/presentation/dto/{entity}/
+├── index.ts                      # Export all DTOs
+├── request/                      # Request DTOs
+│   ├── create-{entity}.request.ts
+│   ├── update-{entity}.request.ts
+│   └── {action}.request.ts
+└── response/                     # Response DTOs
+    ├── {entity}-detail.response.ts
+    ├── {entity}-list.response.ts
+    └── {action}.response.ts
+```
+
+## ✅ Request DTO Pattern (MANDATORY)
+
+### Basic Request DTO
+
+```typescript
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, Length, IsString } from 'class-validator';
+
+export class CreateUserRequest {
+    @ApiProperty({
+        description: 'User email address',
+        example: 'user@example.com',
+    })
+    @IsEmail()
+    @IsNotEmpty()
+    readonly email: string;
+
+    @ApiProperty({
+        description: 'User nickname',
+        example: 'JohnDoe',
+        minLength: 2,
+        maxLength: 20,
+    })
+    @Length(2, 20)
+    @IsString()
+    @IsNotEmpty()
+    readonly nickname: string;
+
+    @ApiProperty({
+        description: 'User tag (unique identifier)',
+        example: 'johndoe123',
+        minLength: 4,
+        maxLength: 50,
+    })
+    @Length(4, 50)
+    @IsString()
+    @IsNotEmpty()
+    readonly tag: string;
+}
+```
+
+### CRITICAL Rules for Request DTOs:
+
+1. ✅ **ALWAYS** use `readonly` for all properties
+2. ✅ **ALWAYS** add `@ApiProperty()` decorator
+3. ✅ **ALWAYS** add validation decorators
+4. ✅ **ALWAYS** provide example values
+5. ✅ **ALWAYS** specify min/max lengths for strings
+6. ✅ **NEVER** use optional properties without `@IsOptional()`
+
+### Optional Properties
+
+```typescript
+export class UpdateUserRequest {
+    @ApiProperty({
+        description: 'User bio',
+        example: 'Software developer',
+        required: false,
+        maxLength: 200,
+    })
+    @IsOptional()
+    @Length(0, 200)
+    @IsString()
+    readonly bio?: string;
+
+    @ApiProperty({
+        description: 'Avatar key',
+        example: 'avatar-123.png',
+        required: false,
+    })
+    @IsOptional()
+    @IsString()
+    readonly avatarKey?: string;
+}
+```
+
+## ✅ Response DTO Pattern (MANDATORY)
+
+### Single Item Response
+
+```typescript
+import { ApiProperty } from '@nestjs/swagger';
+
+export class UserDetailResponse {
+    @ApiProperty({
+        description: 'User ID (UUID v4)',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    })
+    readonly id: string;
+
+    @ApiProperty({
+        description: 'User email',
+        example: 'user@example.com',
+    })
+    readonly email: string;
+
+    @ApiProperty({
+        description: 'User nickname',
+        example: 'JohnDoe',
+    })
+    readonly nickname: string;
+
+    @ApiProperty({
+        description: 'User tag',
+        example: 'johndoe123',
+    })
+    readonly tag: string;
+
+    @ApiProperty({
+        description: 'OAuth provider',
+        enum: ['GOOGLE', 'KAKAO', 'NAVER'],
+        example: 'GOOGLE',
+    })
+    readonly provider: string;
+
+    @ApiProperty({
+        description: 'User avatar key',
+        example: 'avatar-123.png',
+    })
+    readonly avatarKey: string;
+
+    @ApiProperty({
+        description: 'User bio',
+        example: 'Software developer',
+        nullable: true,
+    })
+    readonly bio: string | null;
+}
+```
+
+### List Response (with Pagination)
+
+```typescript
+export class UserInfo {
+    @ApiProperty({ description: 'User ID' })
+    readonly id: string;
+
+    @ApiProperty({ description: 'User nickname' })
+    readonly nickname: string;
+
+    @ApiProperty({ description: 'User tag' })
+    readonly tag: string;
+
+    @ApiProperty({ description: 'Avatar key' })
+    readonly avatarKey: string;
+}
+
+export class UserListResponse {
+    @ApiProperty({
+        description: 'List of users',
+        type: [UserInfo],
+    })
+    readonly data: UserInfo[];
+
+    @ApiProperty({
+        description: 'Cursor for next page',
+        nullable: true,
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    })
+    readonly nextCursor: string | null;
+}
+```
+
+## 🎯 Validation Decorators (COMPREHENSIVE)
+
+### String Validation
+
+```typescript
+@IsString()              // Must be string
+@IsNotEmpty()           // Cannot be empty
+@Length(min, max)       // Length constraint
+@MinLength(min)         // Minimum length
+@MaxLength(max)         // Maximum length
+@Matches(/regex/)       // Match pattern
+@IsEmail()              // Valid email
+@IsUrl()                // Valid URL
+@IsUUID()               // Valid UUID
+```
+
+### Number Validation
+
+```typescript
+@IsNumber()             // Must be number
+@IsInt()                // Must be integer
+@Min(min)               // Minimum value
+@Max(max)               // Maximum value
+@IsPositive()           // Must be positive
+@IsNegative()           // Must be negative
+```
+
+### Boolean Validation
+
+```typescript
+@IsBoolean()            // Must be boolean
+```
+
+### Date Validation
+
+```typescript
+@IsDate()               // Must be date
+@IsDateString()         // Must be ISO date string
+```
+
+### Array Validation
+
+```typescript
+@IsArray()              // Must be array
+@ArrayMinSize(min)      // Minimum array size
+@ArrayMaxSize(max)      // Maximum array size
+@ArrayNotEmpty()        // Array cannot be empty
+```
+
+### Enum Validation
+
+```typescript
+@IsEnum(EnumType)       // Must be enum value
+```
+
+### Nested Object Validation
+
+```typescript
+@ValidateNested()       // Validate nested object
+@Type(() => NestedDto)  // Type transformation
+```
+
+### Conditional Validation
+
+```typescript
+@IsOptional()           // Property is optional
+@ValidateIf(condition)  // Conditional validation
+```
+
+## 📋 Query Parameter DTOs
+
+```typescript
+export class SearchUsersRequest {
+    @ApiProperty({
+        description: 'Search term',
+        example: 'john',
+        required: true,
+    })
+    @IsString()
+    @IsNotEmpty()
+    @MinLength(1)
+    readonly search: string;
+
+    @ApiProperty({
+        description: 'Search variant',
+        enum: ['NICKNAME', 'TAG'],
+        example: 'NICKNAME',
+    })
+    @IsEnum(['NICKNAME', 'TAG'])
+    @IsNotEmpty()
+    readonly varient: 'NICKNAME' | 'TAG';
+
+    @ApiProperty({
+        description: 'Cursor for pagination',
+        required: false,
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    })
+    @IsOptional()
+    @IsUUID()
+    readonly cursor?: string;
+
+    @ApiProperty({
+        description: 'Number of items per page',
+        example: 10,
+        default: 10,
+        minimum: 1,
+        maximum: 100,
+    })
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Max(100)
+    @Type(() => Number) // Transform string to number
+    readonly limit: number = 10;
+}
+```
+
+## 🔄 Transformation
+
+### String Transformation
+
+```typescript
+import { Transform } from 'class-transformer';
+
+export class CreateUserRequest {
+    @ApiProperty({ example: 'user@example.com' })
+    @Transform(({ value }) => value?.trim().toLowerCase())
+    @IsEmail()
+    @IsNotEmpty()
+    readonly email: string;
+
+    @ApiProperty({ example: 'JohnDoe' })
+    @Transform(({ value }) => value?.trim())
+    @Length(2, 20)
+    @IsString()
+    readonly nickname: string;
+}
+```
+
+## 🚫 DTO Anti-Patterns (FORBIDDEN)
+
+### ❌ NEVER use mutable properties
+
+```typescript
+// ❌ WRONG
+export class CreateUserRequest {
+    email: string; // Not readonly
+    nickname: string;
+}
+
+// ✅ CORRECT
+export class CreateUserRequest {
+    readonly email: string;
+    readonly nickname: string;
+}
+```
+
+### ❌ NEVER skip validation decorators
+
+```typescript
+// ❌ WRONG - No validation
+export class CreateUserRequest {
+    @ApiProperty()
+    readonly email: string; // No @IsEmail(), @IsNotEmpty()
+}
+
+// ✅ CORRECT
+export class CreateUserRequest {
+    @ApiProperty()
+    @IsEmail()
+    @IsNotEmpty()
+    readonly email: string;
+}
+```
+
+### ❌ NEVER use generic property names
+
+```typescript
+// ❌ WRONG
+export class UpdateRequest {
+    @ApiProperty()
+    readonly data: any; // Too generic
+}
+
+// ✅ CORRECT
+export class UpdateUserProfileRequest {
+    @ApiProperty()
+    @IsString()
+    readonly nickname: string;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString()
+    readonly bio?: string;
+}
+```
+
+### ❌ NEVER expose internal IDs in requests
+
+```typescript
+// ❌ WRONG - User shouldn't provide their own ID
+export class CreateUserRequest {
+    @ApiProperty()
+    readonly id: string; // Should be generated server-side
+    readonly email: string;
+}
+
+// ✅ CORRECT
+export class CreateUserRequest {
+    // No ID field - will be generated
+    readonly email: string;
+    readonly nickname: string;
+}
+```
+
+## 📚 Swagger Documentation (MANDATORY)
+
+### Controller Documentation
+
+```typescript
+@ApiTags('users')
+@LivislandController('users')
+export class UserController {
+    @ApiOperation({
+        summary: 'Get user profile',
+        description:
+            'Retrieves detailed information about a specific user by their ID',
+    })
+    @ApiParam({
+        name: 'id',
+        description: 'User ID (UUID v4)',
+        type: String,
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'User profile retrieved successfully',
+        type: UserDetailResponse,
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'User not found',
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Invalid user ID format',
+    })
+    @Get(':id')
+    async getUser(@Param('id') id: string): Promise<UserDetailResponse> {
+        // Implementation
+    }
+}
+```
+
+### Required Swagger Decorators:
+
+1. ✅ `@ApiTags()` - Group endpoints
+2. ✅ `@ApiOperation()` - Describe operation
+3. ✅ `@ApiResponse()` - Document responses (all possible status codes)
+4. ✅ `@ApiParam()` - Document path parameters
+5. ✅ `@ApiQuery()` - Document query parameters
+6. ✅ `@ApiBody()` - Document request body
+
+## 🎯 Validation Error Messages
+
+### Custom Error Messages
+
+```typescript
+export class CreateUserRequest {
+    @ApiProperty({ example: 'user@example.com' })
+    @IsEmail({}, { message: 'Please provide a valid email address' })
+    @IsNotEmpty({ message: 'Email is required' })
+    readonly email: string;
+
+    @ApiProperty({ example: 'JohnDoe' })
+    @Length(2, 20, {
+        message: 'Nickname must be between 2 and 20 characters',
+    })
+    @IsString({ message: 'Nickname must be a string' })
+    @IsNotEmpty({ message: 'Nickname is required' })
+    readonly nickname: string;
+}
+```
+
+## 📝 Index File Pattern
+
+```typescript
+// src/presentation/dto/users/index.ts
+export * from './request/create-user.request';
+export * from './request/update-user.request';
+export * from './response/user-detail.response';
+export * from './response/user-list.response';
+```
+
+## 🎯 Summary - Critical Rules
+
+1. ✅ **ALWAYS** use `readonly` for DTO properties
+2. ✅ **ALWAYS** add validation decorators
+3. ✅ **ALWAYS** add `@ApiProperty()` with examples
+4. ✅ **ALWAYS** document all response status codes
+5. ✅ **ALWAYS** validate query parameters
+6. ✅ **ALWAYS** use `@IsOptional()` for optional properties
+7. ✅ **ALWAYS** specify min/max constraints
+
+8. ❌ **NEVER** use `any` type in DTOs
+9. ❌ **NEVER** skip validation decorators
+10. ❌ **NEVER** use mutable properties
+11. ❌ **NEVER** expose internal implementation details
+12. ❌ **NEVER** use generic property names
