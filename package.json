@@ -21,7 +21,7 @@
         "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
         "test": "dotenv -e .env.test -- jest --config ./test/unit/jest.json --verbose --runInBand --verbose",
         "test:e2e": "dotenv -e .env.test -- jest --config ./test/e2e/jest-e2e.json --runInBand --verbose",
-        "docker:up": "docker compose up -d --wait && dotenv -e .env.test -- npx prisma migrate dev",
+        "docker:up": "docker compose up -d && sleep 10 && dotenv -e .env.test -- npx prisma migrate dev",
         "docker:down": "docker compose down"
     },
     "dependencies": {

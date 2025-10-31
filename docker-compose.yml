@@ -17,16 +17,6 @@ services:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: postgres
             POSTGRES_DB: mmorn
-        healthcheck:
-            test:
-                [
-                    'CMD-SHELL',
-                    'pg_isready -U postgres -h 127.0.0.1 -p 5432 -d postgres',
-                ]
-            interval: 2s
-            timeout: 10s
-            retries: 60
-            start_period: 30s
 
     redis:
         image: redis:7-alpine
