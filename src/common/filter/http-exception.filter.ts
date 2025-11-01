@@ -11,6 +11,7 @@ import { Request, Response } from 'express';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { DomainException } from 'src/domain/exceptions/exceptions';
 import { Logger } from 'winston';
+import * as Sentry from '@sentry/node';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -31,6 +32,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
         this.logging(status, requestInfo, errorBody);
 
         const { statusCode, message } = errorBody;
+        if (statusCode === 500) {
+            Sentry.captureException(exception);
+        }
+
         res.status(status).json({
             ...errorBody,
             message: statusCode === 500 ? 'Server Error' : message,

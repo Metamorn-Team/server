@@ -1,0 +1,674 @@
+---
+alwaysApply: false
+description: Step-by-step guide for implementing new features following the architecture
+---
+
+# New Feature Implementation Guide
+
+## 🎯 Overview
+
+This guide provides a systematic approach to implementing new features in the Metamorn Server codebase. Follow these steps in order to maintain architectural consistency.
+
+## 📋 Implementation Checklist
+
+When implementing a new feature, follow these steps in order:
+
+```
+☐ 1. Database Schema (Prisma)
+☐ 2. Domain Types
+☐ 3. Domain Entity
+☐ 4. Repository Interface
+☐ 5. Repository Implementation
+☐ 6. Component Module & Components (Reader/Writer/Checker)
+☐ 7. Domain Service
+☐ 8. DTOs (Request/Response)
+☐ 9. Controller/Gateway
+☐ 10. Feature Module
+☐ 11. Register in AppModule
+☐ 12. Tests
+☐ 13. Documentation
+```
+
+## 🔨 Step-by-Step Implementation
+
+### Step 1: Database Schema (Prisma)
+
+**File**: `prisma/schema.prisma`
+
+```prisma
+model MapPrivateZone {
+  id          String   @id @db.Uuid
+  mapId       String   @map("map_id") @db.Uuid
+  name        String   @db.VarChar(50)
+  description String?  @db.VarChar(200)
+  x           Int      @db.SmallInt
+  y           Int      @db.SmallInt
+  width       Int      @db.SmallInt
+  height      Int      @db.SmallInt
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @map("created_at")
+  updatedAt   DateTime @map("updated_at")
+
+  map Map @relation(fields: [mapId], references: [id])
+
+  @@index([mapId])
+  @@map("map_private_zone")
+}
+
+// Update related model
+model Map {
+  // ... existing fields
+  privateZones MapPrivateZone[]
+
+  @@map("map")
+}
+```
+
+**Run Migration:**
+
+```bash
+npx prisma migrate dev --name add_map_private_zone
+```
+
+### Step 2: Domain Types
+
+**File**: `src/domain/types/map-private-zone.types.ts`
+
+```typescript
+export interface MapPrivateZoneInfo {
+    id: string;
+    mapId: string;
+    name: string;
+    description: string | null;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    isActive: boolean;
+}
+
+export interface CreateMapPrivateZoneData {
+    mapId: string;
+    name: string;
+    description?: string | null;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+export interface PaginatedMapPrivateZones {
+    data: MapPrivateZoneInfo[];
+    nextCursor: string | null;
+}
+```
+
+### Step 3: Domain Entity
+
+**File**: `src/domain/entities/map-private-zone/map-private-zone.entity.ts`
+
+```typescript
+export class MapPrivateZoneEntity {
+    constructor(
+        readonly id: string,
+        readonly mapId: string,
+        readonly name: string,
+        readonly description: string | null,
+        readonly x: number,
+        readonly y: number,
+        readonly width: number,
+        readonly height: number,
+        readonly isActive: boolean,
+        readonly createdAt: Date,
+        readonly updatedAt: Date,
+    ) {}
+
+    static create(
+        input: CreateMapPrivateZoneData,
+        idGen: () => string,
+        stdDate = new Date(),
+    ): MapPrivateZoneEntity {
+        return new MapPrivateZoneEntity(
+            idGen(),
+            input.mapId,
+            input.name,
+            input.description ?? null,
+            input.x,
+            input.y,
+            input.width,
+            input.height,
+            true, // isActive default
+            stdDate,
+            stdDate,
+        );
+    }
+}
+```
+
+### Step 4: Repository Interface
+
+**File**: `src/domain/interface/map-private-zone.repository.ts`
+
+```typescript
+import { MapPrivateZoneEntity } from 'src/domain/entities/map-private-zone/map-private-zone.entity';
+import { MapPrivateZoneInfo } from 'src/domain/types/map-private-zone.types';
+
+export interface MapPrivateZoneRepository {
+    save(data: MapPrivateZoneEntity): Promise<void>;
+    findOneById(id: string): Promise<MapPrivateZoneInfo | null>;
+    findByMapId(mapId: string): Promise<MapPrivateZoneInfo[]>;
+    update(id: string, data: Partial<MapPrivateZoneEntity>): Promise<void>;
+    softDelete(id: string): Promise<void>;
+}
+
+export const MapPrivateZoneRepository = Symbol('MapPrivateZoneRepository');
+```
+
+### Step 5: Repository Implementation
+
+**File**: `src/infrastructure/repositories/map-private-zone-prisma.repository.ts`
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { MapPrivateZoneRepository } from 'src/domain/interface/map-private-zone.repository';
+import { MapPrivateZoneEntity } from 'src/domain/entities/map-private-zone/map-private-zone.entity';
+import { MapPrivateZoneInfo } from 'src/domain/types/map-private-zone.types';
+
+@Injectable()
+export class MapPrivateZonePrismaRepository
+    implements MapPrivateZoneRepository
+{
+    constructor(
+        private readonly txHost: TransactionHost<TransactionalAdapterPrisma>,
+    ) {}
+
+    async save(data: MapPrivateZoneEntity): Promise<void> {
+        await this.txHost.tx.mapPrivateZone.create({
+            data: {
+                id: data.id,
+                mapId: data.mapId,
+                name: data.name,
+                description: data.description,
+                x: data.x,
+                y: data.y,
+                width: data.width,
+                height: data.height,
+                isActive: data.isActive,
+                createdAt: data.createdAt,
+                updatedAt: data.updatedAt,
+            },
+        });
+    }
+
+    async findOneById(id: string): Promise<MapPrivateZoneInfo | null> {
+        return await this.txHost.tx.mapPrivateZone.findUnique({
+            select: {
+                id: true,
+                mapId: true,
+                name: true,
+                description: true,
+                x: true,
+                y: true,
+                width: true,
+                height: true,
+                isActive: true,
+            },
+            where: { id },
+        });
+    }
+
+    async findByMapId(mapId: string): Promise<MapPrivateZoneInfo[]> {
+        return await this.txHost.tx.mapPrivateZone.findMany({
+            select: {
+                id: true,
+                mapId: true,
+                name: true,
+                description: true,
+                x: true,
+                y: true,
+                width: true,
+                height: true,
+                isActive: true,
+            },
+            where: { mapId, isActive: true },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
+    async update(
+        id: string,
+        data: Partial<MapPrivateZoneEntity>,
+    ): Promise<void> {
+        await this.txHost.tx.mapPrivateZone.update({
+            where: { id },
+            data: {
+                ...data,
+                updatedAt: new Date(),
+            },
+        });
+    }
+
+    async softDelete(id: string): Promise<void> {
+        await this.txHost.tx.mapPrivateZone.update({
+            where: { id },
+            data: {
+                isActive: false,
+                updatedAt: new Date(),
+            },
+        });
+    }
+}
+```
+
+### Step 6: Components
+
+**File**: `src/domain/components/map-private-zone/map-private-zone-reader.ts`
+
+```typescript
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { MapPrivateZoneRepository } from 'src/domain/interface/map-private-zone.repository';
+import { MapPrivateZoneInfo } from 'src/domain/types/map-private-zone.types';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+import { DomainExceptionType } from 'src/domain/exceptions/enum/domain-exception-type';
+
+@Injectable()
+export class MapPrivateZoneReader {
+    constructor(
+        @Inject(MapPrivateZoneRepository)
+        private readonly repository: MapPrivateZoneRepository,
+    ) {}
+
+    async readById(id: string): Promise<MapPrivateZoneInfo> {
+        const zone = await this.repository.findOneById(id);
+
+        if (!zone) {
+            throw new DomainException(
+                DomainExceptionType.NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                'Private zone not found',
+            );
+        }
+
+        return zone;
+    }
+
+    async getZonesByMapId(mapId: string): Promise<MapPrivateZoneInfo[]> {
+        return await this.repository.findByMapId(mapId);
+    }
+}
+```
+
+**File**: `src/domain/components/map-private-zone/map-private-zone-writer.ts`
+
+```typescript
+import { Inject, Injectable } from '@nestjs/common';
+import { MapPrivateZoneRepository } from 'src/domain/interface/map-private-zone.repository';
+import { MapPrivateZoneEntity } from 'src/domain/entities/map-private-zone/map-private-zone.entity';
+
+@Injectable()
+export class MapPrivateZoneWriter {
+    constructor(
+        @Inject(MapPrivateZoneRepository)
+        private readonly repository: MapPrivateZoneRepository,
+    ) {}
+
+    async create(entity: MapPrivateZoneEntity): Promise<void> {
+        await this.repository.save(entity);
+    }
+
+    async update(
+        id: string,
+        data: Partial<MapPrivateZoneEntity>,
+    ): Promise<void> {
+        await this.repository.update(id, data);
+    }
+
+    async delete(id: string): Promise<void> {
+        await this.repository.softDelete(id);
+    }
+}
+```
+
+**File**: `src/modules/map-private-zone/map-private-zone-component.module.ts`
+
+```typescript
+import { Module } from '@nestjs/common';
+import { MapPrivateZoneReader } from 'src/domain/components/map-private-zone/map-private-zone-reader';
+import { MapPrivateZoneWriter } from 'src/domain/components/map-private-zone/map-private-zone-writer';
+import { MapPrivateZoneRepository } from 'src/domain/interface/map-private-zone.repository';
+import { MapPrivateZonePrismaRepository } from 'src/infrastructure/repositories/map-private-zone-prisma.repository';
+
+@Module({
+    providers: [
+        MapPrivateZoneReader,
+        MapPrivateZoneWriter,
+        {
+            provide: MapPrivateZoneRepository,
+            useClass: MapPrivateZonePrismaRepository,
+        },
+    ],
+    exports: [MapPrivateZoneReader, MapPrivateZoneWriter],
+})
+export class MapPrivateZoneComponentModule {}
+```
+
+### Step 7: Domain Service
+
+**File**: `src/domain/services/map-private-zone/map-private-zone.service.ts`
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
+import { MapPrivateZoneReader } from 'src/domain/components/map-private-zone/map-private-zone-reader';
+import { MapPrivateZoneWriter } from 'src/domain/components/map-private-zone/map-private-zone-writer';
+import { MapReader } from 'src/domain/components/map/map-reader';
+import { MapPrivateZoneEntity } from 'src/domain/entities/map-private-zone/map-private-zone.entity';
+import { CreateMapPrivateZoneData } from 'src/domain/types/map-private-zone.types';
+import { v4 as uuidv4 } from 'uuid';
+
+@Injectable()
+export class MapPrivateZoneService {
+    constructor(
+        private readonly zoneReader: MapPrivateZoneReader,
+        private readonly zoneWriter: MapPrivateZoneWriter,
+        private readonly mapReader: MapReader,
+    ) {}
+
+    @Transactional()
+    async createPrivateZone(data: CreateMapPrivateZoneData): Promise<string> {
+        // Validate map exists
+        await this.mapReader.readById(data.mapId);
+
+        // Create entity
+        const entity = MapPrivateZoneEntity.create(data, uuidv4);
+
+        // Save to database
+        await this.zoneWriter.create(entity);
+
+        return entity.id;
+    }
+
+    async getZoneById(id: string) {
+        return await this.zoneReader.readById(id);
+    }
+
+    async getZonesByMapId(mapId: string) {
+        return await this.zoneReader.getZonesByMapId(mapId);
+    }
+
+    @Transactional()
+    async updateZone(
+        id: string,
+        data: Partial<CreateMapPrivateZoneData>,
+    ): Promise<void> {
+        // Verify zone exists
+        await this.zoneReader.readById(id);
+
+        // Update
+        await this.zoneWriter.update(id, data);
+    }
+
+    @Transactional()
+    async deleteZone(id: string): Promise<void> {
+        // Verify zone exists
+        await this.zoneReader.readById(id);
+
+        // Soft delete
+        await this.zoneWriter.delete(id);
+    }
+}
+```
+
+### Step 8: DTOs
+
+**File**: `src/presentation/dto/map-private-zone/request/create-zone.request.ts`
+
+```typescript
+import { ApiProperty } from '@nestjs/swagger';
+import {
+    IsString,
+    IsNotEmpty,
+    IsInt,
+    Min,
+    IsOptional,
+    MaxLength,
+} from 'class-validator';
+
+export class CreateMapPrivateZoneRequest {
+    @ApiProperty({
+        description: 'Map ID',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    })
+    @IsString()
+    @IsNotEmpty()
+    readonly mapId: string;
+
+    @ApiProperty({
+        description: 'Zone name',
+        example: 'VIP Area',
+        maxLength: 50,
+    })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(50)
+    readonly name: string;
+
+    @ApiProperty({
+        description: 'Zone description',
+        example: 'Private area for VIP members',
+        required: false,
+        maxLength: 200,
+    })
+    @IsOptional()
+    @IsString()
+    @MaxLength(200)
+    readonly description?: string;
+
+    @ApiProperty({
+        description: 'X coordinate',
+        example: 100,
+    })
+    @IsInt()
+    @Min(0)
+    readonly x: number;
+
+    @ApiProperty({
+        description: 'Y coordinate',
+        example: 200,
+    })
+    @IsInt()
+    @Min(0)
+    readonly y: number;
+
+    @ApiProperty({
+        description: 'Zone width',
+        example: 50,
+    })
+    @IsInt()
+    @Min(1)
+    readonly width: number;
+
+    @ApiProperty({
+        description: 'Zone height',
+        example: 50,
+    })
+    @IsInt()
+    @Min(1)
+    readonly height: number;
+}
+```
+
+**File**: `src/presentation/dto/map-private-zone/response/zone-detail.response.ts`
+
+```typescript
+import { ApiProperty } from '@nestjs/swagger';
+
+export class MapPrivateZoneDetailResponse {
+    @ApiProperty({ description: 'Zone ID' })
+    readonly id: string;
+
+    @ApiProperty({ description: 'Map ID' })
+    readonly mapId: string;
+
+    @ApiProperty({ description: 'Zone name' })
+    readonly name: string;
+
+    @ApiProperty({ description: 'Zone description', nullable: true })
+    readonly description: string | null;
+
+    @ApiProperty({ description: 'X coordinate' })
+    readonly x: number;
+
+    @ApiProperty({ description: 'Y coordinate' })
+    readonly y: number;
+
+    @ApiProperty({ description: 'Zone width' })
+    readonly width: number;
+
+    @ApiProperty({ description: 'Zone height' })
+    readonly height: number;
+
+    @ApiProperty({ description: 'Whether zone is active' })
+    readonly isActive: boolean;
+}
+```
+
+### Step 9: Controller
+
+**File**: `src/presentation/controller/map-private-zone/map-private-zone.controller.ts`
+
+```typescript
+import {
+    Body,
+    Get,
+    Post,
+    Patch,
+    Delete,
+    Param,
+    HttpCode,
+    HttpStatus,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { LivislandController } from 'src/common/decorator/livisland-controller.decorator';
+import { MapPrivateZoneService } from 'src/domain/services/map-private-zone/map-private-zone.service';
+import { CreateMapPrivateZoneRequest } from 'src/presentation/dto/map-private-zone/request/create-zone.request';
+import { MapPrivateZoneDetailResponse } from 'src/presentation/dto/map-private-zone/response/zone-detail.response';
+
+@ApiTags('map-private-zones')
+@LivislandController('map-private-zones')
+export class MapPrivateZoneController {
+    constructor(private readonly service: MapPrivateZoneService) {}
+
+    @ApiOperation({ summary: 'Create private zone' })
+    @ApiResponse({ status: 201, description: 'Zone created' })
+    @Post()
+    async createZone(
+        @Body() dto: CreateMapPrivateZoneRequest,
+    ): Promise<{ id: string }> {
+        const id = await this.service.createPrivateZone(dto);
+        return { id };
+    }
+
+    @ApiOperation({ summary: 'Get zone by ID' })
+    @ApiResponse({ status: 200, type: MapPrivateZoneDetailResponse })
+    @Get(':id')
+    async getZone(
+        @Param('id') id: string,
+    ): Promise<MapPrivateZoneDetailResponse> {
+        return await this.service.getZoneById(id);
+    }
+
+    @ApiOperation({ summary: 'Delete zone' })
+    @ApiResponse({ status: 204, description: 'Zone deleted' })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Delete(':id')
+    async deleteZone(@Param('id') id: string): Promise<void> {
+        await this.service.deleteZone(id);
+    }
+}
+```
+
+### Step 10: Feature Module
+
+**File**: `src/modules/map-private-zone/map-private-zone.module.ts`
+
+```typescript
+import { Module } from '@nestjs/common';
+import { MapPrivateZoneController } from 'src/presentation/controller/map-private-zone/map-private-zone.controller';
+import { MapPrivateZoneService } from 'src/domain/services/map-private-zone/map-private-zone.service';
+import { MapPrivateZoneComponentModule } from './map-private-zone-component.module';
+import { MapComponentModule } from '../map/map-component.module';
+
+@Module({
+    imports: [
+        MapPrivateZoneComponentModule,
+        MapComponentModule, // For MapReader dependency
+    ],
+    controllers: [MapPrivateZoneController],
+    providers: [MapPrivateZoneService],
+    exports: [MapPrivateZoneService],
+})
+export class MapPrivateZoneModule {}
+```
+
+### Step 11: Register in AppModule
+
+**File**: `src/app.module.ts`
+
+```typescript
+import { MapPrivateZoneModule } from 'src/modules/map-private-zone/map-private-zone.module';
+
+@Module({
+    imports: [
+        // ... existing modules
+        MapPrivateZoneModule, // Add new module
+    ],
+})
+export class AppModule {}
+```
+
+### Step 12: Tests
+
+**Unit Test File**: `test/unit/services/map-private-zone.service.spec.ts`
+**E2E Test File**: `test/e2e/map-private-zone.e2e-spec.ts`
+
+(Refer to 05-testing.mdc for test patterns)
+
+### Step 13: Documentation
+
+Update relevant documentation:
+
+- API documentation (Swagger - automatic)
+- README if needed
+- ARCHITECTURE.md if architecture changes
+
+## 🎯 Summary Checklist
+
+Before considering a feature complete, verify:
+
+- [ ] Database schema created and migrated
+- [ ] Types, Entity, Repository interface, and implementation created
+- [ ] Components (Reader/Writer) implemented
+- [ ] Service implemented with business logic
+- [ ] DTOs created and validated
+- [ ] Controller/Gateway created
+- [ ] All modules registered
+- [ ] Unit tests written
+- [ ] E2E tests written
+- [ ] All tests passing
+- [ ] No linter errors
+- [ ] Swagger documentation complete
+- [ ] Code reviewed
+
+## 🚫 Common Mistakes to Avoid
+
+1. ❌ Skipping Component layer and calling Repository from Service
+2. ❌ Not creating proper interfaces for Repository
+3. ❌ Forgetting to add validation decorators to DTOs
+4. ❌ Not handling exceptions properly
+5. ❌ Forgetting to register modules in AppModule
+6. ❌ Not writing tests
+7. ❌ Not updating timestamps in Repository
+8. ❌ Mixing responsibilities in Components

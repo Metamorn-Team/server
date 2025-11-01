@@ -1,0 +1,271 @@
+---
+alwaysApply: true
+description: Core architecture patterns and layer responsibilities for the Metamorn Server project
+---
+
+# Metamorn Server Architecture Rules
+
+## 🏗️ MANDATORY: 4-Layer Architecture
+
+**CRITICAL**: This project follows a strict 4-layer architecture. NEVER violate layer boundaries.
+
+```
+Controller → Service → Component → Repository
+```
+
+### Layer Responsibilities (MUST FOLLOW)
+
+#### 1. Controller Layer (`src/presentation/controller/`)
+
+**ALLOWED:**
+
+- Handle HTTP requests/responses
+- Validate request parameters
+- Call Service layer methods
+- Transform response data
+- Swagger documentation
+
+**FORBIDDEN:**
+
+- ❌ Direct Repository access
+- ❌ Direct Component access (except Reader components in specific cases)
+- ❌ Business logic implementation
+- ❌ Database queries
+- ❌ Transaction management
+
+#### 2. Service Layer (`src/domain/services/`)
+
+**ALLOWED:**
+
+- Compose multiple Components
+- Implement complex business logic
+- Define transaction boundaries
+- Validate domain rules
+- Orchestrate workflows
+
+**FORBIDDEN:**
+
+- ❌ Direct Repository access (use Components instead)
+- ❌ HTTP-specific logic
+- ❌ Direct database queries
+- ❌ Presentation concerns
+
+#### 3. Component Layer (`src/domain/components/`)
+
+**MANDATORY PATTERN: Reader/Writer/Checker/Manager**
+
+**Reader Components:**
+
+- ONLY data retrieval operations
+- Throw DomainException when data not found
+- Return domain types
+
+**Writer Components:**
+
+- ONLY data creation/modification operations
+- Accept domain entities or primitives
+- Return void or simple confirmation
+
+**Checker Components:**
+
+- ONLY validation and existence checks
+- Return boolean or throw exceptions
+
+**Manager Components:**
+
+- Complex domain logic coordination
+- Game state management
+- Business rule enforcement
+
+**FORBIDDEN:**
+
+- ❌ Mixing read and write operations in single component
+- ❌ HTTP-specific logic
+- ❌ Direct transaction management (use TransactionHost)
+
+#### 4. Repository Layer (`src/infrastructure/repositories/`)
+
+**ALLOWED:**
+
+- Database operations via Prisma
+- Query optimization
+- Data mapping
+
+**FORBIDDEN:**
+
+- ❌ Business logic
+- ❌ Domain validation
+- ❌ Throwing domain exceptions (return null instead)
+
+## 🚫 CRITICAL DON'Ts
+
+### ❌ NEVER violate dependency direction:
+
+```typescript
+// ❌ WRONG - Controller calling Repository directly
+@Injectable()
+export class UserController {
+    constructor(private userRepository: UserRepository) {} // FORBIDDEN
+}
+
+// ✅ CORRECT - Controller calling Service
+@Injectable()
+export class UserController {
+    constructor(private userService: UserService) {} // CORRECT
+}
+```
+
+### ❌ NEVER mix responsibilities in Components:
+
+```typescript
+// ❌ WRONG - Reader doing write operations
+@Injectable()
+export class UserReader {
+    async updateUser(id: string, data: any) {} // FORBIDDEN in Reader
+}
+
+// ✅ CORRECT - Separate Reader and Writer
+@Injectable()
+export class UserReader {
+    async getUser(id: string) {} // CORRECT
+}
+
+@Injectable()
+export class UserWriter {
+    async updateUser(id: string, data: any) {} // CORRECT
+}
+```
+
+### ❌ NEVER access same-layer dependencies:
+
+```typescript
+// ❌ WRONG - Service calling another Service
+@Injectable()
+export class UserService {
+    constructor(private friendService: FriendService) {} // AVOID (use Components)
+}
+
+// ✅ CORRECT - Service using Components
+@Injectable()
+export class UserService {
+    constructor(
+        private userReader: UserReader,
+        private friendReader: FriendReader,
+    ) {} // CORRECT
+}
+```
+
+## ✅ MANDATORY Patterns
+
+### 1. Repository Pattern with Interface
+
+```typescript
+// STEP 1: Define interface in domain/interface/
+export interface UserRepository {
+    save(data: UserEntity): Promise<void>;
+    findOneById(id: string): Promise<UserInfo | null>;
+}
+export const UserRepository = Symbol('UserRepository');
+
+// STEP 2: Implement in infrastructure/repositories/
+@Injectable()
+export class UserPrismaRepository implements UserRepository {
+    // implementation
+}
+
+// STEP 3: Provide in Component Module
+@Module({
+    providers: [
+        { provide: UserRepository, useClass: UserPrismaRepository }
+    ]
+})
+```
+
+### 2. Entity Pattern
+
+```typescript
+// MUST use static factory method
+export class UserEntity {
+    constructor(
+        readonly id: string,
+        readonly email: string,
+        // ... other fields
+    ) {}
+
+    static create(
+        input: UserPrototype,
+        idGen: () => string,
+        stdDate = new Date(),
+    ): UserEntity {
+        return new UserEntity(
+            idGen(),
+            input.email,
+            // ...
+        );
+    }
+}
+```
+
+### 3. Exception Handling
+
+```typescript
+// MUST use DomainException for business errors
+throw new DomainException(
+    DomainExceptionType.USER_NOT_FOUND,
+    HttpStatus.NOT_FOUND,
+    USER_NOT_FOUND_MESSAGE,
+);
+
+// NEVER throw generic Error in domain layer
+throw new Error('User not found'); // ❌ FORBIDDEN
+```
+
+## 📦 Module Organization
+
+### MUST follow this structure:
+
+```
+src/modules/{feature}/
+├── {feature}.module.ts           # Main module (imports Component Module)
+└── {feature}-component.module.ts # Component module (provides Reader/Writer)
+```
+
+### Module Dependency Rules:
+
+- Feature Modules import Component Modules ONLY
+- Component Modules provide Reader/Writer/Checker
+- NEVER import other Feature Modules (use their Component Modules)
+
+## 🔄 Data Flow (MANDATORY)
+
+```
+Client Request
+    ↓
+Controller (validate, extract userId)
+    ↓
+Service (business logic, compose components)
+    ↓
+Component (Reader/Writer - single responsibility)
+    ↓
+Repository (data access)
+    ↓
+Database
+```
+
+## 🎯 Key Principles
+
+1. **Single Responsibility**: Each component does ONE thing
+2. **Dependency Inversion**: Depend on abstractions (interfaces)
+3. **Interface Segregation**: Small, focused interfaces
+4. **Don't Repeat Yourself**: Reuse Components across Services
+5. **Separation of Concerns**: Clear layer boundaries
+
+## ⚠️ Common Mistakes to AVOID
+
+1. ❌ Skipping Component layer and calling Repository from Service
+2. ❌ Putting business logic in Controllers
+3. ❌ Mixing read/write in same Component
+4. ❌ Not using transactions for multi-step operations
+5. ❌ Throwing exceptions from Repository (return null instead)
+6. ❌ Accessing HTTP request in Service/Component layers
+7. ❌ Creating circular dependencies between modules
