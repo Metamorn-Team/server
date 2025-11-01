@@ -1,0 +1,564 @@
+---
+globs: prisma/schema.prisma,src/infrastructure/repositories/**/*.ts
+description: Prisma schema design and repository implementation patterns
+---
+
+# Database & Prisma Standards
+
+## 📊 Prisma Schema Design (MANDATORY)
+
+### Model Naming Conventions
+
+```prisma
+// ✅ CORRECT - Singular PascalCase for model name
+model User {
+  id        String   @id @db.Uuid
+  email     String   @db.VarChar(255)
+  nickname  String
+  createdAt DateTime @map("created_at")
+
+  @@map("user") // Table name in snake_case
+}
+
+// ❌ WRONG - Plural or wrong case
+model users { } // FORBIDDEN
+model user { }  // FORBIDDEN (use PascalCase)
+```
+
+### Field Naming (MANDATORY)
+
+```prisma
+model User {
+  // ✅ CORRECT - camelCase for fields
+  id        String   @id @db.Uuid
+  firstName String   @map("first_name")
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // Map to snake_case in database
+  @@map("user")
+}
+```
+
+### Required Fields
+
+```prisma
+model User {
+  // Primary key (MANDATORY)
+  id        String   @id @db.Uuid
+
+  // Timestamps (MANDATORY for most entities)
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+
+  // Soft delete (RECOMMENDED)
+  deletedAt DateTime? @map("deleted_at")
+
+  // Business fields
+  email     String
+  nickname  String
+}
+```
+
+### Relationships
+
+```prisma
+// One-to-Many
+model User {
+  id       String  @id @db.Uuid
+  islands  Island[]
+
+  @@map("user")
+}
+
+model Island {
+  id      String  @id @db.Uuid
+  ownerId String  @map("owner_id") @db.Uuid
+
+  owner   User    @relation(fields: [ownerId], references: [id])
+
+  @@index([ownerId]) // MANDATORY: Index foreign keys
+  @@map("island")
+}
+
+// Many-to-Many
+model Island {
+  id         String      @id @db.Uuid
+  islandTags IslandTag[]
+
+  @@map("island")
+}
+
+model Tag {
+  id         String      @id @db.Uuid
+  islandTags IslandTag[]
+
+  @@map("tag")
+}
+
+model IslandTag {
+  islandId String @db.Uuid
+  tagId    String @db.Uuid
+
+  island   Island @relation(fields: [islandId], references: [id])
+  tag      Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([islandId, tagId]) // Composite primary key
+  @@index([tagId])        // Index for reverse lookup
+  @@map("island_tag")
+}
+```
+
+### Enums
+
+```prisma
+enum OAuthProvider {
+  GOOGLE
+  KAKAO
+  NAVER
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id       String        @id @db.Uuid
+  provider OAuthProvider
+
+  @@map("user")
+}
+```
+
+### Indexes (CRITICAL)
+
+```prisma
+model User {
+  id       String    @id @db.Uuid
+  email    String    @db.VarChar(255)
+  tag      String
+  nickname String
+  deletedAt DateTime? @map("deleted_at")
+
+  // MANDATORY: Unique constraints with deletedAt for soft delete
+  @@unique([email, deletedAt])
+  @@unique([tag, deletedAt])
+
+  // MANDATORY: Indexes for frequent queries
+  @@index([nickname, id])
+  @@index([tag, id])
+
+  @@map("user")
+}
+
+model Island {
+  id      String @id @db.Uuid
+  ownerId String @map("owner_id") @db.Uuid
+  mapId   String @map("map_id") @db.Uuid
+
+  owner   User   @relation(fields: [ownerId], references: [id])
+  map     Map    @relation(fields: [mapId], references: [id])
+
+  // MANDATORY: Index all foreign keys
+  @@index([ownerId])
+  @@index([mapId])
+
+  @@map("island")
+}
+```
+
+### Data Types (MANDATORY SPECIFICATIONS)
+
+```prisma
+model Example {
+  // UUIDs
+  id           String    @id @db.Uuid
+
+  // Strings with limits
+  email        String    @db.VarChar(255)
+  nickname     String    @db.VarChar(50)
+  description  String?   @db.VarChar(200)
+  longText     String    @db.VarChar // Unlimited varchar
+
+  // Numbers
+  count        Int                      // 32-bit integer
+  smallCount   Int       @db.SmallInt   // 16-bit integer
+  price        Int                      // For money (in cents)
+  percentage   Float                    // Decimal numbers
+
+  // Booleans
+  isActive     Boolean   @default(true)
+
+  // Dates
+  createdAt    DateTime
+  deletedAt    DateTime?
+
+  // Arrays
+  tags         String[]  @default([])
+  referenceIds String[]  @db.Uuid
+
+  @@map("example")
+}
+```
+
+## 🏗️ Repository Implementation (MANDATORY PATTERNS)
+
+### Repository Interface
+
+```typescript
+// src/domain/interface/user.repository.ts
+import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { UserInfo } from 'src/domain/types/user.types';
+
+export interface UserRepository {
+    // Create
+    save(data: UserEntity): Promise<void>;
+
+    // Read
+    findOneById(id: string): Promise<UserInfo | null>;
+    findOneByEmail(email: string): Promise<UserInfo | null>;
+
+    // Update
+    update(id: string, data: Partial<UserEntity>): Promise<void>;
+    increaseGold(id: string, amount: number): Promise<void>;
+
+    // Delete (soft delete in implementation)
+    // No delete method - use update with deletedAt
+}
+
+// MANDATORY: Export as Symbol for DI
+export const UserRepository = Symbol('UserRepository');
+```
+
+### Repository Implementation
+
+```typescript
+// src/infrastructure/repositories/user-prisma.repository.ts
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { UserRepository } from 'src/domain/interface/user.repository';
+import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { UserInfo } from 'src/domain/types/user.types';
+
+@Injectable()
+export class UserPrismaRepository implements UserRepository {
+    constructor(
+        private readonly txHost: TransactionHost<TransactionalAdapterPrisma>,
+    ) {}
+
+    async save(data: UserEntity): Promise<void> {
+        await this.txHost.tx.user.create({
+            data: {
+                id: data.id,
+                email: data.email,
+                nickname: data.nickname,
+                tag: data.tag,
+                provider: data.provider,
+                avatarKey: data.avatarKey,
+                createdAt: data.createdAt,
+                updatedAt: data.updatedAt,
+                bio: data.bio,
+                gold: data.gold,
+            },
+        });
+    }
+
+    async findOneById(id: string): Promise<UserInfo | null> {
+        return await this.txHost.tx.user.findUnique({
+            select: {
+                id: true,
+                email: true,
+                nickname: true,
+                tag: true,
+                provider: true,
+                avatarKey: true,
+                bio: true,
+            },
+            where: {
+                id,
+                deletedAt: null, // CRITICAL: Always exclude soft-deleted
+            },
+        });
+    }
+
+    async findOneByEmail(email: string): Promise<UserInfo | null> {
+        return await this.txHost.tx.user.findFirst({
+            select: {
+                id: true,
+                email: true,
+                nickname: true,
+                tag: true,
+                provider: true,
+                avatarKey: true,
+                bio: true,
+            },
+            where: {
+                email,
+                deletedAt: null, // CRITICAL: Always exclude soft-deleted
+            },
+        });
+    }
+
+    async update(id: string, data: Partial<UserEntity>): Promise<void> {
+        await this.txHost.tx.user.update({
+            where: { id },
+            data: {
+                ...data,
+                updatedAt: new Date(), // MANDATORY: Update timestamp
+            },
+        });
+    }
+
+    async increaseGold(id: string, amount: number): Promise<void> {
+        await this.txHost.tx.user.update({
+            where: { id },
+            data: {
+                gold: { increment: amount },
+                updatedAt: new Date(),
+            },
+        });
+    }
+}
+```
+
+## 🎯 Query Patterns (BEST PRACTICES)
+
+### Select Only Required Fields
+
+```typescript
+// ✅ CORRECT - Select specific fields
+async findOneById(id: string): Promise<UserInfo | null> {
+    return await this.txHost.tx.user.findUnique({
+        select: {
+            id: true,
+            email: true,
+            nickname: true,
+            tag: true,
+        },
+        where: { id, deletedAt: null },
+    });
+}
+
+// ❌ WRONG - Selecting all fields
+async findOneById(id: string): Promise<User | null> {
+    return await this.txHost.tx.user.findUnique({
+        where: { id },
+    });
+}
+```
+
+### Pagination (Cursor-Based)
+
+```typescript
+async findStartWithNickname(
+    currentUserId: string,
+    nickname: string,
+    limit: number,
+    cursor?: string,
+): Promise<PaginatedUsers> {
+    const cursorOption = cursor ? { id: cursor } : undefined;
+
+    const data = await this.txHost.tx.user.findMany({
+        select: {
+            id: true,
+            email: true,
+            nickname: true,
+            tag: true,
+            avatarKey: true,
+            bio: true,
+        },
+        where: {
+            id: { not: currentUserId },
+            nickname: { startsWith: nickname },
+            deletedAt: null,
+        },
+        orderBy: { nickname: 'asc' },
+        take: limit + 1, // Get one extra to determine if there's a next page
+        ...(cursorOption && {
+            cursor: cursorOption,
+            skip: 1 // Skip the cursor item
+        }),
+    });
+
+    const hasNextPage = data.length > limit;
+    const items = hasNextPage ? data.slice(0, limit) : data;
+    const nextCursor = hasNextPage ? items[items.length - 1].id : null;
+
+    return {
+        data: items,
+        nextCursor,
+    };
+}
+```
+
+### Transactions (FOR UPDATES)
+
+```typescript
+// CRITICAL: Use TransactionHost for all operations
+async updateUserAndCreateTransaction(
+    userId: string,
+    amount: number,
+): Promise<void> {
+    // All operations use this.txHost.tx
+    // Transaction is managed by @Transactional decorator in service layer
+
+    await this.txHost.tx.user.update({
+        where: { id: userId },
+        data: { gold: { increment: amount } },
+    });
+
+    await this.txHost.tx.goldTransaction.create({
+        data: {
+            id: generateId(),
+            userId,
+            amount,
+            processedAt: new Date(),
+        },
+    });
+}
+```
+
+### Locking for Updates
+
+```typescript
+// For financial operations, use SELECT FOR UPDATE
+async findUserGoldByIdForUpdate(id: string): Promise<{ gold: number } | null> {
+    return await this.txHost.tx.user.findUnique({
+        select: { gold: true },
+        where: { id },
+        // Kysely extension for SELECT FOR UPDATE
+    });
+}
+```
+
+## 🚫 Repository Anti-Patterns (FORBIDDEN)
+
+### ❌ NEVER throw exceptions from Repository
+
+```typescript
+// ❌ WRONG - Repository throwing domain exception
+async findOneById(id: string): Promise<UserInfo> {
+    const user = await this.txHost.tx.user.findUnique({
+        where: { id },
+    });
+
+    if (!user) {
+        throw new DomainException(...); // FORBIDDEN in Repository
+    }
+
+    return user;
+}
+
+// ✅ CORRECT - Return null, let Component handle it
+async findOneById(id: string): Promise<UserInfo | null> {
+    return await this.txHost.tx.user.findUnique({
+        where: { id, deletedAt: null },
+    });
+}
+```
+
+### ❌ NEVER forget soft delete filter
+
+```typescript
+// ❌ WRONG - Not filtering soft-deleted records
+async findOneById(id: string): Promise<UserInfo | null> {
+    return await this.txHost.tx.user.findUnique({
+        where: { id },
+    });
+}
+
+// ✅ CORRECT - Always filter deletedAt
+async findOneById(id: string): Promise<UserInfo | null> {
+    return await this.txHost.tx.user.findUnique({
+        where: { id, deletedAt: null },
+    });
+}
+```
+
+### ❌ NEVER use raw SQL without Kysely types
+
+```typescript
+// ❌ WRONG - Raw SQL without types
+await this.txHost.tx.$executeRaw`
+    SELECT * FROM users WHERE id = ${id}
+`;
+
+// ✅ CORRECT - Use Prisma queries or Kysely with types
+await this.txHost.tx.user.findUnique({
+    where: { id },
+});
+```
+
+### ❌ NEVER update without updatedAt
+
+```typescript
+// ❌ WRONG
+await this.txHost.tx.user.update({
+    where: { id },
+    data: { nickname },
+});
+
+// ✅ CORRECT
+await this.txHost.tx.user.update({
+    where: { id },
+    data: {
+        nickname,
+        updatedAt: new Date(), // MANDATORY
+    },
+});
+```
+
+## 📋 Migration Best Practices
+
+### Migration Naming
+
+```bash
+# Format: YYYYMMDDHHMMSS_description
+20241027120000_add_user_bio_field
+20241027120100_create_island_table
+20241027120200_add_user_island_relation
+```
+
+### ALWAYS review generated migrations
+
+```bash
+# Generate migration
+npx prisma migrate dev --name add_user_bio_field
+
+# CRITICAL: Review the generated SQL before applying
+# Check migration file in prisma/migrations/
+```
+
+### Data Migration Pattern
+
+```prisma
+-- Step 1: Add field as optional
+ALTER TABLE "user" ADD COLUMN "new_field" VARCHAR(50);
+
+-- Step 2: Populate data (in separate migration if needed)
+UPDATE "user" SET "new_field" = 'default_value' WHERE "new_field" IS NULL;
+
+-- Step 3: Make field required (in separate migration)
+ALTER TABLE "user" ALTER COLUMN "new_field" SET NOT NULL;
+```
+
+## 🎯 Summary - Critical Rules
+
+1. ✅ **ALWAYS** use PascalCase for models, camelCase for fields
+2. ✅ **ALWAYS** map to snake_case in database (@map)
+3. ✅ **ALWAYS** add indexes for foreign keys
+4. ✅ **ALWAYS** filter soft-deleted records (deletedAt: null)
+5. ✅ **ALWAYS** update updatedAt timestamp
+6. ✅ **ALWAYS** use TransactionHost for queries
+7. ✅ **ALWAYS** select only required fields
+8. ✅ **ALWAYS** use unique constraints with deletedAt
+
+9. ❌ **NEVER** throw exceptions from Repository
+10. ❌ **NEVER** forget soft delete filter
+11. ❌ **NEVER** select all fields unless necessary
+12. ❌ **NEVER** use raw SQL without type safety
+13. ❌ **NEVER** skip migration review

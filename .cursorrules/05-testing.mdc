@@ -1,0 +1,593 @@
+---
+globs: test/**/*.ts,**/*.spec.ts
+description: Testing standards and patterns for unit and E2E tests
+---
+
+# Testing Standards
+
+## 🧪 Test Structure (MANDATORY)
+
+### Directory Organization
+
+```
+test/
+├── unit/                          # Unit tests
+│   ├── components/               # Component tests
+│   ├── services/                 # Service tests
+│   ├── utils/                    # Utility tests
+│   └── jest.json                 # Unit test config
+├── e2e/                          # E2E tests
+│   ├── auth/                     # Auth flow tests
+│   ├── user.e2e-spec.ts         # User endpoints
+│   ├── island.e2e-spec.ts       # Island endpoints
+│   └── jest-e2e.json            # E2E test config
+└── helper/                       # Test helpers
+    ├── generators.ts             # Data generators
+    ├── login.ts                  # Auth helpers
+    └── socket.ts                 # WebSocket helpers
+```
+
+## ✅ Unit Test Pattern (MANDATORY)
+
+### Test File Naming
+
+```
+{filename}.spec.ts
+user-service.spec.ts
+user-reader.spec.ts
+```
+
+### Test Structure
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { UserService } from 'src/domain/services/users/users.service';
+import { UserReader } from 'src/domain/components/users/user-reader';
+import { UserWriter } from 'src/domain/components/users/user-writer';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+
+describe('UserService', () => {
+    let service: UserService;
+    let userReader: jest.Mocked<UserReader>;
+    let userWriter: jest.Mocked<UserWriter>;
+
+    beforeEach(async () => {
+        // MANDATORY: Create mocks
+        const mockUserReader = {
+            readProfile: jest.fn(),
+            readOneByTag: jest.fn(),
+        };
+
+        const mockUserWriter = {
+            updateNickname: jest.fn(),
+            updateTag: jest.fn(),
+        };
+
+        // MANDATORY: Create testing module
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                UserService,
+                { provide: UserReader, useValue: mockUserReader },
+                { provide: UserWriter, useValue: mockUserWriter },
+            ],
+        }).compile();
+
+        service = module.get<UserService>(UserService);
+        userReader = module.get(UserReader);
+        userWriter = module.get(UserWriter);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    describe('changeNickname', () => {
+        it('should update nickname when valid data is provided', async () => {
+            // Arrange
+            const userId = 'user-123';
+            const newNickname = 'NewNickname';
+
+            // Act
+            await service.changeNickname(userId, newNickname);
+
+            // Assert
+            expect(userWriter.updateNickname).toHaveBeenCalledTimes(1);
+            expect(userWriter.updateNickname).toHaveBeenCalledWith(
+                userId,
+                newNickname,
+            );
+        });
+
+        it('should throw exception when nickname is too short', async () => {
+            // Arrange
+            const userId = 'user-123';
+            const invalidNickname = 'a';
+
+            // Act & Assert
+            await expect(
+                service.changeNickname(userId, invalidNickname),
+            ).rejects.toThrow(DomainException);
+        });
+    });
+
+    describe('changeTag', () => {
+        it('should update tag when tag is available', async () => {
+            // Arrange
+            const userId = 'user-123';
+            const newTag = 'newtag';
+
+            userReader.readOneByTag.mockRejectedValueOnce(
+                new DomainException(
+                    DomainExceptionType.USER_NOT_FOUND,
+                    HttpStatus.NOT_FOUND,
+                    'User not found',
+                ),
+            );
+
+            // Act
+            await service.changeTag(userId, newTag);
+
+            // Assert
+            expect(userReader.readOneByTag).toHaveBeenCalledWith(newTag);
+            expect(userWriter.updateTag).toHaveBeenCalledWith(userId, newTag);
+        });
+
+        it('should throw TAG_CONFLICT when tag is already taken', async () => {
+            // Arrange
+            const userId = 'user-123';
+            const existingTag = 'existingtag';
+
+            userReader.readOneByTag.mockResolvedValueOnce({
+                id: 'other-user',
+                tag: existingTag,
+                email: 'other@example.com',
+                nickname: 'Other',
+                provider: 'GOOGLE',
+                avatarKey: 'avatar-key',
+                bio: null,
+            });
+
+            // Act & Assert
+            await expect(
+                service.changeTag(userId, existingTag),
+            ).rejects.toThrow(DomainException);
+        });
+    });
+});
+```
+
+## 🎯 Test Naming Convention (MANDATORY)
+
+### Use descriptive test names
+
+```typescript
+describe('Component/Service/Function name', () => {
+    describe('methodName', () => {
+        // Pattern: should {expected behavior} when {condition}
+        it('should return user when valid ID is provided', async () => {});
+        it('should throw USER_NOT_FOUND when user does not exist', async () => {});
+        it('should update nickname when new nickname is valid', async () => {});
+        it('should throw exception when nickname is too long', async () => {});
+    });
+});
+```
+
+## 🧩 Mock Patterns (BEST PRACTICES)
+
+### Repository Mocks
+
+```typescript
+const mockUserRepository: jest.Mocked<UserRepository> = {
+    save: jest.fn(),
+    findOneById: jest.fn(),
+    findOneByEmail: jest.fn(),
+    update: jest.fn(),
+    increaseGold: jest.fn(),
+};
+```
+
+### Setting Mock Return Values
+
+```typescript
+// Success case
+mockUserRepository.findOneById.mockResolvedValue({
+    id: 'user-123',
+    email: 'user@example.com',
+    nickname: 'TestUser',
+    tag: 'testuser',
+    provider: 'GOOGLE',
+    avatarKey: 'avatar-key',
+    bio: null,
+});
+
+// Not found case
+mockUserRepository.findOneById.mockResolvedValue(null);
+
+// Error case
+mockUserRepository.findOneById.mockRejectedValue(new Error('Database error'));
+```
+
+## 🌐 E2E Test Pattern (MANDATORY)
+
+### E2E Test Structure
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from 'src/app.module';
+import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { loginAndGetTokens } from 'test/helper/login';
+
+describe('UserController (e2e)', () => {
+    let app: INestApplication;
+    let prisma: PrismaService;
+    let accessToken: string;
+    let userId: string;
+
+    beforeAll(async () => {
+        const moduleFixture: TestingModule = await Test.createTestingModule({
+            imports: [AppModule],
+        }).compile();
+
+        app = moduleFixture.createNestApplication();
+
+        // Apply same configuration as main.ts
+        app.enableCors({ origin: true, credentials: true });
+
+        await app.init();
+
+        prisma = app.get<PrismaService>(PrismaService);
+    });
+
+    afterAll(async () => {
+        await app.close();
+    });
+
+    beforeEach(async () => {
+        // Clean database
+        await prisma.user.deleteMany();
+
+        // Create test user and login
+        const { accessToken: token, userId: id } = await loginAndGetTokens(app);
+        accessToken = token;
+        userId = id;
+    });
+
+    describe('GET /users/my', () => {
+        it('should return current user profile', async () => {
+            // Act
+            const response = await request(app.getHttpServer())
+                .get('/users/my')
+                .set('Authorization', `Bearer ${accessToken}`)
+                .expect(200);
+
+            // Assert
+            expect(response.body).toMatchObject({
+                id: userId,
+                email: expect.any(String),
+                nickname: expect.any(String),
+                tag: expect.any(String),
+                provider: expect.any(String),
+                avatarKey: expect.any(String),
+            });
+        });
+
+        it('should return 401 when not authenticated', async () => {
+            // Act & Assert
+            await request(app.getHttpServer()).get('/users/my').expect(401);
+        });
+    });
+
+    describe('PATCH /users/nickname', () => {
+        it('should update nickname successfully', async () => {
+            // Arrange
+            const newNickname = 'NewNickname';
+
+            // Act
+            await request(app.getHttpServer())
+                .patch('/users/nickname')
+                .set('Authorization', `Bearer ${accessToken}`)
+                .send({ nickname: newNickname })
+                .expect(204);
+
+            // Assert - Verify in database
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+            });
+            expect(user?.nickname).toBe(newNickname);
+        });
+
+        it('should return 400 when nickname is too short', async () => {
+            // Arrange
+            const invalidNickname = 'a';
+
+            // Act & Assert
+            await request(app.getHttpServer())
+                .patch('/users/nickname')
+                .set('Authorization', `Bearer ${accessToken}`)
+                .send({ nickname: invalidNickname })
+                .expect(400);
+        });
+    });
+});
+```
+
+## 🔌 WebSocket E2E Tests
+
+```typescript
+import { io, Socket } from 'socket.io-client';
+import { createSocketConnection } from 'test/helper/socket';
+
+describe('LobyGateway (e2e)', () => {
+    let app: INestApplication;
+    let socket: Socket;
+    let accessToken: string;
+
+    beforeAll(async () => {
+        // Setup app
+    });
+
+    beforeEach(async () => {
+        const { accessToken: token } = await loginAndGetTokens(app);
+        accessToken = token;
+
+        socket = await createSocketConnection(app, '/', accessToken);
+    });
+
+    afterEach(async () => {
+        if (socket.connected) {
+            socket.disconnect();
+        }
+    });
+
+    it('should create island successfully', (done) => {
+        // Arrange
+        const createIslandData = {
+            mapId: 'map-123',
+            name: 'Test Island',
+            maxMembers: 10,
+        };
+
+        // Act
+        socket.emit('createIsland', createIslandData);
+
+        // Assert
+        socket.on('createdIsland', (data) => {
+            expect(data).toHaveProperty('islandId');
+            expect(data.islandId).toBeTruthy();
+            done();
+        });
+    });
+
+    it('should handle errors properly', (done) => {
+        // Arrange
+        const invalidData = {
+            // Missing required fields
+        };
+
+        // Act
+        socket.emit('createIsland', invalidData);
+
+        // Assert
+        socket.on('exception', (error) => {
+            expect(error).toHaveProperty('message');
+            done();
+        });
+    });
+});
+```
+
+## 📊 Test Coverage (TARGETS)
+
+### Minimum Coverage Requirements
+
+```json
+{
+    "jest": {
+        "coverageThreshold": {
+            "global": {
+                "branches": 70,
+                "functions": 80,
+                "lines": 80,
+                "statements": 80
+            }
+        }
+    }
+}
+```
+
+### What to Test (MANDATORY)
+
+1. ✅ **Business Logic** - All service methods
+2. ✅ **Component Logic** - Reader/Writer/Checker methods
+3. ✅ **Edge Cases** - Null, empty, invalid inputs
+4. ✅ **Error Scenarios** - All exception paths
+5. ✅ **API Endpoints** - All controller methods (E2E)
+6. ✅ **WebSocket Events** - All gateway handlers (E2E)
+
+### What NOT to Test
+
+1. ❌ **Trivial Getters/Setters**
+2. ❌ **Third-party Libraries**
+3. ❌ **Database Queries** (test Repository interface, not Prisma)
+4. ❌ **NestJS Framework Code**
+
+## 🎯 Test Data Management
+
+### Use Data Generators
+
+```typescript
+// test/helper/generators.ts
+export function generateUser(overrides?: Partial<UserEntity>): UserEntity {
+    return {
+        id: v4(),
+        email: 'test@example.com',
+        nickname: 'TestUser',
+        tag: 'testuser',
+        provider: 'GOOGLE',
+        avatarKey: 'avatar-key',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+        bio: null,
+        gold: 0,
+        ...overrides,
+    };
+}
+
+export function generateIsland(
+    overrides?: Partial<IslandEntity>,
+): IslandEntity {
+    return {
+        id: v4(),
+        ownerId: v4(),
+        mapId: v4(),
+        name: 'Test Island',
+        maxMembers: 10,
+        type: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...overrides,
+    };
+}
+```
+
+### Use Test Helpers
+
+```typescript
+// test/helper/login.ts
+export async function loginAndGetTokens(
+    app: INestApplication,
+): Promise<{ accessToken: string; userId: string }> {
+    const user = await createTestUser();
+    const tokens = await generateTokens(user.id);
+    return {
+        accessToken: tokens.accessToken,
+        userId: user.id,
+    };
+}
+```
+
+## 🚫 Test Anti-Patterns (FORBIDDEN)
+
+### ❌ NEVER test implementation details
+
+```typescript
+// ❌ WRONG - Testing internal state
+it('should set internal flag', () => {
+    service['internalFlag'] = true; // Don't test private state
+    expect(service['internalFlag']).toBe(true);
+});
+
+// ✅ CORRECT - Test behavior
+it('should update user nickname', async () => {
+    await service.changeNickname(userId, 'NewName');
+    expect(userWriter.updateNickname).toHaveBeenCalled();
+});
+```
+
+### ❌ NEVER use real database in unit tests
+
+```typescript
+// ❌ WRONG - Unit test hitting database
+it('should create user', async () => {
+    const user = await prisma.user.create({ data: {...} });
+    expect(user).toBeDefined();
+});
+
+// ✅ CORRECT - Mock repository
+it('should create user', async () => {
+    await service.createUser(userData);
+    expect(mockRepository.save).toHaveBeenCalled();
+});
+```
+
+### ❌ NEVER share state between tests
+
+```typescript
+// ❌ WRONG - Shared state
+let sharedUser: User;
+
+beforeAll(() => {
+    sharedUser = createUser(); // DON'T share between tests
+});
+
+// ✅ CORRECT - Fresh state for each test
+beforeEach(() => {
+    const user = createUser(); // Fresh for each test
+});
+```
+
+### ❌ NEVER use real timers in tests
+
+```typescript
+// ❌ WRONG - Real delays
+it('should retry after delay', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Slow!
+});
+
+// ✅ CORRECT - Mock timers
+it('should retry after delay', async () => {
+    jest.useFakeTimers();
+    const promise = service.retryOperation();
+    jest.advanceTimersByTime(1000);
+    await promise;
+    jest.useRealTimers();
+});
+```
+
+### ❌ NEVER write tests that depend on execution order
+
+```typescript
+// ❌ WRONG - Tests depend on each other
+it('test 1', () => {
+    globalState = 'value';
+});
+it('test 2', () => {
+    expect(globalState).toBe('value');
+});
+
+// ✅ CORRECT - Independent tests
+it('test 1', () => {
+    const state = 'value';
+    expect(state).toBe('value');
+});
+it('test 2', () => {
+    const state = 'value';
+    expect(state).toBe('value');
+});
+```
+
+## 📝 Test Documentation
+
+### Add descriptive test names
+
+```typescript
+// ✅ CORRECT - Self-documenting
+it('should throw TAG_CONFLICT exception when tag is already taken by another user', async () => {
+    // Test implementation
+});
+
+// ❌ WRONG - Vague
+it('should fail', async () => {
+    // Test implementation
+});
+```
+
+## 🎯 Summary - Critical Rules
+
+1. ✅ **ALWAYS** use Arrange-Act-Assert pattern
+2. ✅ **ALWAYS** mock dependencies in unit tests
+3. ✅ **ALWAYS** test error scenarios
+4. ✅ **ALWAYS** clean up after E2E tests
+5. ✅ **ALWAYS** use descriptive test names
+6. ✅ **ALWAYS** test edge cases
+7. ✅ **ALWAYS** use data generators for consistency
+
+8. ❌ **NEVER** test implementation details
+9. ❌ **NEVER** use real database in unit tests
+10. ❌ **NEVER** share state between tests
+11. ❌ **NEVER** write order-dependent tests
+12. ❌ **NEVER** use real timers
+13. ❌ **NEVER** skip error scenario tests

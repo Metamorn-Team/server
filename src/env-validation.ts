@@ -34,4 +34,7 @@ export const validationSchema = Joi.object({
     // PortOne
     PORTONE_API_KEY: Joi.string().required(),
     WEBHOOK_SECRET_KEY: Joi.string().required(),
+
+    // Sentry
+    SENTRY_DSN: Joi.string().optional(),
 });

@@ -1,0 +1,505 @@
+---
+globs: *.ts,*.tsx
+description: TypeScript patterns, best practices, and coding standards
+---
+
+# TypeScript Coding Standards
+
+## 🎯 Type Safety (MANDATORY)
+
+### ✅ ALWAYS use explicit types
+
+```typescript
+// ✅ CORRECT - Explicit return types
+async getUserById(id: string): Promise<UserInfo> {
+    return await this.userRepository.findOneById(id);
+}
+
+// ❌ WRONG - No return type
+async getUserById(id: string) {
+    return await this.userRepository.findOneById(id);
+}
+```
+
+### ✅ ALWAYS use strict null checks
+
+```typescript
+// ✅ CORRECT - Handle null explicitly
+const user = await this.userRepository.findOneById(id);
+if (!user) {
+    throw new DomainException(...);
+}
+return user;
+
+// ❌ WRONG - Not handling potential null
+const user = await this.userRepository.findOneById(id);
+return user; // Could be null!
+```
+
+### ❌ NEVER use `any` type
+
+```typescript
+// ❌ FORBIDDEN
+async processData(data: any): Promise<any> {}
+
+// ✅ CORRECT - Use proper types
+async processUserData(data: CreateUserDto): Promise<UserInfo> {}
+
+// ✅ CORRECT - Use unknown for truly unknown types
+async handleError(error: unknown): Promise<void> {
+    if (error instanceof Error) {
+        // Handle error
+    }
+}
+```
+
+## 🏗️ Dependency Injection (MUST FOLLOW)
+
+### Constructor Injection Pattern
+
+```typescript
+@Injectable()
+export class UserService {
+    constructor(
+        private readonly userReader: UserReader,
+        private readonly userWriter: UserWriter,
+        private readonly friendReader: FriendReader,
+    ) {}
+
+    // MUST use readonly for injected dependencies
+    // MUST use private for dependencies
+}
+```
+
+### ❌ FORBIDDEN: Property Injection
+
+```typescript
+// ❌ WRONG
+@Injectable()
+export class UserService {
+    @Inject(UserReader)
+    userReader: UserReader; // NEVER use property injection
+}
+```
+
+### Repository Injection with Symbol
+
+```typescript
+// ✅ CORRECT - Use Symbol for interface injection
+@Injectable()
+export class UserReader {
+    constructor(
+        @Inject(UserRepository)
+        private readonly userRepository: UserRepository,
+    ) {}
+}
+```
+
+## 🎨 Class Structure (MANDATORY ORDER)
+
+```typescript
+@Injectable()
+export class UserService {
+    // 1. Static properties
+    private static readonly DEFAULT_LIMIT = 10;
+
+    // 2. Instance properties
+    private readonly maxRetryCount = 3;
+
+    // 3. Constructor
+    constructor(
+        private readonly userReader: UserReader,
+        private readonly userWriter: UserWriter,
+    ) {}
+
+    // 4. Public methods
+    async createUser(data: CreateUserDto): Promise<void> {
+        // Implementation
+    }
+
+    async getUserById(id: string): Promise<UserInfo> {
+        // Implementation
+    }
+
+    // 5. Private methods (at the end)
+    private async validateUserData(data: CreateUserDto): Promise<void> {
+        // Implementation
+    }
+}
+```
+
+## 🔒 Access Modifiers (STRICT RULES)
+
+### ALWAYS use explicit access modifiers
+
+```typescript
+// ✅ CORRECT
+export class UserService {
+    public async createUser(data: CreateUserDto): Promise<void> {}
+    private async validateData(data: any): Promise<void> {}
+}
+
+// ❌ WRONG - Missing access modifiers
+export class UserService {
+    async createUser(data: CreateUserDto): Promise<void> {}
+    validateData(data: any): Promise<void> {}
+}
+```
+
+### Use `readonly` for immutable properties
+
+```typescript
+// ✅ CORRECT
+constructor(
+    private readonly userRepository: UserRepository,
+    private readonly maxRetries: number = 3,
+) {}
+
+// ❌ WRONG
+constructor(
+    private userRepository: UserRepository, // Should be readonly
+) {}
+```
+
+## 🎭 Interface vs Type
+
+### Use Interface for object shapes (PREFERRED)
+
+```typescript
+// ✅ CORRECT - Use interface for objects
+export interface UserInfo {
+    id: string;
+    email: string;
+    nickname: string;
+}
+
+export interface CreateUserRequest {
+    email: string;
+    nickname: string;
+    tag: string;
+}
+```
+
+### Use Type for unions, intersections, primitives
+
+```typescript
+// ✅ CORRECT - Use type for unions
+export type IslandType = 'NORMAL' | 'PRIVATE' | 'DESERTED';
+export type UserId = string;
+
+// ✅ CORRECT - Use type for intersections
+export type UserWithFriend = UserInfo & { friendStatus: FriendStatus };
+```
+
+## 📦 Import/Export (MANDATORY ORGANIZATION)
+
+### Import Order (MUST FOLLOW)
+
+```typescript
+// 1. External libraries
+import { Injectable, HttpStatus } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+
+// 2. Internal absolute imports (grouped by layer)
+import { UserRepository } from 'src/domain/interface/user.repository';
+import { UserEntity } from 'src/domain/entities/user/user.entity';
+import { DomainException } from 'src/domain/exceptions/exceptions';
+
+// 3. Relative imports (avoid if possible)
+import { helperFunction } from './helper';
+```
+
+### ❌ NEVER use relative imports across layers
+
+```typescript
+// ❌ WRONG
+import { UserRepository } from '../../../domain/interface/user.repository';
+
+// ✅ CORRECT
+import { UserRepository } from 'src/domain/interface/user.repository';
+```
+
+### Named Exports (REQUIRED)
+
+```typescript
+// ✅ CORRECT - Named exports
+export class UserService {}
+export interface UserInfo {}
+export const MAX_RETRY = 3;
+
+// ❌ WRONG - Default exports (except for modules)
+export default class UserService {}
+```
+
+## 🔄 Async/Await (BEST PRACTICES)
+
+### ALWAYS use async/await over Promises
+
+```typescript
+// ✅ CORRECT
+async getUserProfile(id: string): Promise<UserInfo> {
+    const user = await this.userRepository.findOneById(id);
+    if (!user) {
+        throw new DomainException(...);
+    }
+    return user;
+}
+
+// ❌ WRONG - Using .then/.catch
+getUserProfile(id: string): Promise<UserInfo> {
+    return this.userRepository.findOneById(id)
+        .then(user => {
+            if (!user) throw new DomainException(...);
+            return user;
+        });
+}
+```
+
+### Parallel Operations
+
+```typescript
+// ✅ CORRECT - Execute in parallel when possible
+async getUserWithFriends(userId: string): Promise<UserWithFriends> {
+    const [user, friends] = await Promise.all([
+        this.userReader.getUserById(userId),
+        this.friendReader.getFriendsList(userId),
+    ]);
+
+    return { ...user, friends };
+}
+
+// ❌ WRONG - Sequential when parallel is possible
+async getUserWithFriends(userId: string): Promise<UserWithFriends> {
+    const user = await this.userReader.getUserById(userId);
+    const friends = await this.friendReader.getFriendsList(userId);
+    return { ...user, friends };
+}
+```
+
+## 🛡️ Error Handling (CRITICAL)
+
+### Domain Layer - Use DomainException
+
+```typescript
+// ✅ CORRECT
+async getUserById(id: string): Promise<UserInfo> {
+    const user = await this.userRepository.findOneById(id);
+
+    if (!user) {
+        throw new DomainException(
+            DomainExceptionType.USER_NOT_FOUND,
+            HttpStatus.NOT_FOUND,
+            USER_NOT_FOUND_MESSAGE,
+        );
+    }
+
+    return user;
+}
+```
+
+### Try-Catch ONLY for expected business errors
+
+```typescript
+// ✅ CORRECT - Specific error handling
+async changeTag(userId: string, tag: string): Promise<void> {
+    try {
+        const existingUser = await this.userReader.readOneByTag(tag);
+
+        if (existingUser) {
+            throw new DomainException(
+                DomainExceptionType.TAG_CONFLICT,
+                HttpStatus.CONFLICT,
+                TAG_CONFLICT_MESSAGE,
+            );
+        }
+    } catch (error: unknown) {
+        if (error instanceof DomainException &&
+            error.errorType === DomainExceptionType.USER_NOT_FOUND) {
+            // Tag is available, proceed with update
+            return await this.userWriter.updateTag(userId, tag);
+        }
+        throw error; // Re-throw unexpected errors
+    }
+}
+
+// ❌ WRONG - Catching everything
+try {
+    await someOperation();
+} catch (error) {
+    console.log(error); // NEVER do this
+}
+```
+
+## 🎯 Type Guards
+
+### Use type guards for unknown types
+
+```typescript
+// ✅ CORRECT
+function isUserInfo(obj: unknown): obj is UserInfo {
+    return (
+        typeof obj === 'object' &&
+        obj !== null &&
+        'id' in obj &&
+        'email' in obj
+    );
+}
+
+async handleData(data: unknown): Promise<void> {
+    if (!isUserInfo(data)) {
+        throw new Error('Invalid user data');
+    }
+
+    // data is now typed as UserInfo
+    await this.processUser(data);
+}
+```
+
+## 📝 Decorators (NestJS Specific)
+
+### Controller Decorators - Proper Order
+
+```typescript
+@ApiOperation({ summary: 'Get user profile' })
+@ApiResponse({ status: 200, type: UserDetailResponse })
+@ApiResponse({ status: 404, description: 'User not found' })
+@Get(':id')
+async getUser(@Param('id') id: string): Promise<UserDetailResponse> {
+    // Implementation
+}
+```
+
+### Validation Decorators
+
+```typescript
+// ✅ CORRECT
+export class CreateUserRequest {
+    @ApiProperty({ example: 'user@example.com' })
+    @IsEmail()
+    @IsNotEmpty()
+    readonly email: string;
+
+    @ApiProperty({ example: 'username' })
+    @Length(2, 20)
+    @IsString()
+    @IsNotEmpty()
+    readonly nickname: string;
+}
+```
+
+## 🔢 Enums vs Union Types
+
+### Use Enum for values that map to numbers or need iteration
+
+```typescript
+// ✅ CORRECT - Enum for database values
+export enum IslandTypeEnum {
+    NORMAL = 0,
+    PRIVATE = 1,
+    DESERTED = 2,
+}
+```
+
+### Use Union Types for simple string constants
+
+```typescript
+// ✅ CORRECT - Union type for simple strings
+export type FriendStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+export type SearchVariant = 'NICKNAME' | 'TAG';
+```
+
+## 🚫 FORBIDDEN Patterns
+
+### ❌ NEVER mutate parameters
+
+```typescript
+// ❌ WRONG
+async updateUser(user: UserInfo): Promise<void> {
+    user.nickname = 'new name'; // Mutating parameter
+    await this.save(user);
+}
+
+// ✅ CORRECT
+async updateUser(userId: string, nickname: string): Promise<void> {
+    await this.userRepository.update(userId, { nickname });
+}
+```
+
+### ❌ NEVER use non-null assertion operator
+
+```typescript
+// ❌ WRONG
+const user = await this.userRepository.findOneById(id);
+return user!; // Dangerous!
+
+// ✅ CORRECT
+const user = await this.userRepository.findOneById(id);
+if (!user) {
+    throw new DomainException(...);
+}
+return user;
+```
+
+### ❌ NEVER use `as` casting without validation
+
+```typescript
+// ❌ WRONG
+const user = data as UserInfo; // No validation
+
+// ✅ CORRECT
+if (!isUserInfo(data)) {
+    throw new Error('Invalid data');
+}
+const user = data; // Type guard provides type safety
+```
+
+## 📋 Code Style
+
+### Use semicolons (MANDATORY)
+
+```typescript
+// ✅ CORRECT
+const userId = '123';
+await this.userService.createUser(data);
+
+// ❌ WRONG
+const userId = '123';
+await this.userService.createUser(data);
+```
+
+### Use double quotes for strings
+
+```typescript
+// ✅ CORRECT
+const message = 'Hello world';
+const sql = 'SELECT * FROM users';
+
+// ❌ WRONG
+const message = 'Hello world';
+```
+
+### Spacing around operators
+
+```typescript
+// ✅ CORRECT
+const result = a + b + c;
+const isValid = count > 0 && count < 100;
+
+// ❌ WRONG
+const result = a + b + c;
+const isValid = count > 0 && count < 100;
+```
+
+## 🎯 Summary - Critical Rules
+
+1. ✅ **ALWAYS** use explicit types and return types
+2. ✅ **ALWAYS** handle null/undefined explicitly
+3. ✅ **ALWAYS** use readonly for injected dependencies
+4. ✅ **ALWAYS** use DomainException in domain layer
+5. ✅ **ALWAYS** use async/await over promises
+
+6. ❌ **NEVER** use `any` type
+7. ❌ **NEVER** use non-null assertion (`!`)
+8. ❌ **NEVER** use default exports
+9. ❌ **NEVER** mutate parameters
+10. ❌ **NEVER** ignore TypeScript errors

@@ -1,0 +1,454 @@
+---
+alwaysApply: false
+description: Git workflow, branch naming, and commit message standards
+---
+
+# Git Workflow & Version Control
+
+## 🌿 Branch Naming Convention (MANDATORY)
+
+### Format
+
+```
+{type}/{description-in-english}
+```
+
+### Branch Types
+
+| Type       | Purpose                      | Example                              |
+| ---------- | ---------------------------- | ------------------------------------ |
+| `feat`     | New feature development      | `feat/implement-google-login`        |
+| `fix`      | Bug fixes                    | `fix/resolve-payment-error`          |
+| `refactor` | Code refactoring             | `refactor/optimize-database-queries` |
+| `docs`     | Documentation changes        | `docs/update-api-documentation`      |
+| `test`     | Test additions/modifications | `test/add-user-service-tests`        |
+| `chore`    | Maintenance tasks            | `chore/update-dependencies`          |
+| `db`       | Database schema changes      | `db/add-user-profile-schema`         |
+| `hotfix`   | Emergency production fixes   | `hotfix/fix-critical-payment-bug`    |
+
+### Branch Naming Rules
+
+1. ✅ **USE** lowercase only
+2. ✅ **USE** hyphens to separate words
+3. ✅ **USE** English for description
+4. ✅ **BE** descriptive but concise
+5. ❌ **DON'T** use special characters
+6. ❌ **DON'T** use spaces
+7. ❌ **DON'T** use Korean characters
+
+### Examples
+
+```bash
+# ✅ CORRECT
+feat/add-private-island-feature
+fix/resolve-websocket-disconnect
+refactor/extract-payment-handler
+db/add-map-private-zone-table
+test/add-e2e-island-tests
+
+# ❌ WRONG
+feature/add_private_island    # Wrong type, uses underscore
+fix-payment                   # Missing type prefix
+feat/프라이빗섬추가            # Korean characters
+FEAT/Add-Island               # Uppercase letters
+feat/add island feature       # Spaces instead of hyphens
+```
+
+## 📝 Commit Message Convention (MANDATORY)
+
+### Format
+
+```
+{TYPE}: {title in Korean}
+
+{body in Korean (optional)}
+{details (optional)}
+```
+
+### Commit Types
+
+| Type       | Purpose          | When to Use                              |
+| ---------- | ---------------- | ---------------------------------------- |
+| `FEAT`     | New features     | Adding new functionality                 |
+| `FIX`      | Bug fixes        | Fixing errors or issues                  |
+| `DOCS`     | Documentation    | Updating README, comments, docs          |
+| `STYLE`    | Code formatting  | Formatting, semicolons, whitespace       |
+| `REFACTOR` | Code refactoring | Improving code without changing behavior |
+| `TEST`     | Testing          | Adding or modifying tests                |
+| `CHORE`    | Maintenance      | Dependencies, build config, etc.         |
+
+### Commit Message Rules
+
+1. ✅ **USE** UPPERCASE for type
+2. ✅ **USE** Korean for title and body
+3. ✅ **LIMIT** title to 50 characters
+4. ✅ **EXPLAIN** what and why (not how)
+5. ✅ **USE** imperative mood in title
+6. ✅ **SEPARATE** title and body with blank line
+7. ❌ **DON'T** end title with period
+8. ❌ **DON'T** include issue numbers in title
+
+### Examples
+
+```bash
+# ✅ CORRECT - Feature
+FEAT: 구글 로그인 기능 추가
+
+- OAuth2 인증 플로우 구현
+- 사용자 정보 저장 로직 추가
+- 프론트엔드와 연동을 위한 API 엔드포인트 생성
+
+# ✅ CORRECT - Bug fix
+FIX: 결제 완료 후 골드 미지급 버그 수정
+
+결제 완료 웹훅 처리 중 트랜잭션 롤백 로직이 잘못되어
+골드가 지급되지 않는 문제 해결
+
+# ✅ CORRECT - Refactor
+REFACTOR: 섬 생성 로직을 Factory 패턴으로 개선
+
+- 섬 타입별 생성 로직을 별도 클래스로 분리
+- 확장성과 테스트 용이성 향상
+- 중복 코드 제거
+
+# ✅ CORRECT - Documentation
+DOCS: API 문서에 인증 흐름 다이어그램 추가
+
+# ✅ CORRECT - Test
+TEST: UserService 단위 테스트 추가
+
+changeNickname, changeTag 메서드에 대한
+정상 케이스 및 예외 케이스 테스트 작성
+
+# ❌ WRONG - Missing type
+Add google login feature
+
+# ❌ WRONG - English in body
+FEAT: 구글 로그인 추가
+
+Implement OAuth2 authentication flow
+
+# ❌ WRONG - Too vague
+FIX: 버그 수정
+
+# ❌ WRONG - Period at end
+FEAT: 로그인 기능 추가.
+```
+
+## 🔀 Git Workflow (MANDATORY)
+
+### Feature Development Flow
+
+```bash
+# 1. Create feature branch from main
+git checkout main
+git pull origin main
+git checkout -b feat/add-private-island
+
+# 2. Make changes and commit
+git add .
+git commit -m "FEAT: 프라이빗 섬 기능 추가
+
+- 섬 생성 API 엔드포인트 구현
+- 섬 접근 권한 검증 로직 추가
+- E2E 테스트 작성"
+
+# 3. Keep branch up to date
+git checkout main
+git pull origin main
+git checkout feat/add-private-island
+git rebase main
+
+# 4. Push to remote
+git push origin feat/add-private-island
+
+# 5. Create Pull Request
+# (via GitHub/GitLab interface)
+
+# 6. After PR approval and merge
+git checkout main
+git pull origin main
+git branch -d feat/add-private-island
+```
+
+### Hotfix Flow
+
+```bash
+# 1. Create hotfix branch from main
+git checkout main
+git pull origin main
+git checkout -b hotfix/fix-critical-payment-bug
+
+# 2. Make fix and commit
+git add .
+git commit -m "FIX: 결제 중복 처리 버그 긴급 수정"
+
+# 3. Push and create PR
+git push origin hotfix/fix-critical-payment-bug
+
+# 4. After urgent merge, update main
+git checkout main
+git pull origin main
+```
+
+## 📦 Commit Best Practices
+
+### Atomic Commits
+
+```bash
+# ✅ CORRECT - One logical change per commit
+git commit -m "FEAT: 사용자 닉네임 변경 기능 추가"
+git commit -m "TEST: 닉네임 변경 테스트 추가"
+git commit -m "DOCS: 닉네임 변경 API 문서 업데이트"
+
+# ❌ WRONG - Multiple unrelated changes
+git commit -m "FEAT: 여러 기능 추가 및 버그 수정"
+```
+
+### When to Commit
+
+1. ✅ After completing a logical unit of work
+2. ✅ After all tests pass
+3. ✅ Before switching context
+4. ✅ At end of work session
+5. ❌ NOT in the middle of refactoring
+6. ❌ NOT with failing tests
+7. ❌ NOT with commented-out code
+
+### What to Commit
+
+```bash
+# ✅ INCLUDE
+- Source code changes
+- Test files
+- Configuration changes
+- Migration files
+- Documentation updates
+
+# ❌ EXCLUDE (should be in .gitignore)
+- node_modules/
+- dist/
+- .env files
+- IDE-specific files (.vscode/, .idea/)
+- Log files (*.log)
+- OS files (.DS_Store)
+- Build artifacts
+```
+
+## 🔍 Code Review Guidelines
+
+### Before Creating PR
+
+1. ✅ **RUN** all tests and ensure they pass
+2. ✅ **FIX** all linter errors
+3. ✅ **REVIEW** your own code first
+4. ✅ **UPDATE** documentation if needed
+5. ✅ **ENSURE** commit messages follow convention
+6. ✅ **REBASE** on latest main branch
+7. ❌ **DON'T** include unrelated changes
+
+### PR Description Template
+
+```markdown
+## 개요
+
+이 PR은 프라이빗 섬 기능을 추가합니다.
+
+## 변경 사항
+
+- [ ] 프라이빗 섬 생성 API 구현
+- [ ] 섬 접근 권한 검증 로직
+- [ ] E2E 테스트 추가
+- [ ] Swagger 문서 업데이트
+
+## 테스트 방법
+
+1. 서버 실행: `npm run start:dev`
+2. POST /api/islands/private 엔드포인트 테스트
+3. 권한 없는 사용자로 접근 시 403 확인
+
+## 관련 이슈
+
+Closes #123
+
+## 체크리스트
+
+- [x] 모든 테스트 통과
+- [x] Linter 통과
+- [x] 문서 업데이트
+- [x] Breaking changes 없음
+```
+
+### Reviewing PRs
+
+#### As Reviewer
+
+1. ✅ **CHECK** architecture compliance
+2. ✅ **VERIFY** test coverage
+3. ✅ **ENSURE** naming conventions followed
+4. ✅ **LOOK** for potential bugs
+5. ✅ **SUGGEST** improvements
+6. ✅ **ASK** questions if unclear
+7. ❌ **DON'T** approve without reviewing
+8. ❌ **DON'T** nitpick trivial issues
+
+#### Review Comments Format
+
+```markdown
+# ✅ CORRECT - Constructive
+
+**Suggestion**: Consider extracting this logic into a separate Component for reusability.
+
+**Question**: Why do we need to fetch all users here instead of paginating?
+
+**Issue**: This will cause a race condition when multiple requests are made simultaneously.
+
+# ❌ WRONG - Not helpful
+
+This is bad.
+Why did you do it this way?
+Change this.
+```
+
+## 🚫 Git Anti-Patterns (FORBIDDEN)
+
+### ❌ NEVER commit directly to main
+
+```bash
+# ❌ WRONG
+git checkout main
+git commit -m "Quick fix"
+git push origin main
+
+# ✅ CORRECT
+git checkout -b fix/quick-bug-fix
+git commit -m "FIX: 버그 수정"
+git push origin fix/quick-bug-fix
+# Then create PR
+```
+
+### ❌ NEVER force push to main
+
+```bash
+# ❌ FORBIDDEN
+git push --force origin main
+
+# Even in feature branches, be careful
+git push --force origin feat/my-feature  # Only if you're sure
+```
+
+### ❌ NEVER commit secrets
+
+```bash
+# ❌ WRONG - Secrets in code
+const API_KEY = 'sk_live_123456789';
+const DB_PASSWORD = 'mypassword';
+
+# ✅ CORRECT - Use environment variables
+const API_KEY = process.env.API_KEY;
+const DB_PASSWORD = process.env.DB_PASSWORD;
+```
+
+### ❌ NEVER squash without understanding
+
+```bash
+# ❌ WRONG - Losing important commit history
+git rebase -i HEAD~10
+# Squashing all commits blindly
+
+# ✅ CORRECT - Preserve meaningful commits
+git rebase -i HEAD~10
+# Keep logical commits, squash only fixups
+```
+
+### ❌ NEVER commit generated files
+
+```bash
+# ❌ WRONG
+git add dist/
+git add node_modules/
+git add .env
+
+# ✅ CORRECT - These should be in .gitignore
+# Only commit source files
+```
+
+## 🔧 Git Configuration
+
+### Recommended Git Config
+
+```bash
+# User information
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+
+# Default branch name
+git config --global init.defaultBranch main
+
+# Pull strategy
+git config --global pull.rebase true
+
+# Auto-correct typos
+git config --global help.autocorrect 20
+
+# Show short status
+git config --global status.short true
+```
+
+## 📋 .gitignore (MANDATORY)
+
+```gitignore
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+.cache/
+```
+
+## 🎯 Summary - Critical Rules
+
+1. ✅ **ALWAYS** use proper branch naming: `type/description-in-english`
+2. ✅ **ALWAYS** write commit messages in Korean with UPPERCASE type
+3. ✅ **ALWAYS** create feature branches from main
+4. ✅ **ALWAYS** rebase before creating PR
+5. ✅ **ALWAYS** run tests before committing
+6. ✅ **ALWAYS** make atomic commits
+7. ✅ **ALWAYS** review your own code first
+
+8. ❌ **NEVER** commit directly to main
+9. ❌ **NEVER** force push to main
+10. ❌ **NEVER** commit secrets or credentials
+11. ❌ **NEVER** commit generated files
+12. ❌ **NEVER** commit without testing
+13. ❌ **NEVER** use vague commit messages
+14. ❌ **NEVER** skip code review
